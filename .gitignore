@@ -1,0 +1,9 @@
+# Sous-projet Phosphoric a son propre git, pas de tracking ici
+Phosphoric/
+
+# Mémoire Claude Code (locale par utilisateur)
+.claude/
+
+# Caches éditeurs
+*.swp
+.DS_Store
