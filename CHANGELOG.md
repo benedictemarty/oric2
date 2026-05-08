@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.h.1 : bank allocator avec free
+
+### OricOS → 0.13.0
+- **Free list LIFO 16 entries** : `BANK_FREE_LIST` ($0154A0) +
+  `BANK_FREE_TOP` ($0154B0).
+- `kernel_alloc_bank` étendu : pop free list d'abord, sinon bump.
+- `kernel_free_bank` (nouvelle routine) : push avec drop si pleine.
+- Test : alloc 3 / free 1 / alloc → LIFO retourne le freed bank.
+- v0.2 (reportée) : bitmap allocator pour fragmentation arbitraire.
+
+### Phosphoric — pas de change code
+- Test `test_oricos_sprint2a` étendu : ASSERT `mem[$015463] = $05`
+  pour valider le LIFO.
+
+---
+
 ## [2026-05-08] — Bug fixes Phosphoric (PH-fix-txs + PH-fix-dp-indirect)
 
 ### Phosphoric (oric2-golden-model)

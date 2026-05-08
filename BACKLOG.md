@@ -21,7 +21,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | **OS-2.e** | Driver console générique (`print_char`, `print_string`, cursor, scroll) | 2-3 j | OricOS | — |
 | ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
 | **OS-2.g** | Refactor TCB-based scheduler (struct `task_t`, N tâches, états) | 5-7 j | OricOS | ADR-14 |
-| **OS-2.h** | Bank allocator bitmap avec free | 2-3 j | OricOS | — |
+| ~~OS-2.h~~ | ✅ **clos 2026-05-08** (v0.1 : free list LIFO 16 entries. Bitmap reportée v0.2). | — | OricOS | — |
 | **OS-2.i** | Modèle d'erreur kernel (panic codes, kernel log ring buffer) | 2-3 j | OricOS | — |
 
 ### Priorité 1bis — Outillage Phosphoric
@@ -142,7 +142,7 @@ unilatéralement.
 | `--kernel` patch `mem.rom[]` (pollue ADR-10) | Demo visible | PH-bootrom |
 | Cohabitation 6502/65C816 sans politique de retrait | B1 cohabitation | DEC-1 / ADR-18 |
 | `kernel_print_banner` = 12 STA hardcodés | Sprint 2.c PoC | OS-2.e remplace |
-| `kernel_alloc_bank` bump-only sans free | Sprint 2.b PoC | OS-2.h remplace |
+| ~~`kernel_alloc_bank` bump-only sans free~~ | Sprint 2.b PoC | ✅ **clos 2026-05-08 (OS-2.h.1)** : free list LIFO 16 entries. Bitmap reportée v0.2. |
 | Compositor B4 = modèle simulé pas pipeline | B4 PoC | HW-4 |
 | Paravirt B3 = stub | B3 PoC | OS-5 + HW |
 | 3 globales `TASK_*_S` au lieu de TCB | Sprint 1.b PoC | OS-2.g |
