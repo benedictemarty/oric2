@@ -7,6 +7,30 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.g.1 : refactor scheduler TCB-based (ADR-14)
+
+### ADR-14 ratifiée
+- Table fixe **16 TCBs** (20 octets chacun) en bank 1 $5C00.
+- **Bitmap free 16 bits** à $5B00 pour réutilisation PID après mort.
+- Champs : PID, STATE, PRIO, PARENT, saved_S 16-bit, entry_pc, code_bank,
+  data_bank, stack_bank, flags, name 8B.
+- Réf. : SymbOS/Z80 (8) et GS/OS/65C816 (32). 16 = compromis OricOS.
+- Cf. workspace `CLAUDE.md` §2.
+
+### OricOS → 0.15.0 (Sprint 2.g.1)
+- Init TCB_1 (task A RUNNING) + TCB_2 (task B READY) au boot, bitmap $07.
+- Scheduler do_switch refactor : sauve/charge via TCB_1_S/TCB_2_S au
+  lieu de globales TASK_A_S/TASK_B_S. Met à jour STATE à chaque swap.
+- TASK_CUR sémantique 0/1 → 1/2 (PID).
+- v0.2 reporté : `task_create` dynamique, alloc PID via bitmap scan,
+  scheduler avec priorité réelle.
+
+### Validation
+- Test 2.a + test visuel pixel-identique au golden : zéro régression.
+- 501 tests OK.
+
+---
+
 ## [2026-05-08] — PH-CI-visual : test visuel golden frame OricOS
 
 ### Phosphoric (oric2-golden-model)

@@ -79,6 +79,53 @@ Alternatives écartées : flat binaire .com (resources externes coûteuses à g�
 
 Alternatives écartées : AY seul (pauvre pour OricOS), OPL2 (lourd à driver depuis 8-bit), Paula wavetable (moins iconique).
 
+### ADR-14 — Format TCB et table tâches (ratifiée 2026-05-08)
+
+OricOS gère ses tâches via une **table fixe de 16 TCBs** (Task Control
+Block) en bank 1 à `$01:5C00`, indexée par PID 8-bit (1..16, 0 réservé
+pour invalid).
+
+**Layout TCB** (20 octets) :
+```
++0  pid         (1B)  : 0=invalid, 1..16=valid
++1  state       (1B)  : 0=DEAD, 1=READY, 2=RUNNING, 3=BLOCKED, 4=ZOMBIE
++2  prio        (1B)  : 0..7 priority (0=highest)
++3  parent_pid  (1B)  : 0=kernel root
++4  saved_S     (2B)  : stack pointer 16-bit (mode N)
++6  entry_pc    (2B)  : PC initial (respawn)
++8  code_bank   (1B)  : PB initial
++9  data_bank   (1B)  : DBR initial
++10 stack_bank  (1B)  : v1 = 0 (stacks page-based en bank 0)
++11 flags       (1B)  : kernel/user, signal pending, etc.
++12 name        (8B)  : nom debug
+                       ─────
+                       20B
+```
+
+**Allocation** : bitmap 16 bits (2 octets) à `$01:5B00`. `kernel_task_create`
+scanne le bitmap pour trouver un slot libre, set le bit, init le TCB.
+`kernel_task_destroy` clear le bit (PID réutilisable).
+
+**Scheduling** : round-robin avec priorité v1 (skip tasks de prio plus
+basse si une plus haute READY). Sauvegarde S dans `tcb[CUR].saved_S`,
+charge `tcb[NEXT].saved_S`. Mode N implicite (mode E réservé au guest
+Oric 1, ADR-02).
+
+**Total RAM** : 322 octets en bank 1 ($01:5B00-$01:5D3F).
+
+Référence d'art : SymbOS (8 tâches Z80), GS/OS (32 tâches 65C816). 16
+choisi comme compromis pour OricOS GUI multifenêtré + apps utilisateur.
+
+Alternatives écartées :
+- **8 tasks** (SymbOS strict) : trop limitant pour GUI + apps simultanées.
+- **32 tasks** (GS/OS) : overkill pour OricOS v1.
+- **256 tasks** (PID 8-bit full) : 5 KiB RAM, surdimensionné.
+- **Liste chaînée** : 10-20% overhead vs table fixe pour N ≤ 32, pas de
+  gain réel à cette échelle.
+
+Ouvert : ADR-17 (API kernel publique syscalls liés à tâches —
+`task_create`/`destroy`/`yield`/`wait`).
+
 ### ADR-13 — Mécanisme de syscall : COP + table (ratifiée 2026-05-08)
 
 OricOS expose ses services à l'userland via l'opcode **`COP #imm`**
@@ -166,14 +213,7 @@ expliciter avant d'avancer.
 
 ### ~~ADR-13~~ → ratifiée 2026-05-08, déplacée vers §2 (option a : COP + table)
 
-### ADR-14 — Format TCB et structure interne tâche
-**Question** : quelle représentation pour une tâche kernel ?
-- Champs minimaux : `pid`, `state` (running/ready/blocked/zombie),
-  `prio`, `regs_save` (A/X/Y/P/PC/PBR/DBR/D/S 16-bit), `stack_bank`,
-  `code_bank`, `data_bank`, `parent_pid`.
-- Layout en bank 1 dédiée ? Table fixe N tâches max ou liste chaînée ?
-
-**Impact** : refactor scheduler obligatoire. Bloque OS-2.g.
+### ~~ADR-14~~ → ratifiée 2026-05-08, déplacée vers §2 (table fixe 16 + bitmap free)
 
 ### ADR-15 — Isolation mémoire post-v1
 **Question** : à quoi ressemble la v2 d'ADR-04 ?

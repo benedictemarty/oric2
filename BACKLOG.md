@@ -20,7 +20,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | **OS-2.d** | Driver clavier Oric 1 (matrice VIA PB) | 3-5 j | OricOS | — |
 | **OS-2.e** | Driver console générique (`print_char`, `print_string`, cursor, scroll) | 2-3 j | OricOS | — |
 | ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
-| **OS-2.g** | Refactor TCB-based scheduler (struct `task_t`, N tâches, états) | 5-7 j | OricOS | ADR-14 |
+| ~~OS-2.g~~ | ✅ **clos 2026-05-08** (v0.1 : TCB table 16 + bitmap, scheduler refactored, ADR-14 ratifiée. v0.2 task_create dynamique reporté). | — | OricOS | — |
 | ~~OS-2.h~~ | ✅ **clos 2026-05-08** (v0.1 : free list LIFO 16 entries. Bitmap reportée v0.2). | — | OricOS | — |
 | ~~OS-2.i~~ | ✅ **clos 2026-05-08** (v0.1 : kernel_panic + print_hex8 + print_nibble. Log ring + SYS_PANIC reportés v0.2). | — | OricOS | — |
 
@@ -112,7 +112,7 @@ unilatéralement.
 | ADR | Sujet |
 |-----|-------|
 | ~~ADR-13~~ | ✅ **ratifiée 2026-05-08 (option a : COP + table)**, déplacée vers `CLAUDE.md` §2 |
-| **ADR-14** | Format TCB et structure interne tâche |
+| ~~ADR-14~~ | ✅ **ratifiée 2026-05-08** (table fixe 16 + bitmap free, layout 20B), déplacée vers `CLAUDE.md` §2 |
 | **ADR-15** | Stratégie d'isolation mémoire post-v1 (MMU custom HDL ?) |
 | **ADR-16** | Driver model (event-driven / polling / IRQ-driven) |
 | **ADR-17** | API kernel publique exposée à userland (call gates, ABI) |
@@ -145,7 +145,7 @@ unilatéralement.
 | ~~`kernel_alloc_bank` bump-only sans free~~ | Sprint 2.b PoC | ✅ **clos 2026-05-08 (OS-2.h.1)** : free list LIFO 16 entries. Bitmap reportée v0.2. |
 | Compositor B4 = modèle simulé pas pipeline | B4 PoC | HW-4 |
 | Paravirt B3 = stub | B3 PoC | OS-5 + HW |
-| 3 globales `TASK_*_S` au lieu de TCB | Sprint 1.b PoC | OS-2.g |
+| ~~3 globales `TASK_*_S` au lieu de TCB~~ | Sprint 1.b PoC | ✅ **clos 2026-05-08 (OS-2.g.1)** : TCB table 16 + bitmap (ADR-14). |
 
 ---
 
