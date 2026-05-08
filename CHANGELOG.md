@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.f.1 : COP syscall (ADR-13 ratifiée)
+
+### ADR-13 ratifiée
+- Mécanisme syscall : `COP #imm` + table dispatch.
+- Numéro syscall en `A`, args en `X`/`Y`.
+- Vecteur $00FFE4 mode N → trampoline bank 0 $0150 → kernel handler bank 1 $5700.
+- Référence : GS/OS sur Apple IIgs.
+- Cf. workspace `CLAUDE.md` §2 (déplacée de §3).
+
+### OricOS → 0.11.0 (Sprint 2.f.1)
+- Segment `COP_HANDLER` à $5700.
+- `kernel_cop_handler` v0.1 : dispatch hardcoded (cmp #$01 → SYS_PRINT_CHAR).
+- v0.2 (reporté) : table de pointers indexée.
+
+### Phosphoric (oric2-golden-model)
+- `--kernel` installe trampoline COP $0150 + vecteurs $00FFE4 / $00FFF4.
+- Test `test_oricos_boot` étendu : ASSERT `mem[$BBA8] = 'Y'` après COP au boot.
+
+### Demo
+"OricOS v0.7" ligne 1 + "Y" ligne 2 (sortie du `cop #$AA` syscall).
+
+---
+
 ## [2026-05-08] — Sprint 2.d.1 : driver clavier OricOS
 
 ### OricOS → 0.9.0 (Sprint 2.d.1)

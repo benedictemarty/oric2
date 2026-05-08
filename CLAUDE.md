@@ -79,6 +79,35 @@ Alternatives écartées : flat binaire .com (resources externes coûteuses à g�
 
 Alternatives écartées : AY seul (pauvre pour OricOS), OPL2 (lourd à driver depuis 8-bit), Paula wavetable (moins iconique).
 
+### ADR-13 — Mécanisme de syscall : COP + table (ratifiée 2026-05-08)
+
+OricOS expose ses services à l'userland via l'opcode **`COP #imm`**
+(opcode `$02`) en mode N. Le `imm` est une signature/version (`$AA` =
+OricOS magic, ignorée pour dispatch v1) ; le **numéro de syscall est
+passé en `A`** ; les args en `X`/`Y` selon convention par syscall.
+
+Le vecteur COP mode N est `$00FFE4` (WDC standard). Phosphoric
+implémente déjà ce vecteur ; OricOS y installe un trampoline bank 0
+(`$0150 → JML $01:5700`) qui route vers `kernel_cop_handler` en bank 1
+segment `COP_HANDLER`.
+
+Le handler dispatch via une **table de pointers 16-bit en bank 1**
+(`syscall_table` à `$01:5750`, indexée par syscall num × 2). Chaque
+entrée pointe vers une routine kernel locale qui consomme les args et
+retourne via RTI.
+
+Référence : GS/OS sur Apple IIgs (65C816, COP-based syscalls).
+
+Alternatives écartées :
+- **Call gate JSL** : pas de privilege boundary, layout kernel figé
+  dans userland, incompatible avec ADR-15 future (MMU).
+- **WAI + signal** : pas conçu pour syscall, mélange ordonnanceur
+  et appel système.
+
+Impact ouvert : **ADR-17** (liste complète syscalls v1 + ABI versioning)
+reste ouverte ; sera tranchée quand le besoin de syscalls se diversifie
+(au-delà de print_char pour Sprint 4 userland C).
+
 ### ADR-12 — Mode HIRES Oric 2 (ratifiée 2026-05-08)
 Le mode vidéo HIRES de l'Oric 2 (utilisé par OricOS) est :
 
@@ -135,13 +164,7 @@ senior (cf. `BACKLOG.md` §annexe). Elles correspondent à des décisions
 prises tacitement dans les premiers sprints OricOS et qu'il faut
 expliciter avant d'avancer.
 
-### ADR-13 — Mécanisme de syscall
-**Question** : comment une app userland appelle le kernel ?
-- (a) `COP #imm` + table de syscalls indexée par `imm` (style 65C816 natif).
-- (b) `WAI` + protocole signal (peu idiomatique).
-- (c) Call gate via JSL vers stub kernel exporté.
-
-**Impact** : ABI kernel/userland, base de tout Sprint 4. Bloque OS-2.f.
+### ~~ADR-13~~ → ratifiée 2026-05-08, déplacée vers §2 (option a : COP + table)
 
 ### ADR-14 — Format TCB et structure interne tâche
 **Question** : quelle représentation pour une tâche kernel ?

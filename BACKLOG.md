@@ -19,7 +19,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 |----|-------|--------|--------|---------|
 | **OS-2.d** | Driver clavier Oric 1 (matrice VIA PB) | 3-5 j | OricOS | — |
 | **OS-2.e** | Driver console générique (`print_char`, `print_string`, cursor, scroll) | 2-3 j | OricOS | — |
-| **OS-2.f** | Mécanisme syscall (COP handler + table) | 5-7 j | OricOS | ADR-13 |
+| ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
 | **OS-2.g** | Refactor TCB-based scheduler (struct `task_t`, N tâches, états) | 5-7 j | OricOS | ADR-14 |
 | **OS-2.h** | Bank allocator bitmap avec free | 2-3 j | OricOS | — |
 | **OS-2.i** | Modèle d'erreur kernel (panic codes, kernel log ring buffer) | 2-3 j | OricOS | — |
@@ -111,7 +111,7 @@ unilatéralement.
 
 | ADR | Sujet |
 |-----|-------|
-| **ADR-13** | Mécanisme syscall : COP / WAI / call gate |
+| ~~ADR-13~~ | ✅ **ratifiée 2026-05-08 (option a : COP + table)**, déplacée vers `CLAUDE.md` §2 |
 | **ADR-14** | Format TCB et structure interne tâche |
 | **ADR-15** | Stratégie d'isolation mémoire post-v1 (MMU custom HDL ?) |
 | **ADR-16** | Driver model (event-driven / polling / IRQ-driven) |
