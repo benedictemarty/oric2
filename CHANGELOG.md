@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j.2 : kernel_fat_init (signature FAT32)
+
+### OricOS → 0.22.0
+- `kernel_fat_init` : lit boot sector via sd_read_block, valide signature
+  `"FAT32"` à offset $52. Stocke résultat à `FS_INIT_RESULT` ($016160).
+- Buffer FS distinct ($015F60) du buffer test sd_read_block ($015D40).
+
+### Phosphoric (oric2-golden-model)
+- `tests/integration/test_oricos_sd.c` étendu :
+  - `create_fat32_test_image` : génère image SD avec boot sector FAT32
+    minimal (champs BPS/SPC/reserved/num_fats/SPF/root_cluster + sig).
+  - Test `test_oricos_fat_init_validates_fat32_signature` : ASSERT mem
+    [$015F60+$52..+$56] = "FAT32" et FS_INIT_RESULT = 0.
+  - Test sd_read_block étendu : ASSERT FS_INIT_RESULT = 1 sur image
+    non-FAT32 (pattern A..Z).
+- 503 tests OK (+1 nouveau).
+
+---
+
 ## [2026-05-08] — Sprint 2.j.1 : test fonctionnel SD validé
 
 ### Phosphoric (oric2-golden-model)
