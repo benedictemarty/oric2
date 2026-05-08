@@ -65,7 +65,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ID | Titre | Notes |
 |----|-------|-------|
 | ~~SP-3.a~~ | ✅ **clos 2026-05-09 (v0.2)** : implémentation ADR-12 (mode HIRES Oric 2 240×200×3bpp) + intégration compositor matériel (ADR-02). Module `video/hires_oric2.{c,h}` (8 tests unit) + `tests/integration/test_compositor_hires_oric2.c` (3 tests intégration). Pipeline validé : bank 128 → render ARGB → compositor host → compose → output. ADR-12 sort de l'état "vaporware". v0.3 reportés : intégration main loop SDL2 (`--video-mode oric2`), bank configurable, double-buffer. |
-| **SP-3.b** | Kernel OricOS : primitives pixels (set_pixel, fill_rect) + bascule TEXT↔HIRES Oric 2 | Pré-req SP-3.a ✅ |
+| ⚙️ **SP-3.b** | v0.1 (clos 2026-05-09) : `kernel_hires2_clear(color)` rempli bank 128 + boot kernel intégré + test (1 ajouté). v0.2 reporté : `pixel_set` arbitraire, `fill_rect`, blit, bascule TEXT↔HIRES via registre I/O. | Pré-req SP-3.a ✅ |
 | **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar | |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
 | **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like) | Pré-req SP-3.c, OS-2.d |

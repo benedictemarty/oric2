@@ -7,6 +7,36 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.b v0.1 : kernel_hires2_clear ✨
+
+### OricOS → 0.29.0
+- **`kernel_hires2_clear(A=color)`** : remplit le framebuffer HIRES
+  Oric 2 (bank 128, ADR-12) avec une couleur uniforme. 18 000 octets
+  écrits via DP indirect long.
+- `pattern_table` 8 × 3 octets : pré-calcul `color × $249249`.
+- Boot kernel intégré : `kernel_hires2_clear(blue)` tôt dans
+  `kernel_entry`. Lazy alloc bank 128 via 1ère écriture (B1.8).
+
+### Phosphoric (oric2-golden-model)
+- Test `test_oricos_hires2_clear_fills_blue` :
+  - Boot kernel → ASSERT pattern octets aux 4 coins.
+  - ASSERT pixels via API hires_oric2_get_pixel.
+  - ASSERT 100% des 48 000 pixels ARGB = `0x0000FF`.
+- 515 tests OK (514 → 515, +1).
+
+### Importance
+**Premier code OricOS qui écrit dans le framebuffer Oric 2.** Le pipeline
+complet est opérationnel : kernel asm → bank 128 → render ARGB →
+ASSERT visuel. Les futurs sprints 3.c/d/e (window manager, toolkit,
+multifenêtré) s'appuieront sur ce socle.
+
+### Reportés Sprint 3.b v0.2
+- `kernel_pixel_set` pixel-perfect arbitraire.
+- `kernel_fill_rect`, `kernel_blit`.
+- Bascule mode TEXT ↔ HIRES via registre I/O.
+
+---
+
 ## [2026-05-09] — Sprint 3.a v0.2 : intégration compositor + HIRES Oric 2 ✨
 
 ### Phosphoric (oric2-golden-model)
