@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.d.1 : driver clavier OricOS
+
+### OricOS → 0.9.0 (Sprint 2.d.1)
+- Routines PSG bus (`psg_set_reg/write_data/read_data`) via VIA PCR.
+- `kernel_kbd_init` (DDRA/DDRB/PSG R7) + `kernel_kbd_scan` (8 colonnes
+  via PSG R14) + matrice 8 octets à `$015470`.
+- Appel du scan depuis IRQ T1 handler (période T1 augmentée 512→4096
+  cycles pour laisser ~3000 cycles/slot aux tasks).
+
+### Phosphoric — pas de change code
+- Test `test_oricos_sprint2a` valide implicitement le driver clavier.
+- Bug latent identifié : TXS en mode N + X=1 copie seulement low byte
+  de X dans S → stack OricOS tourne en bank 0 page 0 par chance.
+  Tracé en dette technique (`PH-fix-txs`).
+
+### oric2-golden-model
+- Repo dédié créé sur github (benedictemarty/oric2-golden-model, privé)
+  et gitea (chipinette/oric2-golden-model, privé). Phosphoric officiel
+  reset à a934cc8 (état pré-Oric 2). Le travail Oric 2 + OricOS
+  integration tests vivent désormais sur oric2-golden-model.
+
+---
+
 ## [2026-05-08] — Backlog révisé suite point critique architecte
 
 ### Added

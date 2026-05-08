@@ -137,6 +137,7 @@ unilatéralement.
 
 | Item | Origine | Plan |
 |------|---------|------|
+| **Bug TXS Phosphoric mode N + X=1** : copie seulement low byte de X dans S → S=$00xx au lieu de $01xx pour ldx #$FF;txs. Stack OricOS tourne page 0 par chance. Reproductible via test 2.a (`TASK_A_S=$00F8`). | Sprint 2.d.1 | **PH-fix-txs** : revoir `cpu816_opcodes.c:841` vs WDC W65C816S §A.32. Sans urgence — kernel actuel non impacté fonctionnellement, mais incorrect sémantiquement. |
 | `--kernel` patch `mem.rom[]` (pollue ADR-10) | Demo visible | PH-bootrom |
 | Cohabitation 6502/65C816 sans politique de retrait | B1 cohabitation | DEC-1 / ADR-18 |
 | `kernel_print_banner` = 12 STA hardcodés | Sprint 2.c PoC | OS-2.e remplace |
