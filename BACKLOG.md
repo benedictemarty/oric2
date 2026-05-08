@@ -22,7 +22,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
 | **OS-2.g** | Refactor TCB-based scheduler (struct `task_t`, N tâches, états) | 5-7 j | OricOS | ADR-14 |
 | ~~OS-2.h~~ | ✅ **clos 2026-05-08** (v0.1 : free list LIFO 16 entries. Bitmap reportée v0.2). | — | OricOS | — |
-| **OS-2.i** | Modèle d'erreur kernel (panic codes, kernel log ring buffer) | 2-3 j | OricOS | — |
+| ~~OS-2.i~~ | ✅ **clos 2026-05-08** (v0.1 : kernel_panic + print_hex8 + print_nibble. Log ring + SYS_PANIC reportés v0.2). | — | OricOS | — |
 
 ### Priorité 1bis — Outillage Phosphoric
 

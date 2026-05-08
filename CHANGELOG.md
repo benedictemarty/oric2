@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.i.1 : modèle erreur kernel
+
+### OricOS → 0.14.0
+- `kernel_panic` (A=code) : "PANIC <hex>" + STP + stocke à PANIC_CODE.
+- `kernel_print_hex8` / `kernel_print_nibble` : helpers hex chars.
+- Test : `print_hex8(#$AB)` au boot → "AB" en VRAM. Démo SDL2 : "YAB".
+- v0.2 (reportés) : log ring buffer, SYS_PANIC syscall, stack trace.
+
+---
+
 ## [2026-05-08] — Sprint 2.h.1 : bank allocator avec free
 
 ### OricOS → 0.13.0
