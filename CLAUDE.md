@@ -79,6 +79,39 @@ Alternatives écartées : flat binaire .com (resources externes coûteuses à g�
 
 Alternatives écartées : AY seul (pauvre pour OricOS), OPL2 (lourd à driver depuis 8-bit), Paula wavetable (moins iconique).
 
+### ADR-12 — Mode HIRES Oric 2 (ratifiée 2026-05-08)
+Le mode vidéo HIRES de l'Oric 2 (utilisé par OricOS) est :
+
+- **Dimensions** : 240×200 pixels (identiques à l'Oric 1 HIRES historique).
+- **Encodage** : **3 bits par pixel direct** (8 couleurs par pixel,
+  palette = 8 couleurs RGB fixes, identique à l'Oric 1). Pas de notion
+  ink/paper séparée — chaque pixel sélectionne directement sa couleur.
+- **Framebuffer** : 240×200 × 3 bits = 18 000 octets/frame. Layout
+  recommandé : 8 pixels groupés en 24 bits sur 3 octets alignés.
+- **Localisation mémoire** : banks 128-191 (cf. `docs/MEMORY_MAP.md`).
+- **ULA guest Oric 1** non concernée — elle reste 240×200 attribute-based
+  pour la compat stricte (ADR-10).
+
+Justification :
+- Simplicité HDL ULX3S : 3 fetches consécutifs par 8 pixels, palette à
+  8 entrées trivialement câblée en combinatoire.
+- Framebuffer compact (18 KiB) → laisse de la marge BRAM ECP5 pour le
+  double-buffering et plusieurs fenêtres OricOS.
+- Compatibilité visuelle Oric 1 stricte (mêmes couleurs).
+- Scrolling pixel-perfect : pas d'attribute clash.
+
+Alternatives écartées :
+- ink/paper indépendants par pixel (7 bpp) : alignement non-trivial,
+  ~42 KiB/frame, gain de flexibilité marginal vs (1).
+- Bitmap + plan attribut (9 bpp) : ~54 KiB/frame, fetches HW doublés,
+  surdimensionné pour le besoin v1.
+- Half-attribute Spectrum-like (5 bpp ~) : compromis qui n'est ni
+  élégant ni nécessaire.
+
+Modes vidéo additionnels (mode TEXT 40×28 compat Oric 1, modes
+étendus 320×240+ pour le desktop OricOS) restent ouverts à de futurs
+ADR (notamment lors de B4 v2).
+
 ### ADR-11 — Sémantique du mode E vis-à-vis du NMOS 6502 (ratifiée 2026-05-07)
 Le 65C816 en mode E adopte un comportement **hybride pragmatique** :
 - **Bug `JMP ($xxFF)`** : reproduit (le high byte est lu à `(ptr & 0xFF00) | ((ptr+1) & 0xFF)`, conforme NMOS).

@@ -1,5 +1,6 @@
-# Sous-projet Phosphoric a son propre git, pas de tracking ici
+# Sous-projets ont leur propre git, pas de tracking ici
 Phosphoric/
+OricOS/
 
 # Mémoire Claude Code (locale par utilisateur)
 .claude/

@@ -450,6 +450,7 @@ Toutes les décisions d'architecture sont consignées comme ADR dans `/home/bmar
 | ADR-09 | AY + SID-like | Compat Oric 1 + extension expressive moderne ; IP HDL existante | Ratifiée 2026-05-07 |
 | ADR-10 | Compatibilité Oric 1 stricte | Préservation patrimoniale, raison d'être Oric 2 | Ratifiée |
 | ADR-11 | Mode E hybride pragmatique | Aligne sur Phosphoric 6502 actuel (bug JMP reproduit, illégaux NOP) | Ratifiée 2026-05-07 |
+| ADR-12 | Mode HIRES Oric 2 = 240×200 × 3 bpp direct (8 couleurs/pixel) | Simplicité HDL, framebuffer compact 18 KiB, palette compatible Oric 1, scrolling pixel-perfect | Ratifiée 2026-05-08 |
 
 Pour le détail des alternatives et raisons de leur écartement, voir CLAUDE.md §2.
 
