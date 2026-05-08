@@ -41,7 +41,8 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ID | Titre | Estim. | Pré-req |
 |----|-------|--------|---------|
 | **OS-2.j** | FAT32 SD lecture seule (ULX3S SPI + hostfs Phosphoric) | 10-15 j | — |
-| **OS-2.k** | Format bundle apps (header + sections) — ADR-08 implémenté | 3-5 j | ADR-08, ADR-17 |
+| ⚠️ **OS-2.k** | v0.1 partiel (clos 2026-05-08) : spec + code routine `kernel_bundle_validate`. Validate runtime crash mystérieux ; v0.2 nécessaire après fix bug `[dp],Y`. | 3-5 j | OS-2.k.2 |
+| **PH-bug-dp-indirect-Y-bank1** | Investiger crash `lda [dp],Y` Phosphoric quand DP_PTR_BK=$01 et offset spécifique. Print_string fonctionne, validate crash. À reproduire en test unitaire isolé. | 1-2 j | — |
 | **OS-2.l** | App loader (parse bundle, alloc bank, exec) | 5-7 j | OS-2.k, OS-2.f, OS-2.h |
 | **OS-2.m** | Première app "hello" en asm 65C816 (PoC userland sans llvm-mos) | 2-3 j | OS-2.l |
 

@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.k.1 : format bundle apps (ADR-08 partiel)
+
+### OricOS → 0.16.0 (Sprint 2.k.1)
+- Spec format bundle "OOS\x01" : header 8B + section entries 8B + data.
+- `kernel_bundle_validate` code écrit (magic + version check).
+- `bundle_test` inline header + section CODE 2B placeholder.
+- 500 tests OK.
+
+### Known issue tracée
+- **PH-bug-dp-indirect-Y-bank1** : crash mystérieux dans `lda [dp],Y`
+  quand DP_PTR_BK=$01 et offset spécifique du bundle_test. Print_string
+  utilise le même opcode sans souci. Position-dépendant. Validate
+  désactivé au boot en attendant fix. À investiguer via test unitaire
+  isolé dans Phosphoric.
+
+---
+
 ## [2026-05-08] — Sprint 2.g.1 : refactor scheduler TCB-based (ADR-14)
 
 ### ADR-14 ratifiée
