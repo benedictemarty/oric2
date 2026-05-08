@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.l.0 : kernel_bundle_find_code (parse sections)
+
+### OricOS → 0.18.0
+- `kernel_bundle_find_code` : parse sections du bundle, trouve CODE,
+  retourne size + offset 16-bit dans BUNDLE_FOUND_SIZE/OFFSET.
+- Constantes BNL_HDR_SIZE / BNL_SEC_SIZE / BNL_SEC_* offsets.
+- Test au boot : sur bundle_test inline, SIZE=$0002, OFFSET=$0010.
+  ASSERT mem[$015498..$01549B] = 02 00 10 00.
+- v0.1 (kernel_app_exec) reportée.
+
+### Notes
+- `cpx` n'a pas de long-absolute. Utilise tmp DP zero page pour cpx zp.
+- 501 tests OK.
+
+---
+
 ## [2026-05-08] — Bug majeur Phosphoric P mode N corrigé + OS-2.k.1 finalisé
 
 ### Phosphoric (oric2-golden-model)

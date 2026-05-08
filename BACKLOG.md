@@ -43,7 +43,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | **OS-2.j** | FAT32 SD lecture seule (ULX3S SPI + hostfs Phosphoric) | 10-15 j | — |
 | ~~OS-2.k~~ | ✅ **clos 2026-05-08** (v0.1 : spec + `kernel_bundle_validate` fonctionnel après fix bug PH P-mode-N). | — | OricOS | — |
 | ~~PH-bug-dp-indirect-Y-bank1~~ | ✅ **clos 2026-05-08** : pas un bug `[dp],Y`. Vraie cause = COP/BRK/IRQ/NMI/PHP/PLP/RTI corrompaient bits X/M de P en mode N (masque mode E `& ~FLAG_BREAK \| FLAG_UNUSED`). RTI post-COP restaurait X=0 → `ldy` du caller consommait 2 bytes au lieu de 1. Fix : conditionnement sur `cpu->E` aux 6 emplacements. |
-| **OS-2.l** | App loader (parse bundle, alloc bank, exec) | 5-7 j | OS-2.k, OS-2.f, OS-2.h |
+| ⚙️ **OS-2.l** | v0.0 partiel (clos 2026-05-08) : `kernel_bundle_find_code` parse sections, retourne size+offset. v0.1 (kernel_app_exec : alloc bank + copy + JSL self-modifying) reportée. | 5-7 j | OS-2.l.1 |
 | **OS-2.m** | Première app "hello" en asm 65C816 (PoC userland sans llvm-mos) | 2-3 j | OS-2.l |
 
 ### Priorité 2bis — Toolchain userland C
