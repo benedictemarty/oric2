@@ -7,6 +7,53 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j.5/6 : APP CHARGÉE DEPUIS FAT32 SD ✨✨
+
+### OricOS → 0.25.0
+- `kernel_fat_read_cluster` : lit 1 cluster (v0.1, SPC=1) vers
+  DP_PCPTR. LBA = FDS + cluster - 2.
+- Boot kernel intégré : après fat_open OK, charge le bundle vers
+  $01:6200 puis appelle kernel_app_exec dessus → app exécutée
+  écrit 'Z' supplémentaire à $BBAC.
+
+### Pipeline complet validé
+1. Boot kernel
+2. SD device émulé (Phosphoric I/O $0320-$0327)
+3. kernel_sd_read_block ↔ image hôte
+4. kernel_fat_init valide FAT32 + parse champs
+5. kernel_fat_open localise fichier 8.3 dans root dir
+6. kernel_fat_read_cluster charge contenu en mémoire
+7. kernel_app_exec valide bundle + alloc bank + copy + JSL
+8. App exécute en bank dédiée + syscall vers kernel
+
+**OricOS peut charger et exécuter une app depuis FAT32 SD** sans
+qu'elle soit embedded dans le kernel.
+
+### Phosphoric (oric2-golden-model)
+- Image SD test 162 secteurs avec bundle hello à cluster 3.
+- ASSERT mem[$BBAB]='Z' (bundle inline) + mem[$BBAC]='Z' (bundle SD).
+- 503 tests OK.
+
+### Démo
+"OricOS v0.7" + "**YABZZ**" — deux 'Z' = exec inline + exec from SD.
+
+### Importance
+Sprint 2.j clos. Tous les fondamentaux OS sont en place :
+- Multitâche préemptif (TCB scheduler).
+- Mécanisme syscall (COP).
+- Driver clavier matrice.
+- Driver console (print_char/print_string).
+- Bank allocator (free list LIFO).
+- Modèle erreur kernel (panic + hex8).
+- App loader (validate + alloc + copy + JSL).
+- App standalone (pipeline asm + bundle + .incbin).
+- **Stockage FAT32 SD lecture seule + chargement app depuis disque**.
+
+Sprint 3 (GUI) théoriquement débloqué — tous les blocs OS de base sont
+fonctionnels.
+
+---
+
 ## [2026-05-08] — Sprint 2.j.4 : kernel_fat_open (root dir lookup 8.3) ✨
 
 ### OricOS → 0.24.0
