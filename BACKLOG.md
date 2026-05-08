@@ -40,7 +40,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 | ID | Titre | Estim. | Pré-req |
 |----|-------|--------|---------|
-| ~~OS-2.j~~ | ✅ **clos 2026-05-08 (v0.6)** : pipeline complet SD → FAT32 → fat_open → fat_read_cluster → app_exec → exec en bank dédiée. App chargée depuis fichier "HELLO.BIN" sur image SD FAT32 et exécutée. Démo SDL2 : "YABZZ" (deux Z = bundle inline + bundle SD). v0.2 reportés : cluster chain (fichier > 1 cluster), subdir, fichier > 32 MiB. | — | OricOS | — |
+| ~~OS-2.j~~ | ✅ **clos 2026-05-08 (v0.7)** : pipeline complet SD → FAT32 → fat_open → fat_read_cluster → app_exec + **fat_next_cluster (cluster chain v0.2)**. v0.3 reportés : `kernel_fat_read_file` itératif, BPS != 512, cluster ≥ 16384, subdirs. | — | OricOS | — |
 | ~~OS-2.k~~ | ✅ **clos 2026-05-08** (v0.1 : spec + `kernel_bundle_validate` fonctionnel après fix bug PH P-mode-N). | — | OricOS | — |
 | ~~PH-bug-dp-indirect-Y-bank1~~ | ✅ **clos 2026-05-08** : pas un bug `[dp],Y`. Vraie cause = COP/BRK/IRQ/NMI/PHP/PLP/RTI corrompaient bits X/M de P en mode N (masque mode E `& ~FLAG_BREAK \| FLAG_UNUSED`). RTI post-COP restaurait X=0 → `ldy` du caller consommait 2 bytes au lieu de 1. Fix : conditionnement sur `cpu->E` aux 6 emplacements. |
 | ~~OS-2.l~~ | ✅ **clos 2026-05-08** : v0.1 livré. `kernel_app_exec` complet : validate + find_code + alloc + copy + JSL self-modifying. App test en bank 7 écrit 'Z' via syscall. v0.2 (free bank exit, sandbox) reporté. | — | OricOS | — |

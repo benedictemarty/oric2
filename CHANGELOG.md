@@ -7,6 +7,36 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j v0.2 : kernel_fat_next_cluster (cluster chain) ✨
+
+### OricOS → 0.26.0
+- **`kernel_fat_next_cluster`** : lit l'entry FAT32 d'un cluster donné,
+  retourne le cluster suivant dans la chaîne. Permet la traversée de
+  fichiers multi-cluster.
+- API : input `FS_QUERY_CLUSTER` (4B), output `FS_NEXT_CLUSTER` (4B,
+  >= $0FFFFFF8 = EOC).
+- Hypothèse v0.2 : BPS=512, cluster < 16384.
+
+### Phosphoric (oric2-golden-model)
+- Image SD test : LBA 32 contient une vraie FAT FAT32 partielle
+  (FAT[0..5] avec media descriptor + reserved + EOC + chaîne 4→5→EOC).
+- ASSERT `kernel_fat_next_cluster(4) → 5`.
+- 503 tests OK.
+
+### Reportés v0.3
+- `kernel_fat_read_file` (itération sur la chaîne complète).
+- BPS != 512 (rare en FAT32 mais spec autorise 512/1024/2048/4096).
+- Cluster >= 16384 (FAT spread sur plusieurs secteurs).
+- Subdirectories.
+
+### Importance
+Building block essentiel pour charger des fichiers > 1 cluster.
+Sans la chaîne FAT, OricOS ne lit que les 512 premiers octets d'un
+fichier — la v0.3 pourra lire des fichiers de taille arbitraire en
+bouclant sur `fat_next_cluster` jusqu'à EOC.
+
+---
+
 ## [2026-05-08] — Sprint 2.j.5/6 : APP CHARGÉE DEPUIS FAT32 SD ✨✨
 
 ### OricOS → 0.25.0
