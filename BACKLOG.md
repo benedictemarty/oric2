@@ -138,6 +138,7 @@ unilatéralement.
 | Item | Origine | Plan |
 |------|---------|------|
 | **Bug TXS Phosphoric mode N + X=1** : copie seulement low byte de X dans S → S=$00xx au lieu de $01xx pour ldx #$FF;txs. Stack OricOS tourne page 0 par chance. Reproductible via test 2.a (`TASK_A_S=$00F8`). | Sprint 2.d.1 | **PH-fix-txs** : revoir `cpu816_opcodes.c:841` vs WDC W65C816S §A.32. Sans urgence — kernel actuel non impacté fonctionnellement, mais incorrect sémantiquement. |
+| **8 opcodes DP indirect 65C816 NON IMPLÉMENTÉS dans Phosphoric** : $12 ORA (dp), $32 AND, $52 EOR, $72 ADC, $92 STA, $B2 LDA, $D2 CMP, $F2 SBC. Le decoder les traite via default case avec `opcode_table[op].size` (table 6502 où ces slots sont `???` size=1) → consume 0 bytes operand → corruption décodage. Contournement Sprint 2.e : utiliser `[dp]` long indirect (opcodes $03/$07/$13/$17/...). | Sprint 2.e.1 | **PH-fix-dp-indirect** : ajouter les 8 opcodes dans `cpu65c816_opcodes.c` + helper `addr816_dp_indirect` (16-bit pointer en DP+dp, écrit à DBR:addr). Mettre à jour opcode_table size=2 pour ces 8 slots. Priorité moyenne (contournement actuel fonctionne mais coûteux en clarté). |
 | `--kernel` patch `mem.rom[]` (pollue ADR-10) | Demo visible | PH-bootrom |
 | Cohabitation 6502/65C816 sans politique de retrait | B1 cohabitation | DEC-1 / ADR-18 |
 | `kernel_print_banner` = 12 STA hardcodés | Sprint 2.c PoC | OS-2.e remplace |
