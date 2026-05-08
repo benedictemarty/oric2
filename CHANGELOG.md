@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.l.1 : APP LOADER COMPLET ✨
+
+### OricOS → 0.19.0
+- **`kernel_app_exec`** orchestre validate + find_code + alloc_bank +
+  copy code section + JSL self-modifying.
+- **App test** = `ldx #'Z'; lda #$01; cop #$AA; rtl` exécutée en bank 7.
+- ASSERT côté Phosphoric : `mem[$BBAB] = 'Z'` écrit par l'app via
+  syscall SYS_PRINT_CHAR depuis bank dédiée. `BUNDLE_APP_BANK = $07`.
+- **Démo SDL2** : "OricOS v0.7" + "YABZ" — Y du kernel syscall + AB hex
+  + **Z de l'app loader**.
+
+### Notes techniques
+- Bug ld65 contourné : `STA al` sur label CODE génère bank=$00 par
+  défaut. Workaround = `STA [dp]` long indirect avec bank explicite
+  en DP zero page.
+- 501 tests OK. Golden frame régénérée.
+
+---
+
 ## [2026-05-08] — Sprint 2.l.0 : kernel_bundle_find_code (parse sections)
 
 ### OricOS → 0.18.0
