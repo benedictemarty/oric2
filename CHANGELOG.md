@@ -7,6 +7,50 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — TC-llvmmos investigation : ADR-05 révisée v2 ✨
+
+### Décision stratégique majeure
+
+**TC-llvmmos** clos par **investigation documentaire** (pas
+d'installation, suffit pour trancher). Document complet :
+`docs/TC-llvmmos.md`.
+
+#### Constats
+- llvm-mos n'implémente **PAS** le mode N 16-bit registres
+  (issue #321) ni le banking 24-bit (issue #320), tous deux ouverts
+  depuis 2023-2024 sans horizon.
+- Le compilateur C génère du code 8-bit linéaire dans tous les
+  targets existants (`mos6502`, `mos65c02`, `mosw65c816`, `mos65el02`,
+  `rpc8e`).
+- Le target `rpc8e` (le plus proche de notre besoin) fait `xce` puis
+  `sep #$30` → repasse immédiatement en 8-bit native.
+
+#### Décisions actées
+- **ADR-05 v2** (cf. `CLAUDE.md` §2) : userland C llvm-mos en
+  **mode N 8-bit native** (M=1, X=1), **apps mono-bank** ≤ 64 KiB
+  linéaire. Apps multi-bank ou registres 16-bit → asm 65C816.
+- **DEC-3** ratifiée : llvm-mos **conservé** avec contraintes. Pas de
+  fallback asm-only complet.
+- **Risque "llvm-mos 65C816 immature"** transformé en contrainte
+  connue (cf. tableau RISQUES).
+
+#### Sprint 4 décomposé
+- `TC-llvmmos-install` (1j) : installer pre-built, vérifier targets.
+- `TC-llvmmos-target-oricos` (2-3j) : target custom (clang.cfg +
+  crt0.S + link.ld pour bank dédiée).
+- `TC-libc` (5-10j) : libc minimal (printf, malloc bank-local).
+- `TC-poc-hello-c` (1-2j) : premier hello.c → bundle .oosobj → exec.
+
+#### Importance
+**ADR-05 v1 promettait registres 16-bit + banking** pour les apps C —
+non tenable. **ADR-05 v2 promet apps C mono-bank ≤ 64 KiB** — tenable
+et largement suffisant pour OricOS v1 (un éditeur de texte 60 KiB,
+c'est gros sur 8-bit). La roadmap reflète maintenant la réalité
+technique. Sprint 3 GUI peut commencer sereinement, Sprint 4 a un
+plan concret.
+
+---
+
 ## [2026-05-09] — Sprint 2.l v0.2 : APP MULTI-CLUSTER DEPUIS SD ✨✨
 
 ### OricOS → 0.28.0

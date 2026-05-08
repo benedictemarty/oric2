@@ -51,11 +51,17 @@ Pas de MMU/MPU matérielle dans la v1. L'isolation s'appuie sur le banking 65C81
 
 Alternatives écartées : MMU custom (coûte BRAM, retarde B2), MPU à segments (sans précédent 65C816).
 
-### ADR-05 — Langage d'implémentation OricOS : asm + C llvm-mos (ratifiée 2026-05-07)
+### ADR-05 — Langage d'implémentation OricOS : asm + C llvm-mos (ratifiée 2026-05-07, **révisée v2 2026-05-09**)
 - **Kernel + drivers** en assembleur 65C816 natif (ca65 ou équivalent) : performances critiques, contrôle direct du banking.
-- **Userland (apps, libs)** en C compilé par **llvm-mos** (toolchain LLVM ciblant 6502/65C816).
+- **Userland (apps, libs)** en C compilé par **llvm-mos** (toolchain LLVM ciblant 6502/65C816), en **mode N 8-bit native** (M=1, X=1, après XCE par le kernel). **Apps mono-bank** : limitées à 1 bank de 64 KiB linéaire (code+data), pas de pointer cross-bank, pas de registres 16-bit dans le code généré.
 
-Alternatives écartées : tout asm (maintenance et apps lourdes), tout C (perfs kernel dégradées sur boucles serrées et drivers temps réel).
+**Révision v2 (2026-05-09) — TC-llvmmos** :
+- L'ADR-05 v1 sous-entendait registres 16-bit + banking 24-bit pour les apps C. Investigation TC-llvmmos (cf. `docs/TC-llvmmos.md`) montre que **llvm-mos ne supporte ni le mode 16-bit registres ni le banking 24-bit dans le compilateur C** (issues llvm-mos #320, #321 ouvertes depuis 2023-2024, pas d'horizon de livraison).
+- Le compilateur C génère du code 8-bit linéaire dans tous les targets existants (`mos6502`, `mos65c02`, `mosw65c816`, `mos65el02`, `rpc8e`). Le crt0 du target rpc8e fait `xce` puis `sep #$30` → mode 8-bit native.
+- v2 acte la contrainte : **apps C = mono-bank 8-bit native**. Apps multi-bank ou exigeant registres 16-bit restent **en asm 65C816** (ca65).
+- Implication : DEC-3 ratifiée (cf. BACKLOG). Pas de dépendance à des features llvm-mos non-implémentées pour Sprint 4.
+
+Alternatives écartées : tout asm (maintenance et apps lourdes), tout C (perfs kernel dégradées sur boucles serrées et drivers temps réel), attendre llvm-mos #320/#321 (horizon multi-années).
 
 ### ADR-06 — Modèle GUI : SymbOS-like (ratifiée 2026-05-07)
 GUI multifenêtrée préemptive sur 8/16-bit, drag & drop, menus contextuels, taskbar. Référence directe d'implémentation : **SymbOS**. Cohérent avec ADR-03 (préemptif). Adapté au compositor double ULA d'ADR-02 (la fenêtre guest Oric 1 est une fenêtre OricOS comme une autre, alimentée par l'ULA guest matérielle).
