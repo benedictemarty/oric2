@@ -7,6 +7,35 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j v0.3 : kernel_fat_read_file (multi-cluster) ✨
+
+### OricOS → 0.27.0
+- **`kernel_fat_read_file`** : lit un fichier complet en suivant la
+  chaîne FAT32 jusqu'à EOC. Boucle `read_cluster` + `next_cluster`,
+  avance `DP_PCPTR` de 512 octets entre clusters.
+- API : input `FS_FOUND_CLUSTER` (4B) + `DP_PCPTR` (24-bit dest).
+  FS_FOUND_CLUSTER préservé à la sortie.
+- Boot kernel : ouvre BIG.BIN (1024B, 2 clusters) → charge à $01:7000.
+
+### Phosphoric (oric2-golden-model)
+- Image SD test 164 secteurs : root dir avec 2 entries (HELLO + BIG),
+  cluster 4 (pattern $AA) + cluster 5 (pattern $55).
+- ASSERT `mem[$01:7000..$01:73FF]` valide les 1024 octets contigus.
+- 503 tests OK.
+
+### Reportés v0.4
+- Fichiers > 64 KiB (propagation DP_PCPTR vers bank).
+- BPS != 512, cluster ≥ 16384, subdirectories.
+
+### Importance
+OricOS peut désormais charger des fichiers de taille arbitraire
+(≤ 64 KiB) depuis SD. **Building block essentiel pour un app loader
+complet** : une app multi-cluster pourra être chargée en RAM puis
+exécutée. La couche FAT32 v1 lecture seule est complète pour usage
+typique (cluster size = 1 secteur, fichiers de quelques KiB).
+
+---
+
 ## [2026-05-08] — Sprint 2.j v0.2 : kernel_fat_next_cluster (cluster chain) ✨
 
 ### OricOS → 0.26.0
