@@ -7,6 +7,34 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.a : ADR-12 mode HIRES Oric 2 implémenté ✨
+
+### Phosphoric (oric2-golden-model)
+- **`video/hires_oric2.{c,h}`** : implémentation complète ADR-12.
+- API : `get_pixel`, `set_pixel`, `clear`, `render_argb`, `export_ppm`.
+- Format pixel figé : 8 pixels en 24 bits sur 3 octets, big-endian.
+- Bank 128 ($80xxxx), 240×200×3bpp = 18 000 octets/frame.
+- Palette 8 couleurs Oric 1 (idem ADR-10 compat stricte).
+- 8 tests unitaires (round-trip, layout, palette, clear, isolation
+  intra-groupe, bornes, PPM, full line).
+- Total tests OK : **511** (503 → 511).
+
+### Importance
+- **ADR-12 sort de l'état "vaporware"** identifié au point critique
+  architecte senior 2026-05-08 (#1 des 5 ADRs ratifiées sans
+  implémentation).
+- Building block pour Sprint 3.b/c/d : kernel OricOS pourra écrire
+  des pixels en bank 128, le compositor logique pourra dessiner des
+  fenêtres, le toolkit pourra rendre des fontes pixel-perfect.
+
+### Reportés Sprint 3.a v0.2
+- Intégration compositor (host ULA = HIRES Oric 2).
+- Bank framebuffer configurable via registre I/O.
+- Double-buffering swap A/B.
+- Mode étendu 320×240 (B4 v2).
+
+---
+
 ## [2026-05-09] — TC-llvmmos investigation : ADR-05 révisée v2 ✨
 
 ### Décision stratégique majeure

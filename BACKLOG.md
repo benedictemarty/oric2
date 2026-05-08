@@ -64,10 +64,11 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 | ID | Titre | Notes |
 |----|-------|-------|
-| **OS-3.a** | Compositor logique au-dessus du compositor matériel | Bloqué par ADR-15 |
-| **OS-3.b** | Window manager basique (1 fenêtre + focus) | |
-| **OS-3.c** | Event loop (clavier, timer, IRQ) | Pré-req OS-3.a, OS-2.d |
-| **OS-3.d** | Toolkit minimal (frame, label, button) | |
+| ~~SP-3.a~~ | ✅ **clos 2026-05-09 (Phosphoric)** : implémentation ADR-12 (mode HIRES Oric 2 240×200×3bpp dans Phosphoric). Module `video/hires_oric2.{c,h}` + 8 tests unit. ADR-12 sort de l'état "vaporware". Building block pour le reste du Sprint 3. v0.2 reportés : intégration compositor, bank configurable, double-buffer. |
+| **SP-3.b** | Kernel OricOS : primitives pixels (set_pixel, fill_rect) + bascule TEXT↔HIRES Oric 2 | Pré-req SP-3.a ✅ |
+| **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar | |
+| **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
+| **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like) | Pré-req SP-3.c, OS-2.d |
 
 ### Priorité 4 — Audio
 
