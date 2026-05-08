@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j.4 : kernel_fat_open (root dir lookup 8.3) ✨
+
+### OricOS → 0.24.0
+- `kernel_fat_open` : scanne le root dir cluster (16 entries 32B),
+  match filename 11B en `DP+$40..$4A`, extrait first_cluster + size
+  dans `FS_FOUND_CLUSTER`/`FS_FOUND_SIZE`. `FS_OPEN_RESULT = $00` OK
+  ou `$01` NOT_FOUND.
+- Skip LFN ($0F), volume label ($08), directory ($10).
+- v0.1 : 1 secteur root dir max ; suppose `FS_ROOT=2` (LBA root = FDS).
+
+### Phosphoric (oric2-golden-model)
+- Image FAT32 test étendue 1 → 161 secteurs (root dir au bloc 160).
+- ASSERT FS_OPEN_RESULT, FS_FOUND_CLUSTER ($3), FS_FOUND_SIZE
+  ($DEADBEEF) après lookup "HELLO   BIN" au boot kernel.
+- 503 tests OK.
+
+### Importance
+Le kernel sait désormais **localiser un fichier dans la racine FAT32**
+par son nom 8.3. Plus que la lecture du contenu (OS-2.j.5) et l'intégration
+loader (OS-2.j.6) avant que les apps puissent être chargées depuis SD.
+
+---
+
 ## [2026-05-08] — Sprint 2.j.3 : parse complet boot sector FAT32
 
 ### OricOS → 0.23.0

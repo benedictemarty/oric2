@@ -40,7 +40,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 | ID | Titre | Estim. | Pré-req |
 |----|-------|--------|---------|
-| ⚙️ **OS-2.j** | v0.3 (clos 2026-05-08) : driver SD + fat_init + parse complet boot sector (BPS/SPC/RSC/NFAT/SPF/ROOT/FDS). Root dir lookup + file open + loader reportés OS-2.j.4+. | 10-15 j | OS-2.j.4 |
+| ⚙️ **OS-2.j** | v0.4 (clos 2026-05-08) : driver SD + fat_init + parse boot sector + **fat_open** (root dir 8.3 lookup, cluster + size). FAT chain read + loader reportés OS-2.j.5+. | 10-15 j | OS-2.j.5 |
 | ~~OS-2.k~~ | ✅ **clos 2026-05-08** (v0.1 : spec + `kernel_bundle_validate` fonctionnel après fix bug PH P-mode-N). | — | OricOS | — |
 | ~~PH-bug-dp-indirect-Y-bank1~~ | ✅ **clos 2026-05-08** : pas un bug `[dp],Y`. Vraie cause = COP/BRK/IRQ/NMI/PHP/PLP/RTI corrompaient bits X/M de P en mode N (masque mode E `& ~FLAG_BREAK \| FLAG_UNUSED`). RTI post-COP restaurait X=0 → `ldy` du caller consommait 2 bytes au lieu de 1. Fix : conditionnement sur `cpu->E` aux 6 emplacements. |
 | ~~OS-2.l~~ | ✅ **clos 2026-05-08** : v0.1 livré. `kernel_app_exec` complet : validate + find_code + alloc + copy + JSL self-modifying. App test en bank 7 écrit 'Z' via syscall. v0.2 (free bank exit, sandbox) reporté. | — | OricOS | — |
