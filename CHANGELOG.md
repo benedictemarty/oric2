@@ -7,6 +7,27 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Bug majeur Phosphoric P mode N corrigé + OS-2.k.1 finalisé
+
+### Phosphoric (oric2-golden-model)
+- **Bug critique 65C816** : COP/BRK/IRQ/NMI/PHP/PLP/RTI manipulaient
+  cpu->P avec masque mode E (`& ~FLAG_BREAK | FLAG_UNUSED`) en toutes
+  circonstances. En mode N, ces bits sont X/M (index/accumulator width).
+  Résultat : RTI/PLP/COP corrompaient les flags width.
+- **Manifestation OricOS** : `cop #$AA` syscall → RTI restorait X=0
+  (16-bit) → `ldy #$00` du caller consommait 2 bytes au lieu de 1 →
+  crash $00:0000.
+- **Fix** : conditionnement sur `cpu->E` aux 6 emplacements ; en mode N
+  push/pull P entier sans masque, troncation X/Y si transition X 0→1.
+- **Test isolé** ajouté (`test_dp_indirect_long_y_bank1_validate_pattern`).
+- Référence : WDC W65C816S §7, §A.21/A.32.
+
+### OricOS → 0.17.0 (Sprint 2.k.1 finalisé)
+- `kernel_bundle_validate` ré-activé, ASSERT mem[$01549C]=$00 OK.
+- 501 tests passent (500 → +1).
+
+---
+
 ## [2026-05-08] — Sprint 2.k.1 : format bundle apps (ADR-08 partiel)
 
 ### OricOS → 0.16.0 (Sprint 2.k.1)
