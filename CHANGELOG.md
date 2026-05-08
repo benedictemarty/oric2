@@ -7,6 +7,31 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.a v0.2 : intégration compositor + HIRES Oric 2 ✨
+
+### Phosphoric (oric2-golden-model)
+- Test d'intégration `test_compositor_hires_oric2.c` : démontre que
+  le framebuffer Oric 2 (bank 128) peut servir de `host` au compositor
+  matériel (ADR-02).
+- Pipeline complet validé sans toucher aux modules existants (compositor
+  et hires_oric2 communiquent via uint32_t* ARGB).
+- 3 tests : host seul, host + guest overlay, guest invisible.
+- 514 tests OK (511 → 514, +3 intégration).
+
+### Importance
+Le compositor matériel double-ULA (ADR-02) peut désormais consommer
+un framebuffer Oric 2 (ADR-12) comme `host`, en plus du framebuffer
+Oric 1 historique comme `guest` (ULA guest, attribute-based). Toute la
+plomberie est en place pour Sprint 3.b (kernel pixels) et au-delà.
+
+### Reportés Sprint 3.a v0.3
+- Intégration main loop SDL2 : `--video-mode oric2` rend visible le
+  framebuffer Oric 2 en temps réel via SDL2.
+- Sans cette étape, validation = PPM dump ; avec, on voit OricOS
+  dessiner directement à l'écran.
+
+---
+
 ## [2026-05-09] — Sprint 3.a : ADR-12 mode HIRES Oric 2 implémenté ✨
 
 ### Phosphoric (oric2-golden-model)
