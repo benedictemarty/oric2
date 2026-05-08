@@ -7,6 +7,45 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Backlog révisé suite point critique architecte
+
+### Added
+- **`BACKLOG.md`** racine workspace : source de vérité priorisée
+  (NOW / NEXT / LATER), liste sprints OS-2.d à OS-2.m, dépendances,
+  estimations en jours-semaines réalistes.
+- **6 ADRs ouvertes** dans `CLAUDE.md` §3 :
+  - ADR-13 Mécanisme de syscall (COP / WAI / call gate)
+  - ADR-14 Format TCB et structure interne tâche
+  - ADR-15 Isolation mémoire post-v1 (MMU custom HDL ?)
+  - ADR-16 Driver model (event/polling/IRQ)
+  - ADR-17 API kernel publique exposée à userland (ABI)
+  - ADR-18 Sort du 6502 Phosphoric (retrait / cohabitation)
+- **4 décisions stratégiques** en attente (DEC-1 à DEC-4).
+- **Phase 7** dans `Phosphoric/ROADMAP` : outillage post point critique
+  (PH-debug816, PH-CI-visual, PH-bootrom).
+
+### Changed
+- **Roadmap OricOS révisée** (`OricOS/CLAUDE.md` §7) : insertion
+  Sprints 2.d → 2.m comme prérequis stricts avant Sprint 3 GUI. La
+  version d'origine sautait directement de 2.c à 3, ce qui n'était
+  pas viable (manque clavier, console générique, syscalls, TCB,
+  allocator avec free, modèle d'erreur).
+
+### Why
+Point critique architecte senior 2026-05-08 a identifié :
+- **5 ADRs vaporware** ratifiées sans implémentation (05, 06, 07,
+  08, 09).
+- **Kernel 380 LOC asm** = proof-of-concept, pas un OS.
+- **Sprints <1 jour** non réalistes vs charge restante.
+- **Tests sans validation visuelle** : bug H4 fonte passé inaperçu.
+- **6 décisions implicites** non documentées.
+
+Ce commit cristallise les recommandations sans changement de code
+(documentation seule). Les sprints OS-2.d à OS-2.i deviennent
+prérequis explicites pour Sprint 3.
+
+---
+
 ## [2026-05-08] — Démo OricOS visible (kernel autonome)
 
 ### Diagnostic & fix H4 — fonte char absente

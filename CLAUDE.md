@@ -130,8 +130,60 @@ Alternatives écartées :
 
 Si une tâche force la main sur l'une de ces décisions, **arrête et demande**. Ne choisis pas par défaut.
 
-*Aucune ADR ouverte à ce jour (toutes ratifiées le 2026-05-07, cf. §2).*
-- **ADR-09** — Audio : AY-3-8912 seul / extension SID-like / OPL.
+Ces ADR ont été ouvertes le **2026-05-08** suite au point critique architecte
+senior (cf. `BACKLOG.md` §annexe). Elles correspondent à des décisions
+prises tacitement dans les premiers sprints OricOS et qu'il faut
+expliciter avant d'avancer.
+
+### ADR-13 — Mécanisme de syscall
+**Question** : comment une app userland appelle le kernel ?
+- (a) `COP #imm` + table de syscalls indexée par `imm` (style 65C816 natif).
+- (b) `WAI` + protocole signal (peu idiomatique).
+- (c) Call gate via JSL vers stub kernel exporté.
+
+**Impact** : ABI kernel/userland, base de tout Sprint 4. Bloque OS-2.f.
+
+### ADR-14 — Format TCB et structure interne tâche
+**Question** : quelle représentation pour une tâche kernel ?
+- Champs minimaux : `pid`, `state` (running/ready/blocked/zombie),
+  `prio`, `regs_save` (A/X/Y/P/PC/PBR/DBR/D/S 16-bit), `stack_bank`,
+  `code_bank`, `data_bank`, `parent_pid`.
+- Layout en bank 1 dédiée ? Table fixe N tâches max ou liste chaînée ?
+
+**Impact** : refactor scheduler obligatoire. Bloque OS-2.g.
+
+### ADR-15 — Isolation mémoire post-v1
+**Question** : à quoi ressemble la v2 d'ADR-04 ?
+- (a) MMU custom HDL ECP5 (translation table par bank, BRAM).
+- (b) MPU à segments avec privilege bits (kernel/user).
+- (c) Banking matériel étendu avec tags d'accès.
+
+**Impact** : multitâche robuste, exécution apps non-trusted. Pour Q4 2026.
+
+### ADR-16 — Driver model
+**Question** : comment un driver est structuré dans OricOS ?
+- IRQ-driven pur (handler + queue ?).
+- Polling depuis idle task ?
+- Hybride avec callback registration ?
+- Quelle interface (struct ops ? jump table ?) ?
+
+**Impact** : forme tous les drivers à venir (clavier, FAT32, audio).
+
+### ADR-17 — API kernel publique exposée à userland
+**Question** : quelle ABI stable expose-t-on à une app C ?
+- Liste minimale syscalls v1 (`open/read/write/close/exec/exit/alloc_bank/...`).
+- Convention d'appel (registres, stack frame).
+- Versioning de l'ABI.
+
+**Impact** : ABI = contrat long terme. Décide avec ADR-13.
+
+### ADR-18 — Sort du 6502 dans Phosphoric
+**Question** : maintient-on la cohabitation 6502/65C816 indéfiniment ?
+- (a) Retrait du 6502 après B1.6 stable (mode E remplace tout).
+- (b) Cohabitation perpétuelle (régression-protection).
+- (c) Bascule conditionnelle compile-time (`-DLEGACY_6502`).
+
+**Impact** : surface de maintenance Phosphoric, dette doublée actuellement.
 
 ---
 
