@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j.0 : driver bloc SD minimal
+
+### Phosphoric (oric2-golden-model)
+- **`include/io/sd_device.h` + `src/io/sd_device.c`** : émulation device
+  SD bloc minimal (8 registres I/O à $0320-$0327, LBA 24-bit,
+  CTRL/DATA, lecture 512B).
+- **Option `--sd-image FILE`** : binde une image SD au device émulé.
+- Hook io_read/write_callback. Cleanup sd_close à emulator_cleanup.
+
+### OricOS → 0.21.0 (Sprint 2.j.0)
+- **`kernel_sd_read_block (LBA 16-bit en $30/$31, dest via DP_PCPTR)`** :
+  lit 1 bloc 512 octets via device SD.
+- Constantes SD_LBA_*/CTRL/DATA. Test au boot : sd_read_block(LBA=0,
+  dest=$01:5D40). Sans image : 512 zéros. Avec image : contenu.
+- 501 tests OK.
+
+### Reportés OS-2.j.1+
+- Test fonctionnel image SD.
+- Parser FAT32 boot sector + root dir.
+- Charger app depuis SD au lieu de .incbin.
+
+---
+
 ## [2026-05-08] — Sprint 2.m.1 : première app asm standalone ✨
 
 ### OricOS → 0.20.0
