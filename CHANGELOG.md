@@ -7,6 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Bug fixes Phosphoric (PH-fix-txs + PH-fix-dp-indirect)
+
+### Phosphoric (oric2-golden-model)
+- **PH-fix-dp-indirect** : 8 opcodes DP indirect 16-bit `(dp)` ajoutés
+  ($12/$32/$52/$72/$92/$B2/$D2/$F2). Helper `addr816_dp_indirect`.
+  2 tests unitaires.
+- **PH-fix-txs** (faux positif) : investigation conclue — comportement
+  WDC correct, le "bug" était dans OricOS. Code Phosphoric inchangé,
+  commentaire WDC §A.32 ajouté. 2 tests de non-régression.
+- 498 tests OK (494 → +4 nouveaux).
+
+### OricOS → 0.12.0 (cleanup)
+- `kernel_entry` : `ldx #$FF; txs` → `lda #$01FF; tcs` (stack page 1).
+- `kernel_print_char` : `STA [dp]` long indirect → `STA (dp)` natif
+  (suite à PH-fix-dp-indirect).
+
+---
+
 ## [2026-05-08] — Sprint 2.f.1 : COP syscall (ADR-13 ratifiée)
 
 ### ADR-13 ratifiée
