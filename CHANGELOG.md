@@ -7,6 +7,45 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 2.l v0.2 : APP MULTI-CLUSTER DEPUIS SD ✨✨
+
+### OricOS → 0.28.0
+- Boot kernel : ouvre **MULTI.BIN** (bundle 527B sur 2 clusters), charge
+  via `fat_read_file` vers $01:8000, exécute via `kernel_app_exec`.
+- Bundle synthétique : section CODE à offset 520 → réside dans le 2e
+  cluster du bundle. Valide que `app_exec` calcule `DP_SRC = DP_PTR +
+  BUNDLE_FOUND_OFFSET` (16-bit add) correctement et copie 7 octets
+  depuis le 2e cluster du bundle.
+- L'app exécute `ldx #'X' ; lda #1 ; cop #$AA ; rtl` → 'X' à $BBAD.
+
+### Phosphoric (oric2-golden-model)
+- Image SD test 166 secteurs : FAT étendue (FAT[6]=7, FAT[7]=EOC) +
+  3e entry root dir + clusters 6+7 du bundle MULTI.
+- ASSERT `mem[$BBAD] = 'X'` confirme exec multi-cluster.
+- 503 tests OK.
+
+### Pipeline complet validé
+**Boot → SD → FAT32 → fat_open → fat_read_file → app_exec → exec.**
+
+OricOS peut désormais charger et exécuter une app de taille arbitraire
+depuis fichier FAT32 SD :
+- 1 cluster (HELLO.BIN, 23B) ✅
+- N clusters (MULTI.BIN, 527B) ✅
+
+### Reportés OS-2.l v0.3
+- Section CODE > 256 octets (size 16-bit dans copie).
+- Sections multiples (DATA, ICON).
+- Free bank au RTS app.
+- Sandbox / privilege check.
+
+### Importance
+Sprint 2.l v0.2 ferme la boucle entière de l'OS pour des **apps réelles
+multi-cluster**. Toute la stack du Sprint 2 (driver SD, FAT32 lecture
+seule, bundle, app loader) converge ici. **Sprint 3 GUI peut commencer
+sur des fondations solides** pour ses propres apps depuis disque.
+
+---
+
 ## [2026-05-08] — Sprint 2.j v0.3 : kernel_fat_read_file (multi-cluster) ✨
 
 ### OricOS → 0.27.0
