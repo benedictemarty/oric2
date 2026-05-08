@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j.1 : test fonctionnel SD validé
+
+### Phosphoric (oric2-golden-model)
+- `tests/integration/test_oricos_sd.c` : pipeline complet validé.
+  Image SD test 512B (pattern A..Z) → driver kernel sd_read_block au
+  boot → ASSERT mem[$01:5D40..] contient le pattern.
+- `make test-oricos-sd` target dédiée.
+- 502 tests OK (+1 nouveau).
+
+### OricOS — pas de change code
+- Driver `kernel_sd_read_block` (livré en 2.j.0) prouvé fonctionnel
+  end-to-end.
+
+---
+
 ## [2026-05-08] — Sprint 2.j.0 : driver bloc SD minimal
 
 ### Phosphoric (oric2-golden-model)
