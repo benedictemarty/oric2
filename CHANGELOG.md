@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — PH-CI-visual : test visuel golden frame OricOS
+
+### Phosphoric (oric2-golden-model)
+- `tests/integration/test_oricos_visual.c` : boot OricOS jusqu'à STP,
+  render frame, compare pixel-par-pixel à `tests/golden/oricos_boot.ppm`.
+  FAIL au 1er offset divergent avec (x, y, channel).
+- `make test-oricos-visual` target dédiée.
+- Test gated : SKIP si kernel.bin OU golden absent.
+- 501 tests OK (500 → +1).
+
+### Why
+Prévient régressions render type H4 (fonte char manquante en bank 0
+$B400-$B7FF). Test FAIL détecté empiriquement quand 1 byte du golden
+est corrompu.
+
+---
+
 ## [2026-05-08] — PH-debug816 : extension debugger 65C816
 
 ### Phosphoric (oric2-golden-model)

@@ -29,7 +29,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ID | Titre | Estim. | Pré-req |
 |----|-------|--------|---------|
 | ~~PH-debug816~~ | ✅ **clos 2026-05-08** : `cpu816_get_state_string` mode E/N, debugger `regs`+`set` étendus, 2 tests unitaires. | — | — |
-| **PH-CI-visual** | CI visuelle : pHash sur frame golden, comparer à chaque test | 2 j | — |
+| ~~PH-CI-visual~~ | ✅ **clos 2026-05-08** : test_oricos_visual + golden PPM + comparaison pixel-perfect. Empêche régressions render comme H4 (fonte). | — | — |
 | **PH-bootrom** | Refactor `--kernel` pour utiliser une boot ROM Oric 2 propre (pas patch `mem.rom[]`) | 1 j | — |
 
 ---
@@ -129,7 +129,7 @@ unilatéralement.
 | Bank allocator → fragmentation | 🟠 OS crash après N apps | 🟠 moyenne | OS-2.h en NOW |
 | Pas de driver clavier = OS non-interactif | 🔴 démo finale impossible | 🔴 haute | OS-2.d en NOW |
 | Pas d'isolation mémoire ADR-04 v1 | 🟠 multitasking fragile | 🟠 assumée v1 | DEC-4 prévue Q4 2026 |
-| Tests d'intégration sans validation visuelle | 🟠 bugs render passent | 🔴 haute (cf. H4 fonte) | PH-CI-visual en NOW |
+| ~~Tests d'intégration sans validation visuelle~~ | 🟠 bugs render passent | ✅ **clos 2026-05-08** | test_oricos_visual + golden PPM mis en place |
 
 ---
 
