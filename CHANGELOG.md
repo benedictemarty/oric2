@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — PH-debug816 : extension debugger 65C816
+
+### Phosphoric (oric2-golden-model)
+- `cpu816_get_state_string` : formate l'état CPU mode E/N pour le
+  debugger. Affiche tous les registres natifs (C 16-bit, X/Y/S 16-bit,
+  D, DBR, PBR, P avec flags MX en mode N).
+- Debugger `regs`/`r` route selon `cpu_kind`. `set <reg> <val>` étendu
+  pour 65C816 : C/A, X, Y, S, PC, P, D, DB, PB.
+- 2 tests unitaires + Makefile fix (TEST_DEBUGGER_SRCS / TEST_COVERAGE_SRCS
+  incluent maintenant cpu65c816.* et cpu_core.c).
+- 500 tests OK (498 → +2).
+
+---
+
 ## [2026-05-08] — Sprint 2.i.1 : modèle erreur kernel
 
 ### OricOS → 0.14.0

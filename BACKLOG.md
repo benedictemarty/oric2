@@ -28,7 +28,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 | ID | Titre | Estim. | Pré-req |
 |----|-------|--------|---------|
-| **PH-debug816** | Étendre debugger REPL pour 65C816 (B, D, PBR, DBR, S 16-bit, M/X/E) | 2 j | — |
+| ~~PH-debug816~~ | ✅ **clos 2026-05-08** : `cpu816_get_state_string` mode E/N, debugger `regs`+`set` étendus, 2 tests unitaires. | — | — |
 | **PH-CI-visual** | CI visuelle : pHash sur frame golden, comparer à chaque test | 2 j | — |
 | **PH-bootrom** | Refactor `--kernel` pour utiliser une boot ROM Oric 2 propre (pas patch `mem.rom[]`) | 1 j | — |
 
