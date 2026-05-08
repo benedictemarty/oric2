@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.m.1 : première app asm standalone ✨
+
+### OricOS → 0.20.0
+- **`apps/hello/hello.s`** : première app userland standalone, source
+  asm 65C816 mode N, position-independent.
+- **`apps/hello/Makefile`** + **`tools/oricos-bundle.py`** : pipeline
+  build complet asm → flat binary → bundle .oosobj.
+- Top Makefile build apps avant kernel ; `.incbin` du bundle dans
+  `kernel.s`.
+- **Premier exécutable userland** d'OricOS dont la source vit hors
+  du kernel. Démontre la viabilité du pipeline d'apps tierces.
+- Sprint 4 (llvm-mos C) utilisera le même pipeline avec un compilo C.
+
+### Demo
+"OricOS v0.7" + "YABZ" inchangé visuellement, mais le 'Z' provient
+désormais d'une app standalone (`apps/hello/hello.s`) buildée
+indépendamment du kernel et embedded via `.incbin`.
+
+### Tests
+501 tests OK.
+
+---
+
 ## [2026-05-08] — Sprint 2.l.1 : APP LOADER COMPLET ✨
 
 ### OricOS → 0.19.0

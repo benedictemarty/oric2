@@ -44,7 +44,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ~~OS-2.k~~ | ✅ **clos 2026-05-08** (v0.1 : spec + `kernel_bundle_validate` fonctionnel après fix bug PH P-mode-N). | — | OricOS | — |
 | ~~PH-bug-dp-indirect-Y-bank1~~ | ✅ **clos 2026-05-08** : pas un bug `[dp],Y`. Vraie cause = COP/BRK/IRQ/NMI/PHP/PLP/RTI corrompaient bits X/M de P en mode N (masque mode E `& ~FLAG_BREAK \| FLAG_UNUSED`). RTI post-COP restaurait X=0 → `ldy` du caller consommait 2 bytes au lieu de 1. Fix : conditionnement sur `cpu->E` aux 6 emplacements. |
 | ~~OS-2.l~~ | ✅ **clos 2026-05-08** : v0.1 livré. `kernel_app_exec` complet : validate + find_code + alloc + copy + JSL self-modifying. App test en bank 7 écrit 'Z' via syscall. v0.2 (free bank exit, sandbox) reporté. | — | OricOS | — |
-| **OS-2.m** | Première app "hello" en asm 65C816 (PoC userland sans llvm-mos) | 2-3 j | OS-2.l |
+| ~~OS-2.m~~ | ✅ **clos 2026-05-08** : `apps/hello/hello.s` source standalone, pipeline build via ca65+ld65+`tools/oricos-bundle.py`. Bundle .oosobj embedded dans kernel via `.incbin`, exec via `kernel_app_exec`. Premier userland OricOS hors kernel. | — | OricOS | — |
 
 ### Priorité 2bis — Toolchain userland C
 
