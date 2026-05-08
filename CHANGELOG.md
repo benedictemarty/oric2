@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-08] — Sprint 2.j.3 : parse complet boot sector FAT32
+
+### OricOS → 0.23.0
+- `fat_parse_boot_sector` : parse 6 champs FAT32 (BPS, SPC, RSC, NFAT,
+  SPF 4B, ROOT 4B) depuis FS_BUFFER. Calcule FS_FDS (first data sector)
+  = RSC + NFAT*SPF par boucle d'addition.
+- v0.1 limite arithmétique à 16-bit (disque < 32 MiB).
+
+### Phosphoric (oric2-golden-model)
+- Test `test_oricos_fat_init_validates_fat32_signature` étendu : ASSERT
+  les 6 champs + FDS calculé.
+- 503 tests OK.
+
+---
+
 ## [2026-05-08] — Sprint 2.j.2 : kernel_fat_init (signature FAT32)
 
 ### OricOS → 0.22.0
