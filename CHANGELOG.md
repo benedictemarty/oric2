@@ -7,6 +7,34 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.b v0.2 partiel : kernel_fill_rect_aligned (bug)
+
+### OricOS → 0.30.0
+- **`kernel_fill_rect_aligned`** ajoutée : rectangle 8-px-aligned X.
+  Args ZP : gx_start, gx_count, y_start, y_count, color. Algorithme
+  basé sur DP indirect long avec pattern 24-bit color × $249249.
+
+### ⚠️ Bug connu
+- Rectangle dessiné à (-6gx, -51y) du target. Size correcte (800
+  triples pour 10×80) mais placement faux.
+- Differential offset = 4608 = 0x1200 = 18 × 256. Suggère bug
+  high byte FB_PTR.
+- Appel au boot retiré → test `test_oricos_hires2_clear_fills_blue`
+  passe (v0.1 préservée).
+- À débugger session suivante : asm sentinels + lecture post-STP.
+
+### Validation
+- 515 tests OK (inchangé). Pas de régression.
+
+### Importance
+Sprint 3.b v0.2 livré avec **honesty** sur le bug. La fonction est
+présente dans le kernel comme primitive disponible, à corriger plus
+tard. Le fait d'avoir 800 triples écrits (count correct) + range
+correct (10×80) prouve que le inner loop fonctionne ; seul le
+calcul d'offset_initial est foireux.
+
+---
+
 ## [2026-05-09] — Sprint 3.b v0.1 : kernel_hires2_clear ✨
 
 ### OricOS → 0.29.0

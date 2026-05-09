@@ -65,7 +65,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ID | Titre | Notes |
 |----|-------|-------|
 | ~~SP-3.a~~ | ✅ **clos 2026-05-09 (v0.2)** : implémentation ADR-12 (mode HIRES Oric 2 240×200×3bpp) + intégration compositor matériel (ADR-02). Module `video/hires_oric2.{c,h}` (8 tests unit) + `tests/integration/test_compositor_hires_oric2.c` (3 tests intégration). Pipeline validé : bank 128 → render ARGB → compositor host → compose → output. ADR-12 sort de l'état "vaporware". v0.3 reportés : intégration main loop SDL2 (`--video-mode oric2`), bank configurable, double-buffer. |
-| ⚙️ **SP-3.b** | v0.1 (clos 2026-05-09) : `kernel_hires2_clear(color)` rempli bank 128 + boot kernel intégré + test (1 ajouté). v0.2 reporté : `pixel_set` arbitraire, `fill_rect`, blit, bascule TEXT↔HIRES via registre I/O. | Pré-req SP-3.a ✅ |
+| ⚙️ **SP-3.b** | v0.1 ✅ (clos 2026-05-09) : `kernel_hires2_clear(color)` rempli bank 128 + boot kernel intégré + test. v0.2 partiel ⚠️ : `kernel_fill_rect_aligned` ajoutée (rectangles 8-px-aligned X) mais **bug d'offset_initial** (rect dessiné à (-6gx, -51y) du target). Fonction présente, appel boot retiré, à débugger. v0.3 reporté : `pixel_set` arbitraire, blit, bascule TEXT↔HIRES via registre I/O. | Pré-req SP-3.a ✅ |
 | **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar | |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
 | **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like) | Pré-req SP-3.c, OS-2.d |
@@ -145,6 +145,7 @@ unilatéralement.
 | ~~Bug TXS Phosphoric~~ | Sprint 2.d.1 | ✅ **clos 2026-05-08** : faux positif. Comportement WDC correct (SEP #$10 force X high=0, TXS copie X entier). Fix côté OricOS : utiliser TCS au lieu de TXS pour stack page 1. |
 | ~~8 opcodes DP indirect manquants~~ | Sprint 2.e.1 | ✅ **clos 2026-05-08** : 8 opcodes ajoutés ($12/$32/$52/$72/$92/$B2/$D2/$F2) + helper `addr816_dp_indirect`. 2 tests unitaires. OricOS print_char simplifié vers STA (dp) natif. |
 | `--kernel` patch `mem.rom[]` (pollue ADR-10) | Demo visible | PH-bootrom |
+| Bug `kernel_fill_rect_aligned` offset_initial : rect translaté de (-6gx, -51y). Size correcte (800 triples), placement faux. | Sprint 3.b v0.2 | Symptom : 800 triples red à Y=[9..88] gx=[4..13] au lieu de Y=[60..139] gx=[10..19]. Calcul `y*90 + gx*3` semble bon en review listing asm — bug subtil non trouvé en 1ère session. Reprendre avec asm sentinels (sta zone bank 1 connue) + lecture post-STP. |
 | Cohabitation 6502/65C816 sans politique de retrait | B1 cohabitation | DEC-1 / ADR-18 |
 | `kernel_print_banner` = 12 STA hardcodés | Sprint 2.c PoC | OS-2.e remplace |
 | ~~`kernel_alloc_bank` bump-only sans free~~ | Sprint 2.b PoC | ✅ **clos 2026-05-08 (OS-2.h.1)** : free list LIFO 16 entries. Bitmap reportée v0.2. |
