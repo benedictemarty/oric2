@@ -7,6 +7,28 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Phase 1 PH-2.a : décrochage types CPU partagés (ADR-18 étape 1.A) 🧹
+
+### Phosphoric → 1.22.10-alpha
+- Création `include/cpu/cpu_types.h` neutre : `memory_t` (forward decl),
+  `cpu_flags_t` (FLAG_*), `cpu_irq_source_t` (IRQF_*). Types partagés
+  6502 ↔ 65C816, décrochés de `cpu6502.h` selon plan ADR-18 étape 1.A.
+- `cpu6502.h` allégé : inclut désormais `cpu_types.h`, conserve les
+  définitions cœur (`cpu6502_t`, `addressing_mode_t`, signatures cpu_*).
+- Étape additive pure : 0 consommateur à modifier (transitivité d'include).
+- Migration effective des consommateurs vers `cpu_types.h` direct prévue
+  en étape 1.C (suppression du cœur 6502, post go/no-go 1.B).
+
+### Validation
+- 541 tests OK (aucune régression).
+- Build SDL2 OK.
+
+### Phase 1 — sprint suivant
+- PH-cleanup-zombie (retrait `kernel_hires2_*` legacy ADR-19 v2).
+- PH-2.b campagne validation 65C816 mode E par défaut (bloquante 1.B → 1.C).
+
+---
+
 ## [2026-05-09] — Programme état-de-l'art Phase 0 close 🏛️
 
 Lancement d'un programme de **remise au top de l'état de l'art** sur 8 semaines, 4 axes parallèles (hygiène d'ingénierie, toolchain & CI moderne, élargissement architectural, process & doc publiable). Phase 0 = décisions bloquantes.
