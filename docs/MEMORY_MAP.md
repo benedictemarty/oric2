@@ -173,14 +173,14 @@ Allocateur :
 
 ---
 
-## 8bis. VRAM en SDRAM (ADR-19 v2 + ADR-20 v2)
+## 8bis. VRAM en SDRAM (ADR-19 v2 + ADR-20 v3)
 
 **Toute la VRAM** réside en SDRAM ULX3S (32 MiB physiques, v1 expose
 16 MiB via I/O 24-bit). **Hors banking CPU**.
 
-Localisation framebuffer principal SVGA (ADR-20) :
-- **SDRAM offset $000000-$03A97F** : 240 KiB linéaires (800×600×4bpp).
-- 400 octets/ligne × 600 lignes = 240 000 octets contigus.
+Localisation framebuffer principal **XVGA** (ADR-20 v3) :
+- **SDRAM offset $000000-$05FFFF** : 384 KiB linéaires (1024×768×4bpp).
+- 512 octets/ligne × 768 lignes = 393 216 octets contigus.
 - Aucune contrainte de bank-cross (1 seul espace SDRAM).
 
 Le **GPU Blitter HW** (ADR-21) lit/écrit cette zone directement à

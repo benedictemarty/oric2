@@ -261,26 +261,54 @@ Alternatives écartées :
 - (a) **Approche B hybride progressif** (v1 CPU+DMA, v2 GPU) : refactor kernel douloureux à v2.
 - (b) **CPU-only** : trop lent pour résolution > 320×240 et apps fluides.
 
-### ADR-20 — Mode HIRES Oric 2 desktop : 800×600×4bpp SVGA (ratifiée 2026-05-09, **révisée v2 2026-05-09** suite ADR-19 v2)
-Avec GPU Blitter HW (ADR-21) qui décharge le CPU, OricOS vise une résolution desktop **ambitieuse SVGA** :
+### ADR-20 — Mode HIRES Oric 2 desktop : 1024×768×4bpp XVGA (ratifiée 2026-05-09, **révisée v3 2026-05-09** : SVGA → XVGA après simplification ADR-19 v2)
 
-- **Résolution** : 800×600 pixels (format 4:3 SVGA standard).
+Avec GPU Blitter HW (ADR-21) qui décharge le CPU + VRAM SDRAM unifiée (ADR-19 v2) qui retire la contrainte BRAM, OricOS vise une résolution desktop **XVGA** :
+
+- **Résolution** : 1024×768 pixels (format 4:3 XVGA standard).
 - **Profondeur** : 4 bits par pixel = 16 couleurs simultanées.
 - **Palette** : 16 couleurs fixes style VGA-IBM (v2 indexable 16 sur 4096).
 - **Layout pixel** : 2 pixels groupés en 8 bits, big-endian :
   - Octet n bits [7:4] = pixel 0 (gauche)
   - Octet n bits [3:0] = pixel 1 (droite)
-- **Adressage** : 800/2 = **400 octets/ligne** × 600 lignes = **240 000 octets/frame**.
+- **Adressage** : 1024/2 = **512 octets/ligne** × 768 lignes = **393 216 octets/frame** (= 384 KiB).
 
-**Révision v2 — localisation framebuffer en SDRAM (cf. ADR-19 v2)** :
-- v1 prévoyait : framebuffer en 4 banks live BRAM (banks 128-131).
-- v2 acte : **framebuffer en SDRAM** offset `$000000-$03A97F` (240 KiB linéaires).
-- Conséquence : banks 128-131 **redeviennent libres** pour usage RAM extra.
-- Le framebuffer est lu par le compositor HDL via line-buffer cache BRAM (1 ligne lookahead). GPU le modifie via accès SDRAM direct. CPU n'y accède normalement pas (sauf debug via I/O VRAM ports).
+**Localisation** : framebuffer en SDRAM (cf. ADR-19 v2). Adresse `$000000-$05FFFF` (= 0..393 215, 384 KiB linéaires contigus).
 
-Layout SDRAM framebuffer SVGA : **linéaire 240 KiB contigus** sans préoccupation de bank-cross.
+**HDMI** : pixel clock 1024×768@60Hz = **65 MHz** (VESA standard). LFE5U-85F PLL trivial (≪ limite 250 MHz).
 
-**Palette VGA-IBM standard** :
+**Évolution résolutions** :
+- v1 : 240×200×3bpp (= ADR-12, mode HIRES Oric 2 compat ULA guest).
+- v2 : 800×600×4bpp SVGA (= ADR-20 v2, libéré BRAM grâce à ADR-21).
+- **v3 : 1024×768×4bpp XVGA** (= ADR-20 v3, libéré contrainte BRAM via ADR-19 v2 SDRAM unifiée).
+
+Justification :
+- **Format 4:3 productif** standard, supporté universellement (HDMI/DVI/CRT).
+- **786 432 pixels** = +60% surface vs SVGA, look "OS pro" (Win 95, OS/2 Warp).
+- **384 KiB framebuffer** = 2.4% des 16 MiB SDRAM v1. Négligeable.
+- **Pixel clock 65 MHz** : trivial pour ULX3S.
+- **Effort HDL +30%** vs SVGA (PLL ajustée, raster timing standard).
+
+Alternatives écartées :
+- 800×600 SVGA (ADR-20 v2) : moins productif que XVGA, marge HDL trop grande inutilisée.
+- 1280×720 HD 16:9 : pixels rectangulaires moins fidèles retro 8/16-bit (préfère 4:3).
+- 1280×1024 SXGA : plus exigeant HDL (108 MHz), peu de gain visuel.
+- 1920×1080 FHD : effort HDL +200%, format 16:9 non-retro, surdimensionné.
+- XVGA 8bpp 256 couleurs : reportable v2 si demande de couleurs riches émerge.
+
+Implications :
+- **Phosphoric** : module `video/hires_oric2_xvga.{c,h}` (à créer SP-GPU-1) ou refactor `hires_oric2.c` original. Render 1024×768×4bpp ARGB.
+- **OricOS kernel** : constantes `HIRES2X_W=1024`, `HIRES2X_H=768`, `HIRES2X_BPL=512`, `HIRES2X_FB_SIZE=393216`.
+- **HDL ULX3S** : raster controller à 65 MHz pixel clock, PLL ajustée. Compositor lit 512 octets de SDRAM par scanline via line-buffer BRAM (1 BRAM 18Kb = 2 KiB suffit).
+- **GPU performance** : CLEAR XVGA = 384 KiB writes. À 100 MHz GPU = 3.8 ms (1/4 frame 60Hz). OK fluide.
+
+**Capacité fenêtres** (avec 16 MiB SDRAM, framebuffer 384 KiB) :
+- Disponible backing-stores : 15.6 MiB.
+- Mini fenêtre 200×150×4bpp = 15 KiB → ~1050.
+- Standard 320×240×4bpp = 38 KiB → ~410.
+- Plein écran 1024×768×4bpp = 384 KiB → ~40.
+
+**Palette VGA-IBM standard (ADR-20)** :
 
 | Idx | Nom | RGB |
 |-----|-----|-----|
@@ -300,24 +328,6 @@ Layout SDRAM framebuffer SVGA : **linéaire 240 KiB contigus** sans préoccupati
 | 13 | lightmagenta | (255,85,255) |
 | 14 | yellow | (255,255,85) |
 | 15 | white | (255,255,255) |
-
-**HDMI** : 800×600 60Hz = 40 MHz pixel clock. Largement supporté ULX3S (LFE5U-85F PLL OK).
-
-Justification :
-- **Ambitieuse mais réaliste** avec GPU autonome (ADR-21). Le CPU n'a plus à dessiner.
-- **Référence d'art** : Amiga ECS (640×512×4bpp), OS/2 Warp, Win 3.1 (640×480×16 ou SVGA add-on).
-- **Productivité** : ≈ 6× plus de surface qu'un Oric 1 historique.
-- **Pixel-square 4:3** : fidèle aux standards 80s/90s.
-
-Alternatives écartées :
-- 320×240×4bpp : trop modeste vu que GPU n'est plus bottleneck.
-- 640×480×4bpp : VGA standard, mais moins ambitieux.
-- 1024×768×4bpp : 393 KiB = 6 banks live, raster timing 65 MHz tendu LFE5U-85F. Reportable v2.
-
-Implications :
-- **Phosphoric** : module `video/hires_oric2_svga.{c,h}` (ou réutilisation refactorée du module ADR-12).
-- **OricOS kernel** : constantes `HIRES2X_W=800`, `HIRES2X_H=600`, `HIRES2X_BPL=400`, `HIRES2X_FB_BANKS=4`.
-- **HDL ULX3S** : raster controller multi-bank (lit 4 banks BRAM séquentiellement par scanline).
 
 ### ADR-19 — VRAM en SDRAM unifiée (ratifiée 2026-05-09, **révisée v2 2026-05-09** suite ADR-21)
 **v1 (caduque)** : architecture hybride avec BRAM live (banks 128-159) + SDRAM cold via I/O. Les banks live offraient un accès CPU pixel-direct rapide.

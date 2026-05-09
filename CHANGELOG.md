@@ -7,6 +7,39 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — ADR-20 v3 : XVGA 1024×768×4bpp ✨
+
+Avec ADR-19 v2 (VRAM SDRAM unifiée), la contrainte BRAM est levée.
+On peut donc viser plus haut que SVGA.
+
+### ADR-20 v3 — XVGA 1024×768×4bpp 16 couleurs
+- **Résolution** : 1024×768 pixels (format 4:3 XVGA standard).
+- **Profondeur** : 4 bits par pixel = 16 couleurs (palette VGA-IBM).
+- **Framebuffer** : 384 KiB linéaires en SDRAM ($000000-$05FFFF).
+- **Pixel clock** : 65 MHz (VESA standard XVGA 60Hz).
+- **+60% surface vs SVGA**, look "OS pro Win 95-like".
+
+### Évolution résolutions
+- v1 : 240×200×3bpp (ADR-12, compat Oric 1, ULA guest)
+- v2 : 800×600×4bpp SVGA (ADR-19 v1, BRAM live)
+- **v3 : 1024×768×4bpp XVGA** (ADR-19 v2 SDRAM unifiée)
+
+### Capacité fenêtres en XVGA
+- 16 MiB SDRAM - 384 KiB framebuffer = **15.6 MiB libres**.
+- ~1050 mini fenêtres (200×150) ou ~410 standard (320×240).
+- ~40 fenêtres plein écran XVGA backing simultané.
+
+### Effort HDL marginal
+- vs SVGA : +30% (PLL ajustée, raster timing standard XVGA).
+- HDMI 1024×768 60Hz universellement supporté.
+
+### Documents mis à jour
+- **CLAUDE.md §2** : ADR-20 v3 complet, ancien contenu SVGA retiré.
+- **MEMORY_MAP §8bis** : framebuffer XVGA $000000-$05FFFF.
+- **BACKLOG** : ADR-20 v3 fermée.
+
+---
+
 ## [2026-05-09] — ADR-19 v2 + ADR-20 v2 : architecture VRAM simplifiée ✨
 
 Suite à un échange architectural, simplification de la stack VRAM.
