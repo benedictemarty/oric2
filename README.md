@@ -3,9 +3,9 @@
 > Une **chimère 8/16 bits rétrocompatible Oric 1**, conçue de zéro pour FPGA ULX3S — avec son propre OS multitâche graphique et un guest Oric 1 virtualisé nativement.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](Phosphoric/LICENSE)
-[![Phosphoric](https://img.shields.io/badge/Phosphoric-1.22.13--alpha-green)](https://github.com/benedictemarty/oric2-golden-model)
+[![Phosphoric](https://img.shields.io/badge/Phosphoric-1.22.16--alpha-green)](https://github.com/benedictemarty/oric2-golden-model)
 [![OricOS](https://img.shields.io/badge/OricOS-v0.41--alpha-green)](https://github.com/benedictemarty/OricOS)
-[![Tests](https://img.shields.io/badge/tests-535%2F535-brightgreen)](Phosphoric/VERSION_TRACKING)
+[![Tests](https://img.shields.io/badge/tests-530%2F530-brightgreen)](Phosphoric/VERSION_TRACKING)
 [![Phase](https://img.shields.io/badge/programme-état--de--l'art%20Phase%201-orange)](BACKLOG.md)
 
 ---

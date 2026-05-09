@@ -7,6 +7,52 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Phase 1 PH-2.c.2 sub-1/2/3 : extraction + découplage + migration tests 🧹
+
+### Phosphoric → 1.22.16-alpha (3 sous-commits successifs)
+
+**sub-1 (e3e6384)** — Extraction `opcode_metadata` neutre :
+- Nouveau `include/cpu/opcode_metadata.h` + `src/cpu/opcode_metadata.c` :
+  contient `opcode_info_t`, `addressing_mode_t` (déplacé de cpu6502.h),
+  `opcode_table[256]` (extrait de opcodes.c, ~145 lignes struct littéraux).
+- `cpu_internal.h`, `cpu6502.h` : retrait des types déplacés, include
+  transitif vers opcode_metadata.h.
+- Makefile : `opcode_metadata.c` ajouté à toutes les TEST_*_SRCS.
+
+**sub-2 (1ab1e89)** — Découplage cpu65c816 du cœur 6502 :
+- `cpu65c816.h` : include cpu6502.h → cpu_types.h (types neutres uniquement).
+- `cpu65c816.c` et `cpu65c816_opcodes.c` : include cpu_internal.h →
+  opcode_metadata.h.
+- Vérification grep : cpu65c816.c et cpu65c816_opcodes.c n'utilisent
+  AUCUNE fonction `cpu_*` du 6502.
+- Makefile : `TEST_CPU_CORE_SRCS`, `TEST_CPU816_*_SRCS` débarrassés de
+  cpu6502.c, opcodes.c, addressing.c. Cœur 65C816 désormais autonome.
+
+**sub-3 (ef75a3e)** — Migration tests Oric 1 vers 65C816 mode E :
+- `test_klaus_dormann.c` : retrait test_6502_core, conservation
+  test_65c816_core_e_mode (canari régression mode E ADR-10).
+- `test_oric_boot_dual.c` : SUPPRIMÉ (4 tests retirés). Comparaison
+  explicite 2 cœurs perd son sens post-suppression 6502. Couverture
+  régression mode E préservée par test_klaus + test_cpu65c816_e_mode +
+  diff PPM PH-2.b.
+- `test_paravirt_demo.c` : Makefile uniquement (utilisait déjà cpu65c816_t).
+- Makefile : `TEST_KLAUS_SRCS`, `TEST_PARAVIRT_SRCS` débarrassés des deps
+  6502. `TEST_BOOT_DUAL_SRCS` et target supprimés.
+
+### Validation
+- Build SDL2 OK.
+- 530/530 tests verts (= -5 vs 535 : 1 klaus 6502 + 4 boot_dual retirés).
+- 0 FAIL.
+
+### Phase 1 — sprint suivant
+- **PH-2.c.2 sub-4** (à risque) : refactor `emulator_t.cpu` (cpu6502_t →
+  cpu65c816_t), 69 accès `emu->cpu.X` dans savestate.c (18) + debugger.c
+  (30+) + trace.c, profiler.c (15+). Format binaire .ost étendu.
+- **PH-2.c.2 sub-5** : suppression effective `cpu6502.c`, `opcodes.c`,
+  `addressing.c`, `cpu6502.h`, `cpu_internal.h`, `tests/unit/test_cpu.c`.
+
+---
+
 ## [2026-05-09] — Phase 1 PH-2.c.1 : retrait vtable 6502 (ADR-18 étape 1.C, partie 1) 🧹
 
 ### Phosphoric → 1.22.13-alpha
