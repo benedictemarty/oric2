@@ -132,7 +132,7 @@ unilatéralement.
 | **ADR-16** | Driver model (event-driven / polling / IRQ-driven) |
 | **ADR-17** | API kernel publique exposée à userland (call gates, ABI) |
 | **ADR-18** | Sort du 6502 Phosphoric (cf. DEC-1) |
-| ~~ADR-19~~ | ✅ **ratifiée 2026-05-09 (Arch D hybride : BRAM live banks 128-159 + SDRAM cold via I/O $0330-$033C)**, déplacée vers `CLAUDE.md` §2. MEMORY_MAP §8/9 refondu. |
+| ~~ADR-19~~ | ✅ **ratifiée 2026-05-09**, **révisée v2 2026-05-09** suite ADR-21 : VRAM en SDRAM unifiée (32 MiB hors banking, accès GPU direct + I/O CPU). Banks 128-191 redeviennent RAM extra apps. BRAM ECP5 = caches GPU internes invisibles CPU. Cf. `CLAUDE.md` §2. |
 | ~~ADR-20~~ | ✅ **ratifiée 2026-05-09 (mode HIRES Oric 2 desktop = SVGA 800×600×4bpp 16 couleurs, banks 128-131)**, déplacée vers `CLAUDE.md` §2. |
 | ~~ADR-21~~ | ✅ **ratifiée 2026-05-09 (GPU Blitter HW autonome, 5 commandes v1 : CLEAR/FILL_RECT/BLIT/LINE/TEXT, ports I/O $0340-$034F)**, déplacée vers `CLAUDE.md` §2. |
 

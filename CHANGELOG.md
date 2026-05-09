@@ -7,6 +7,54 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — ADR-19 v2 + ADR-20 v2 : architecture VRAM simplifiée ✨
+
+Suite à un échange architectural, simplification de la stack VRAM.
+
+### Constat
+Avec ADR-21 (GPU Blitter HW autonome), le CPU n'écrit plus de pixels
+directement. Les banks 128-159 dédiées VRAM live BRAM (Arch D
+hybride) deviennent **redondantes** : le GPU accède SDRAM directement,
+pas besoin de "live" exposé au CPU.
+
+### ADR-19 v2 — VRAM en SDRAM unifiée
+- **Toute la VRAM** réside en SDRAM 32 MiB (16 MiB exposés v1).
+- Hors banking 24-bit du CPU.
+- Accès GPU direct + accès CPU via I/O `$0330-$033C` (rare).
+- BRAM ECP5 redéployée : caches internes GPU/compositor (line-buffers,
+  sprite cache) — invisible côté CPU.
+
+### ADR-20 v2 — Framebuffer SVGA en SDRAM
+- v1 : framebuffer 800×600×4bpp en 4 banks live (128-131).
+- v2 : framebuffer en **SDRAM offset $000000-$03A97F** (240 KiB linéaires).
+- Banks 128-131 **libérés** (réservés legacy v1 kernel_hires2_* à
+  retirer Sprint 3.b cleanup).
+
+### Bénéfices
+- **+4 MiB RAM utilisable** pour apps (banks 128-191 récupérables).
+- **HDL plus simple** : 1 controller SDRAM, BRAM = caches internes.
+- **Architecture cohérente** : style Amiga chip RAM unifiée.
+- **Capacité fenêtres** : ~420 fenêtres 320×240×4bpp possibles
+  (15.76 MiB SDRAM disponible après framebuffer principal).
+
+### Documents mis à jour
+- **CLAUDE.md §2** : ADR-19 v2 + ADR-20 v2 complets (l'ancienne v1
+  ADR-19 supprimée).
+- **MEMORY_MAP §8** : refondu (banks 128-191 = RAM extra apps,
+  §8bis = VRAM en SDRAM).
+- **BACKLOG** : ADR-19 marquée révisée v2.
+
+### Non modifié
+- Le code kernel reste avec `BANK_LIVE_POOL_BASE = $84` (banks 132-159
+  pool extra). Cleanup banks 128-131 reporté Sprint 3.b cleanup
+  (retirer kernel_hires2_* du boot, étendre pool à $80).
+- `vram_device` Phosphoric (Sprint VRAM-1) inchangé.
+- `kernel_vram_*` (Sprint VRAM-2) inchangé.
+
+526 tests OK toujours.
+
+---
+
 ## [2026-05-09] — RÉORIENTATION MAJEURE : ADR-20 + ADR-21 ratifiées ✨✨✨
 
 ### Décisions stratégiques

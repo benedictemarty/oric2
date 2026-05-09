@@ -261,7 +261,7 @@ Alternatives écartées :
 - (a) **Approche B hybride progressif** (v1 CPU+DMA, v2 GPU) : refactor kernel douloureux à v2.
 - (b) **CPU-only** : trop lent pour résolution > 320×240 et apps fluides.
 
-### ADR-20 — Mode HIRES Oric 2 desktop : 800×600×4bpp SVGA (ratifiée 2026-05-09)
+### ADR-20 — Mode HIRES Oric 2 desktop : 800×600×4bpp SVGA (ratifiée 2026-05-09, **révisée v2 2026-05-09** suite ADR-19 v2)
 Avec GPU Blitter HW (ADR-21) qui décharge le CPU, OricOS vise une résolution desktop **ambitieuse SVGA** :
 
 - **Résolution** : 800×600 pixels (format 4:3 SVGA standard).
@@ -271,15 +271,14 @@ Avec GPU Blitter HW (ADR-21) qui décharge le CPU, OricOS vise une résolution d
   - Octet n bits [7:4] = pixel 0 (gauche)
   - Octet n bits [3:0] = pixel 1 (droite)
 - **Adressage** : 800/2 = **400 octets/ligne** × 600 lignes = **240 000 octets/frame**.
-- **Localisation** : **4 banks live BRAM** (128-131) selon ADR-19.
 
-**Layout 4 banks (préliminaire, à figer en SP-GPU-1)** :
-- Option A — **lignes alignées par bank** (recommandé HDL) :
-  - Bank 128 : lignes 0..162 (163 lignes × 400 = 65 200 octets, padding 336 bytes)
-  - Bank 129 : lignes 163..325
-  - Bank 130 : lignes 326..488
-  - Bank 131 : lignes 489..599 (111 lignes, 44 400 octets utilisés)
-- Option B — packing strict 240 KiB linéaires sans padding (ligne cross-bank).
+**Révision v2 — localisation framebuffer en SDRAM (cf. ADR-19 v2)** :
+- v1 prévoyait : framebuffer en 4 banks live BRAM (banks 128-131).
+- v2 acte : **framebuffer en SDRAM** offset `$000000-$03A97F` (240 KiB linéaires).
+- Conséquence : banks 128-131 **redeviennent libres** pour usage RAM extra.
+- Le framebuffer est lu par le compositor HDL via line-buffer cache BRAM (1 ligne lookahead). GPU le modifie via accès SDRAM direct. CPU n'y accède normalement pas (sauf debug via I/O VRAM ports).
+
+Layout SDRAM framebuffer SVGA : **linéaire 240 KiB contigus** sans préoccupation de bank-cross.
 
 **Palette VGA-IBM standard** :
 
@@ -320,47 +319,52 @@ Implications :
 - **OricOS kernel** : constantes `HIRES2X_W=800`, `HIRES2X_H=600`, `HIRES2X_BPL=400`, `HIRES2X_FB_BANKS=4`.
 - **HDL ULX3S** : raster controller multi-bank (lit 4 banks BRAM séquentiellement par scanline).
 
-### ADR-19 — VRAM hybride : BRAM live + SDRAM cold via I/O (ratifiée 2026-05-09)
-OricOS adopte une architecture VRAM **à deux niveaux** pour combiner accès pixel direct rapide et capacité de stockage massive :
+### ADR-19 — VRAM en SDRAM unifiée (ratifiée 2026-05-09, **révisée v2 2026-05-09** suite ADR-21)
+**v1 (caduque)** : architecture hybride avec BRAM live (banks 128-159) + SDRAM cold via I/O. Les banks live offraient un accès CPU pixel-direct rapide.
 
-**VRAM "live"** :
-- Banks **128-159** (32 banks × 64 KiB = **2 MiB**) physiquement implémentés en **BRAM ECP5** côté HDL ULX3S.
-- Accès CPU **direct** via banking 24-bit (`STA al`, `STA [dp],Y`, etc.). Latence 1 cycle.
-- Capacité visée : framebuffer principal `host` (mode HIRES Oric 2) + 4-8 backing-stores fenêtres simultanément en focus.
-- Le **compositor matériel ULA host** lit ces banks à fréquence pixel HDMI.
+**v2 (actuelle)** : avec ratification d'ADR-21 (GPU Blitter HW autonome), le CPU n'écrit **plus** de pixels directement — il envoie des commandes au GPU. Les banks 128-159 dédiées VRAM live perdent leur raison d'être. Architecture **simplifiée** :
 
-**VRAM "cold"** :
-- **SDRAM ULX3S** (32 MiB), accessible **uniquement via I/O ports MMIO** depuis le CPU (pas dans le banking 24-bit).
-- Ports en bank 0 (DBR=0) :
-  - `$0330` `VRAM_ADDR_LO`  (R/W)
-  - `$0331` `VRAM_ADDR_MID` (R/W)
-  - `$0332` `VRAM_ADDR_HI`  (R/W) — adresse 24-bit dans SDRAM
-  - `$0333` `VRAM_DATA`     (R/W, **auto-increment ADDR**)
-  - `$0334` `VRAM_DMA_CTRL` (W = trigger, R bit 7 = busy)
-  - `$0335-$0337` `VRAM_DMA_SRC_{LO,MID,HI}` — adresse source 24-bit (interprétée selon `VRAM_DMA_CTRL` bit 0/1 = SDRAM/bank live)
-  - `$0338-$033A` `VRAM_DMA_DST_{LO,MID,HI}` — adresse dest 24-bit
-  - `$033B-$033C` `VRAM_DMA_LEN_{LO,HI}` — longueur 16-bit (max 64 KiB par DMA)
-- Usage : backing-stores fenêtres iconifiées, sprites/fontes/icônes, streams, code apps en pagination.
-- **DMA matériel** : copie SDRAM ↔ banks live (2 MiB BRAM) sans bouger le CPU. Drives de blits massifs (drag fenêtre, restore from icon).
+**Toute la VRAM** réside en **SDRAM ULX3S (32 MiB, v1 expose 16 MiB via 24-bit address)**, accessible :
+- **Par le GPU Blitter HW (ADR-21)** : accès direct, pleine vitesse SDRAM. Commandes graphiques opèrent directement en SDRAM.
+- **Par le CPU** : via I/O ports MMIO `$0330-$033C` (auto-increment + DMA). Usage minoritaire : debug, init, fallback exceptionnel.
 
-**Banks 160-191** : redeviennent **"Réservés extensions futures"** (pas VRAM directe). Cf. ADR-12 inchangée mais avec localisation framebuffer = bank 128 (live).
+**Banks 128-255 (8 MiB) libérés** pour usage RAM extra (apps gourmandes, code paging, buffers utilisateur, ROM cartouche). Total RAM banking accessible CPU = **191 banks × 64 KiB ≈ 12 MiB** (vs 8 MiB dans v1).
 
-Justification :
-- Capacité scalable : 32 MiB SDRAM → 100+ fenêtres iconifiées + assets gros.
-- Performance optimale fenêtre active : `STA al` direct.
-- DMA HW pour transferts massifs sans cycle CPU perdu (déplacement fenêtre = quelques µs, pas 38 000 cycles).
-- Référence d'art : **Amiga (chip RAM + fast RAM)**, **Apple IIgs (system RAM + slot RAM)**.
+**BRAM ECP5 ULX3S** redéployée :
+- v1 : 32 banks live (= 2 MiB) accessible CPU + cache compositor.
+- v2 : caches internes GPU/compositor uniquement (line-buffers raster, sprite cache, font cache, command queue). **Invisible côté CPU**.
+
+**Ports I/O VRAM (inchangés v1→v2)** :
+
+| Adresse | Registre | R/W | Description |
+|---------|----------|-----|-------------|
+| `$0330-$0332` | `VRAM_ADDR_{LO,MID,HI}` | R/W | adresse 24-bit dans SDRAM |
+| `$0333` | `VRAM_DATA` | R/W | byte courant, **auto-increment ADDR** |
+| `$0334` | `VRAM_DMA_CTRL` | R/W | bit 0 trigger, bit 1 dir, bit 7 busy |
+| `$0335-$0337` | `VRAM_DMA_SRC_{LO,MID,HI}` | R/W | source 24-bit |
+| `$0338-$033A` | `VRAM_DMA_DST_{LO,MID,HI}` | R/W | dest 24-bit |
+| `$033B-$033C` | `VRAM_DMA_LEN_{LO,HI}` | R/W | longueur 16-bit |
+
+DMA HW utile pour :
+- Init initial (kernel charge fonts/icônes en SDRAM au boot).
+- Migration RAM ↔ VRAM (apps qui veulent pré-calculer en RAM puis envoyer au GPU).
+- Debug / dumps.
+
+Justification v2 :
+- **Cohérence avec GPU autonome** : 1 seul espace VRAM, pas de hiérarchie live/cold redondante.
+- **+4 MiB RAM utilisable** pour apps (banks 128-191 libérés).
+- **HDL plus simple** : 1 controller SDRAM, BRAM = caches internes, pas exposée CPU.
+- **Architecture moderne unifiée** : style consoles / Amiga (chip RAM = SDRAM unifiée, pas de niveaux multi-tier exposés au CPU).
 
 Alternatives écartées :
-- (a) **Arch A pure (banking-only)** : limité à ~3-4 MiB pratique, pas scalable pour 100+ fenêtres iconifiées.
-- (b) **Arch B I/O VRAM pure** : pas d'accès pixel direct, freine apps qui dessinent point-par-point (tous les pixels via I/O port = 3-4× cycles).
-- (c) **Arch C window mapping** : memory remap HDL complexe, latence cache, debugging non-trivial.
+- v1 hybride BRAM live + SDRAM cold : redondant avec GPU autonome.
+- "1 bank live scratch" : compromis sans valeur claire.
 
 Implications projet :
-- **Phosphoric** : ajouter `src/io/vram_device.{c,h}` (32 MiB simulés en heap, ports `$0330-$033C`).
-- **OricOS kernel** : helpers `kernel_vram_read_block`, `kernel_vram_write_block`, `kernel_vram_dma`. Allocator `kernel_alloc_bank` distingue pool "live" (banks 128-159) du pool système (banks 4-127).
-- **HDL ULX3S** : DMA controller SDRAM↔BRAM, address latch + auto-increment, refresh SDRAM, controller raster.
-- **MEMORY_MAP.md §8** : refonte (live BRAM banks 128-159, cold SDRAM via I/O) — cf. ADR-19 §implications.
+- **Phosphoric** : `vram_device.{c,h}` reste valide (Sprint VRAM-1, 16 MiB simulés). v2 pourrait étendre à 32 MiB.
+- **OricOS kernel** : helpers `kernel_alloc_live_bank` / `free_live_bank` (Sprint VRAM-3) restent valides mais sémantique élargie : pool RAM extra (banks 128-191) pour apps gourmandes, plus dédié uniquement à VRAM.
+- **MEMORY_MAP §8/9/10** : refondus.
+- **Sprint 3.b kernel_hires2_*** : code conservé en legacy fallback (écrit en bank 128 mais bank 128 = RAM normale, plus visible compositor). Effectivement obsolète, à retirer en Sprint 3.b cleanup.
 
 ### ADR-11 — Sémantique du mode E vis-à-vis du NMOS 6502 (ratifiée 2026-05-07)
 Le 65C816 en mode E adopte un comportement **hybride pragmatique** :
