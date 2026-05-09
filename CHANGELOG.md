@@ -7,6 +7,39 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint GPU-3 v0.2 : kernel_gfx_blit + line ✨
+
+### OricOS → 0.35.0
+- **`kernel_gfx_blit`** : copie bloc rectangulaire SDRAM via GPU BLIT.
+- **`kernel_gfx_line`** : tracé Bresenham 4bpp via GPU LINE.
+- Constantes I/O : GPU_OP_BLIT = $03, GPU_OP_LINE = $04.
+
+### Boot kernel intégré
+- BLIT(src=$004000, dst=$008000, byte_w=10, byte_h=8) : 8 lignes × 20
+  pixels copiés vers ligne 32+, le rect FILL_RECT répliqué.
+- LINE((40,20)→(40,25), color=2=green) : ligne verticale 6 pixels
+  green sur fond blue, mix byte = $24.
+
+### API kernel_gfx_* complet
+| Helper | Status | GPU opcode |
+|--------|--------|------------|
+| kernel_gfx_clear | ✅ v0.1 | CLEAR |
+| kernel_gfx_fill_rect | ✅ v0.1 | FILL_RECT |
+| kernel_gfx_blit | ✅ v0.2 | BLIT |
+| kernel_gfx_line | ✅ v0.2 | LINE |
+| kernel_gfx_text | ⏳ v0.3 | TEXT (font ROM) |
+
+### Validation
+- 539 tests OK. ASSERTs étendus (BLIT + LINE post-STP).
+
+### Importance
+**Le kernel OricOS dispose maintenant d'une API graphique complète
+pour Sprint 3.c (window manager) :** clear, fill_rect, blit (drag
+fenêtre), line (bordures arbitraires). Suffisant pour démarrer le
+window manager sans attendre TEXT.
+
+---
+
 ## [2026-05-09] — Sprint GPU-2 partiel : BLIT + LINE ajoutés ✨
 
 ### Phosphoric (oric2-golden-model)
