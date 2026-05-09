@@ -7,6 +7,38 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint GPU-2 v0.3 : TEXT (ADR-21 complet) ✨✨✨
+
+### Phosphoric (oric2-golden-model)
+- **`GPU_OP_TEXT ($05)`** : 5e commande GPU implémentée.
+  Rendu fonte 8×8 monochrome (color_fg, transparency intacte).
+  Args : base + font_addr + string_addr (null-term) + (x, y, color).
+- Test unitaire `test_text_basic_char` valide rendu pixel par pixel
+  d'un caractère simple.
+
+### ADR-21 — 100% complet
+Toutes 5 commandes GPU ratifiées sont **implémentées et testées** :
+
+| Opcode | Nom | Phosphoric | Kernel API |
+|--------|-----|------------|------------|
+| $01 | CLEAR | ✅ v0.1 | ✅ kernel_gfx_clear |
+| $02 | FILL_RECT | ✅ v0.1 | ✅ kernel_gfx_fill_rect |
+| $03 | BLIT | ✅ v0.1 | ✅ kernel_gfx_blit |
+| $04 | LINE | ✅ v0.1 | ✅ kernel_gfx_line |
+| **$05** | **TEXT** | **✅ v0.1** | ⏳ kernel_gfx_text v0.3 |
+
+### Validation
+- 541 tests OK (540 → 541, +1).
+
+### Reportés
+- **kernel_gfx_text** côté OricOS (SP-GPU-3 v0.3) : helper asm qui
+  configure registres GPU. Demande aussi pré-chargement fonte +
+  string en SDRAM avant l'appel — plus lourd à intégrer dans le
+  boot, à faire dans une session dédiée.
+- v0.4 : color_bg, fonte variable, BLIT pixel-aligned/overlap.
+
+---
+
 ## [2026-05-09] — Sprint 3.c v0.2 : Multi-fenêtre via BLIT ✨✨
 
 ### OricOS → 0.37.0
