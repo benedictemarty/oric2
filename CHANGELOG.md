@@ -7,6 +7,33 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint VRAM-2 : kernel API vram_* opérationnelle ✨
+
+### OricOS → 0.31.0
+- **`kernel_vram_write_block`** : RAM banking → VRAM cold.
+- **`kernel_vram_read_block`** : VRAM cold → RAM banking.
+- **`kernel_vram_dma`** : trigger DMA HW SDRAM↔bank (synchrone v0.1).
+- ZP args $60-$6D, constantes I/O $000330-$00033C.
+- Boot kernel exerce les 3 helpers en séquence (write "VRAM", read
+  "ABCD", DMA copy "ABCD"). Validation 3 ASSERTs post-STP.
+
+### Phosphoric (oric2-golden-model)
+- Test `test_oricos_vram_write_read_dma` : pré-charge VRAM via
+  `vram_poke`, boot kernel, ASSERT post-STP.
+- io_callback étendu : $0320-$0327 (SD) + $0330-$033F (VRAM).
+- 525 tests OK (524 → 525, +1).
+
+### Importance architecturale
+**Premier code kernel utilisant l'I/O VRAM cold.** Les Sprints
+suivants (SP-VRAM-3 refactor allocator, SP-3.c window manager)
+s'appuieront sur ces helpers comme primitives de base.
+
+### Reportés Sprint VRAM-2 v0.2
+- `kernel_vram_alloc(size)` allocator (bumb-only ou bitmap).
+- `kernel_vram_blit(src_24, dst_24, w, h)` rectangles 2D.
+
+---
+
 ## [2026-05-09] — Sprint VRAM-1 : vram_device implémenté ✨
 
 ### Phosphoric (oric2-golden-model)
