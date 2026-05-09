@@ -7,31 +7,54 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
-## [2026-05-09] — Sprint 3.b v0.2 partiel : kernel_fill_rect_aligned (bug)
+## [2026-05-09] — Sprint 3.b v0.2 : kernel_fill_rect_aligned ✨ + fix Phosphoric ASL M=0
 
 ### OricOS → 0.30.0
-- **`kernel_fill_rect_aligned`** ajoutée : rectangle 8-px-aligned X.
-  Args ZP : gx_start, gx_count, y_start, y_count, color. Algorithme
-  basé sur DP indirect long avec pattern 24-bit color × $249249.
+- **`kernel_fill_rect_aligned`** : rectangle 8-px-aligned X.
+  Args ZP : gx_start, gx_count, y_start, y_count, color.
+- Boot kernel : clear(blue) + fill_rect(red 80×80 centre).
 
-### ⚠️ Bug connu
-- Rectangle dessiné à (-6gx, -51y) du target. Size correcte (800
-  triples pour 10×80) mais placement faux.
-- Differential offset = 4608 = 0x1200 = 18 × 256. Suggère bug
-  high byte FB_PTR.
-- Appel au boot retiré → test `test_oricos_hires2_clear_fills_blue`
-  passe (v0.1 préservée).
-- À débugger session suivante : asm sentinels + lecture post-STP.
+### Phosphoric (oric2-golden-model) → fix opcodes 65C816
+**Bug racine trouvé dans Phosphoric** : ASL/LSR/ROL/ROR Accumulator
+(`$0A`, `$4A`, `$2A`, `$6A`) ne propageaient PAS le carry low→high
+byte en mode M=0 (utilisaient `a8(cpu)` 8-bit même quand A est 16-bit).
+
+**Conséquence** : `lda #$003C; asl asl asl` en M=0 donnait `$00E0`
+au lieu de `$01E0`. Toute arithmétique 16-bit basée sur shifts était
+silencieusement fausse.
+
+**Découverte** : kernel_fill_rect_aligned d'OricOS calculait `y*90`
+via shifts 16-bit. Résultat erroné `$0318` (792) au lieu de `$1518`
+(5400) pour y=60. Sentinels asm injectés dans le kernel ont permis
+d'isoler le bug DANS Phosphoric, pas OricOS.
+
+**Fix** : branchement M=8bit/M=16bit explicite dans les 4 opcodes
+Accumulator, utilisant `cpu->C` 16-bit en M=0.
 
 ### Validation
-- 515 tests OK (inchangé). Pas de régression.
+- 515 tests OK (aucune régression du fix Phosphoric).
+- Test `test_oricos_hires2_clear_and_rect` : ASSERT 6400 pixels red
+  + 41600 pixels blue + 0 autres + frontières strictes 1-px.
 
 ### Importance
-Sprint 3.b v0.2 livré avec **honesty** sur le bug. La fonction est
-présente dans le kernel comme primitive disponible, à corriger plus
-tard. Le fait d'avoir 800 triples écrits (count correct) + range
-correct (10×80) prouve que le inner loop fonctionne ; seul le
-calcul d'offset_initial est foireux.
+**Bel exemple de méthodologie pluri-projets** :
+- Le golden-model Phosphoric avait un bug latent silencieux.
+- Une primitive OricOS l'a réveillé.
+- Sentinels asm ont localisé la racine côté Phosphoric.
+- Fix en amont → le code OricOS était correct depuis le début.
+
+ADR-12 + ADR-02 maintenant **complètement opérationnels** : kernel
+peut dessiner des rectangles arbitraires (granularité 8 pixels en X)
+en bank 128, visibles via le compositor.
+
+### Dette technique restante
+- Audit shifts/rotations zp/abs en M=0 (possible même bug pour `$06`,
+  `$0E`, `$2E` etc.). Pas encore exercé.
+
+### Reportés Sprint 3.b v0.3
+- `kernel_pixel_set(x, y, color)` pixel-perfect arbitraire.
+- `kernel_blit` pour fontes / icônes.
+- Bascule mode TEXT ↔ HIRES via registre I/O.
 
 ---
 
