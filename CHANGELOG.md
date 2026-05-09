@@ -7,6 +7,38 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint GPU-3 : kernel_gfx_* opérationnels ✨
+
+### OricOS → 0.34.0
+- **`kernel_gfx_clear`** : remplit zone SDRAM via GPU CLEAR.
+- **`kernel_gfx_fill_rect`** : rectangle 4bpp via GPU FILL_RECT.
+- ZP args $70-$78, constantes I/O $000340-$00034F.
+- Boot kernel : CLEAR 32 KiB blue + FILL_RECT 8×4 white sur fond blue.
+
+### Phosphoric (oric2-golden-model)
+- Test `test_oricos_gpu_clear_then_fill_rect` : pipeline complet
+  Boot → kernel_gfx_clear → kernel_gfx_fill_rect → GPU exec → SDRAM.
+- io_callback étendu pour routing $0340-$034F (GPU).
+- 534 tests OK (533 → 534, +1).
+
+### Importance architecturale
+**OricOS utilise désormais le GPU autonome au lieu d'écrire directement
+en VRAM.** Pipeline complet validé end-to-end :
+```
+Boot kernel → kernel_gfx_clear/fill_rect → I/O ports $0340+
+           → gpu_device exec → vram_device SDRAM
+           → vram_peek validation
+```
+
+SP-3.c (window manager) peut maintenant s'appuyer sur cette API.
+
+### Reportés Sprint GPU-3 v0.2
+- `kernel_gfx_blit/line/text` (dépend SP-GPU-2 extension Phosphoric).
+- IRQ-based wait au lieu de polling busy.
+- Cleanup `kernel_hires2_*` legacy (Sprint 3.b cleanup).
+
+---
+
 ## [2026-05-09] — Sprint GPU-1 : gpu_device v0.1 implémenté ✨
 
 ### Phosphoric (oric2-golden-model)
