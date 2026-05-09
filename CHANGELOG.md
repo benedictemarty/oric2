@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.c v0.4 : 3e fenêtre démo palette ✨
+
+### OricOS → 0.40.0
+- Boot kernel : ajout window 3 colorful à (140, 100), 80×60.
+- Couleurs distinctes : frame=12=lightred, title=14=yellow,
+  body=11=lightcyan — démontre la palette VGA-IBM 16 couleurs.
+
+### Phosphoric → 1.22.9-alpha
+- `tests/integration/test_oricos_window.c` : 6 ASSERTs window 3.
+- 541 tests OK (= aucune régression).
+
+### Démo PPM finale (1024×768 visualisable)
+- Window 1 (20, 10) bleu/lgray + "OS" blanc.
+- Window 2 (300, 300) vert/lgray (dragged).
+- Window 3 (140, 100) rouge/jaune/cyan ✨.
+
+### Limite v0.1 documentée
+- `kernel_window_draw` arguments ZP 8-bit (WIN_X/Y/W/H).
+- Contrainte : x+w-1 ≤ 255, y+h-1 ≤ 255.
+- Extension 16-bit args prévue v0.5.
+
+---
+
 ## [2026-05-09] — Sprint 3.c v0.3 : true drag ✨✨
 
 ### OricOS → 0.39.0
