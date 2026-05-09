@@ -7,6 +7,33 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint GPU-1 : gpu_device v0.1 implémenté ✨
+
+### Phosphoric (oric2-golden-model)
+- **`src/io/gpu_device.{c,h}`** : émulation GPU Blitter HW (ADR-21).
+- 2 commandes v0.1 : CLEAR + FILL_RECT synchrones.
+- Ports I/O `$0340-$034F` : 4 args 24-bit + status + trigger.
+- 7 tests unitaires : init, registres round-trip, CLEAR, FILL_RECT
+  (aligné + mask intra-octet 4bpp), opcode inconnu err, CLEAR full
+  XVGA framebuffer.
+
+### Validation
+- 533 tests OK (526 → 533, +7 nouveaux, aucune régression).
+
+### Importance architecturale
+**Première brique GPU autonome opérationnelle**. Le golden model
+Phosphoric peut désormais simuler des commandes GPU CLEAR / FILL_RECT
+sur la VRAM SDRAM. Le HDL ULX3S à venir (SP-GPU-HDL-1) reproduira
+le même comportement.
+
+### Reportés Sprint GPU-2
+- Commandes BLIT, LINE, TEXT (3 ops restantes ADR-21).
+- BPL configurable (pour résolutions autres que XVGA).
+- x/y/w/h 16-bit (limite v0.1 = 255 chacun).
+- DMA async + IRQ.
+
+---
+
 ## [2026-05-09] — ADR-20 v3 : XVGA 1024×768×4bpp ✨
 
 Avec ADR-19 v2 (VRAM SDRAM unifiée), la contrainte BRAM est levée.

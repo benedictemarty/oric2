@@ -69,7 +69,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ~~SP-VRAM-1~~ | ✅ **clos 2026-05-09** : `src/io/vram_device.{c,h}` simulant 16 MiB SDRAM via I/O `$0330-$033C` + DMA synchrone. 9 tests unitaires (init, address round-trip, auto-increment, wrap, DMA bidirectionnel, LEN=0=64K). 524 tests OK (+9). | ADR-19 ✅ |
 | ~~SP-VRAM-2~~ | ✅ **clos 2026-05-09** : `kernel_vram_write_block`, `kernel_vram_read_block`, `kernel_vram_dma` (OricOS) + test boot intégration (Phosphoric). 525 tests OK (+1). | SP-VRAM-1 ✅ |
 | ~~SP-VRAM-3~~ | ✅ **clos 2026-05-09 (v0.2)** : pool LIVE banks 132-159 (= $84..$9F, 28 banks) suite ADR-20 ratifiée (banks 128-131 réservés framebuffer SVGA 800×600×4bpp). `kernel_alloc_live_bank`/`free_live_bank` (LIFO+bump). Robustesse DMA : timeout 256 polls. 526 tests OK. | SP-VRAM-2 ✅ |
-| **SP-GPU-1** | Phosphoric : `src/io/gpu_device.{c,h}` simulant le GPU Blitter (ADR-21). v0.1 : commande CLEAR + FILL_RECT synchrone. Tests unitaires. | ADR-21 ✅ |
+| ~~SP-GPU-1~~ | ✅ **clos 2026-05-09** : `src/io/gpu_device.{c,h}` simulant GPU Blitter (ADR-21). v0.1 : CLEAR + FILL_RECT synchrones. Ports I/O $0340-$034F. 7 tests unitaires (init, args round-trip, CLEAR, FILL_RECT aligned, FILL_RECT mask intra-octet, opcode inconnu err, CLEAR full XVGA). 533 tests OK (+7). | ADR-21 ✅ |
 | **SP-GPU-2** | Phosphoric : étendre gpu_device avec BLIT, LINE, TEXT. Tests étendus. | SP-GPU-1 |
 | **SP-GPU-3** | OricOS kernel : helpers `kernel_gfx_clear`, `kernel_gfx_fill_rect`, etc. Refactor `kernel_hires2_*` vers `kernel_gfx_*` (ou les marquer legacy). | SP-GPU-1 |
 | **SP-GPU-HDL-1** | HDL ULX3S : controller GPU minimal (CLEAR + FILL_RECT). | SP-GPU-3 |
