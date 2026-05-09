@@ -146,34 +146,87 @@ Banks `$10xxxx` à `$7Fxxxx` (7 MiB) sont l'espace d'adressage utilisateur
 
 ---
 
-## 8. Banks 128-191 — Framebuffers et fenêtres OricOS (lazy)
+## 8. Banks 128-159 — VRAM "live" BRAM (ADR-19)
 
-Banks `$80xxxx` à `$BFxxxx` (4 MiB) sont réservés aux framebuffers
-graphiques :
-- Framebuffer principal OricOS (mode 320×240+ host ULA, ADR-02)
-- Buffers fenêtres (chaque fenêtre OricOS a son backing-store)
-- Sprites et tilemaps précalculés
+Banks `$80xxxx` à `$9Fxxxx` (32 banks × 64 KiB = **2 MiB**) sont la
+**VRAM "live" rapide** d'OricOS, physiquement implémentés en BRAM
+ECP5 côté HDL ULX3S (ADR-19, ratifiée 2026-05-09).
 
-Le compositor matériel HDL ULX3S accède directement à ces banks via
-DMA-like fetches (à spécifier dans le HDL Spec).
+Caractéristiques :
+- **Accès CPU direct** via banking 24-bit (`STA al`, `STA [dp],Y`,
+  etc.). Latence 1 cycle.
+- **Compositor matériel ULA host** (ADR-02) lit ces banks à fréquence
+  pixel HDMI (~25 MHz pour 640×400 60Hz).
+- Capacité visée : framebuffer principal `host` (ADR-12) + 4-8
+  backing-stores fenêtres simultanément en focus.
+
+Allocation typique :
+- **Bank 128** : framebuffer principal OricOS (mode HIRES Oric 2,
+  ADR-12). Lazy-alloc à la 1ère écriture par le kernel.
+- **Banks 129-159** : pool de banks live disponibles pour fenêtres
+  actives (chaque fenêtre = 1 bank dédiée si fenêtre 320×240×4bpp).
+  Allocateur `kernel_alloc_live_bank` (Sprint 3.c+).
 
 ---
 
-## 9. Banks 192-255 — Réservé / extensions futures (lazy)
+## 9. VRAM "cold" SDRAM via I/O (ADR-19)
 
-Banks `$C0xxxx` à `$FFxxxx` (4 MiB) sont **réservés pour extensions
-futures** et ne doivent pas être utilisés par le code v1. Cas d'usage
-prévus :
-- ROM cartouche (banks 192-207 : 1 MiB)
+La **VRAM "cold"** réside dans la **SDRAM ULX3S (32 MiB)** et est
+accessible **uniquement via I/O ports MMIO** depuis le CPU
+(non mappée dans le banking 24-bit).
+
+Ports I/O (bank 0 / DBR=0) :
+
+| Adresse | Registre | R/W | Description |
+|---------|----------|-----|-------------|
+| `$0330` | `VRAM_ADDR_LO`  | R/W | Adresse SDRAM bits [7:0] |
+| `$0331` | `VRAM_ADDR_MID` | R/W | bits [15:8] |
+| `$0332` | `VRAM_ADDR_HI`  | R/W | bits [23:16] (16 MiB adressable, top 16 MiB réservés) |
+| `$0333` | `VRAM_DATA`     | R/W | byte courant, **auto-increment ADDR** après chaque accès |
+| `$0334` | `VRAM_DMA_CTRL` | R/W | W bit 0 = trigger DMA, bit 1 = direction (0=SDRAM→bank, 1=bank→SDRAM); R bit 7 = busy |
+| `$0335` | `VRAM_DMA_SRC_LO`  | R/W | DMA source adresse low |
+| `$0336` | `VRAM_DMA_SRC_MID` | R/W | DMA source adresse mid |
+| `$0337` | `VRAM_DMA_SRC_HI`  | R/W | DMA source adresse high (banking si bank→SDRAM) |
+| `$0338` | `VRAM_DMA_DST_LO`  | R/W | DMA dest adresse low |
+| `$0339` | `VRAM_DMA_DST_MID` | R/W | DMA dest adresse mid |
+| `$033A` | `VRAM_DMA_DST_HI`  | R/W | DMA dest adresse high |
+| `$033B` | `VRAM_DMA_LEN_LO`  | R/W | DMA longueur low |
+| `$033C` | `VRAM_DMA_LEN_HI`  | R/W | DMA longueur high (max 64 KiB par burst) |
+
+Usage typique :
+- **Backing-stores** des fenêtres iconifiées ou occluded.
+- **Sprites/fontes/icônes** précalculées chargées au boot.
+- **Streams** (vidéo, animations) lus pendant le rendu.
+- **Code apps en pagination** (apps > 64 KiB peuvent paginer leur code).
+
+**DMA** est l'opération clé pour les transferts massifs :
+- Drag fenêtre : DMA cold backing → live bank, ~µs au lieu de 38 000
+  cycles CPU pour une fenêtre 320×240×4bpp.
+- Restore from icon : DMA cold backing → live bank.
+- Sauvegarder fenêtre avant focus change : DMA live bank → cold
+  backing.
+
+Le DMA **bloque le CPU** pendant le transfert (busy bit set). Pour
+les blits asynchrones, le kernel polle `VRAM_DMA_CTRL` ou attend une
+interruption (à définir).
+
+---
+
+## 10. Banks 160-255 — Réservé / extensions futures (lazy)
+
+Banks `$A0xxxx` à `$FFxxxx` (96 banks × 64 KiB = 6 MiB) sont
+**réservés pour extensions futures** et ne doivent pas être utilisés
+par le code v1. Cas d'usage prévus :
+- ROM cartouche (banks 160-191 : 2 MiB)
 - DMA buffers spécialisés
 - Memory-mapped peripherals étendus
 - Banks privilégiés (sécurité, si ADR-04 v2 introduit MPU)
 
 ---
 
-## 10. Implémentation Phosphoric (golden model)
+## 11. Implémentation Phosphoric (golden model)
 
-### 10.1 Mode machine
+### 11.1 Mode machine
 
 `emulator_t.machine` = `ORIC_MACHINE_ORIC1` (défaut) ou
 `ORIC_MACHINE_ORIC2`. Sélectionné par CLI `--machine oric1|oric2`.
@@ -183,7 +236,7 @@ prévus :
 - **Mode oric2** : banks 0-3 alloués au boot (RAM 192 KiB additionnelle).
   Banks 4-255 toujours lazy.
 
-### 10.2 Allocation banks
+### 11.2 Allocation banks
 
 - Bank 0 : `mem.ram` + `mem.rom` (existant, jamais alloué via `extra_banks`).
 - Banks 1-3 (oric2) : alloués au reset via `memory_write24(BANK*0x10000, 0)`
@@ -191,14 +244,14 @@ prévus :
   sont initialisés à zéro (calloc).
 - Banks 4-255 : lazy alloc à la première écriture (mécanisme B1.8 inchangé).
 
-### 10.3 Vecteurs Oric 2
+### 11.3 Vecteurs Oric 2
 
 Mode oric2 attend que les vecteurs en bank 0 (`$00FFE_` et `$00FFF_`)
 soient initialisés par OricOS. Si non initialisés (test sans OricOS),
 COP/BRK/IRQ se comportent comme du Oric 1 (bank 0 ROM contient les
 vecteurs Oric 1 originaux).
 
-### 10.4 Gating B2 v0.1
+### 11.4 Gating B2 v0.1
 
 - Aucun changement de comportement guest Oric 1 (bank 0).
 - `--machine oric2` débloque l'allocation banks 1-3 mais ne charge

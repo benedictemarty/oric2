@@ -7,6 +7,51 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — ADR-19 ratifiée : VRAM hybride (BRAM live + SDRAM cold) ✨
+
+### Décision stratégique architecturale
+
+OricOS adopte une **architecture VRAM à deux niveaux** :
+- **VRAM live** : banks 128-159 (2 MiB) en BRAM ECP5, accès CPU
+  direct via banking, latence 1 cycle. Compositor matériel ULA host
+  (ADR-02) lit ces banks à fréquence pixel HDMI.
+- **VRAM cold** : SDRAM 32 MiB accessible via I/O ports $0330-$033C
+  (auto-increment + DMA HW pour blit massif). Hors banking 24-bit.
+
+### Justification
+- Capacité scalable : 100+ fenêtres iconifiées en SDRAM.
+- Performance optimale fenêtre active : `STA al` direct.
+- DMA HW pour transferts massifs (drag fenêtre) sans cycle CPU perdu.
+- Référence d'art : **Amiga (chip RAM + fast RAM)**, **Apple IIgs
+  (system RAM + slot RAM)**.
+
+### Alternatives écartées
+- Arch A pure (banking-only) : limité ~3 MiB pratique, pas scalable.
+- Arch B I/O VRAM pure : pas d'accès pixel direct, perf dégradée.
+- Arch C window mapping : memory remap HDL complexe, latence cache.
+
+### Documents mis à jour
+- **`CLAUDE.md` §2 ADR-19** : ratification complète avec spec ports
+  I/O et impacts.
+- **`docs/MEMORY_MAP.md`** : §8 refondu (banks 128-159 = VRAM live
+  BRAM), §9 nouveau (VRAM cold via I/O), §10 ajusté (banks 160-255
+  réservés extensions).
+- **`BACKLOG.md`** : nouveaux sprints SP-VRAM-1/2/3 ajoutés en
+  prérequis SP-3.c. ADR-19 fermée.
+
+### Sprint plan implémentation (à venir)
+- **SP-VRAM-1** : Phosphoric `vram_device` simulant 32 MiB SDRAM (1-2j).
+- **SP-VRAM-2** : kernel API `vram_read/write/dma` (2-3j).
+- **SP-VRAM-3** : refactor allocator pool "live" vs système (1-2j).
+- **SP-3.c** ensuite : window manager utilisant Arch D pleinement.
+
+### Importance
+**ADR-19 fixe les fondations long-terme** d'OricOS GUI. Sprint 3.c
+(window manager) ne démarrera qu'après les SP-VRAM pour s'appuyer
+sur la bonne plomberie dès le début (vs refactor douloureux ensuite).
+
+---
+
 ## [2026-05-09] — Sprint 3.b v0.2 : kernel_fill_rect_aligned ✨ + fix Phosphoric ASL M=0
 
 ### OricOS → 0.30.0

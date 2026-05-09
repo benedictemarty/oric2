@@ -194,6 +194,48 @@ Modes vidéo additionnels (mode TEXT 40×28 compat Oric 1, modes
 étendus 320×240+ pour le desktop OricOS) restent ouverts à de futurs
 ADR (notamment lors de B4 v2).
 
+### ADR-19 — VRAM hybride : BRAM live + SDRAM cold via I/O (ratifiée 2026-05-09)
+OricOS adopte une architecture VRAM **à deux niveaux** pour combiner accès pixel direct rapide et capacité de stockage massive :
+
+**VRAM "live"** :
+- Banks **128-159** (32 banks × 64 KiB = **2 MiB**) physiquement implémentés en **BRAM ECP5** côté HDL ULX3S.
+- Accès CPU **direct** via banking 24-bit (`STA al`, `STA [dp],Y`, etc.). Latence 1 cycle.
+- Capacité visée : framebuffer principal `host` (mode HIRES Oric 2) + 4-8 backing-stores fenêtres simultanément en focus.
+- Le **compositor matériel ULA host** lit ces banks à fréquence pixel HDMI.
+
+**VRAM "cold"** :
+- **SDRAM ULX3S** (32 MiB), accessible **uniquement via I/O ports MMIO** depuis le CPU (pas dans le banking 24-bit).
+- Ports en bank 0 (DBR=0) :
+  - `$0330` `VRAM_ADDR_LO`  (R/W)
+  - `$0331` `VRAM_ADDR_MID` (R/W)
+  - `$0332` `VRAM_ADDR_HI`  (R/W) — adresse 24-bit dans SDRAM
+  - `$0333` `VRAM_DATA`     (R/W, **auto-increment ADDR**)
+  - `$0334` `VRAM_DMA_CTRL` (W = trigger, R bit 7 = busy)
+  - `$0335-$0337` `VRAM_DMA_SRC_{LO,MID,HI}` — adresse source 24-bit (interprétée selon `VRAM_DMA_CTRL` bit 0/1 = SDRAM/bank live)
+  - `$0338-$033A` `VRAM_DMA_DST_{LO,MID,HI}` — adresse dest 24-bit
+  - `$033B-$033C` `VRAM_DMA_LEN_{LO,HI}` — longueur 16-bit (max 64 KiB par DMA)
+- Usage : backing-stores fenêtres iconifiées, sprites/fontes/icônes, streams, code apps en pagination.
+- **DMA matériel** : copie SDRAM ↔ banks live (2 MiB BRAM) sans bouger le CPU. Drives de blits massifs (drag fenêtre, restore from icon).
+
+**Banks 160-191** : redeviennent **"Réservés extensions futures"** (pas VRAM directe). Cf. ADR-12 inchangée mais avec localisation framebuffer = bank 128 (live).
+
+Justification :
+- Capacité scalable : 32 MiB SDRAM → 100+ fenêtres iconifiées + assets gros.
+- Performance optimale fenêtre active : `STA al` direct.
+- DMA HW pour transferts massifs sans cycle CPU perdu (déplacement fenêtre = quelques µs, pas 38 000 cycles).
+- Référence d'art : **Amiga (chip RAM + fast RAM)**, **Apple IIgs (system RAM + slot RAM)**.
+
+Alternatives écartées :
+- (a) **Arch A pure (banking-only)** : limité à ~3-4 MiB pratique, pas scalable pour 100+ fenêtres iconifiées.
+- (b) **Arch B I/O VRAM pure** : pas d'accès pixel direct, freine apps qui dessinent point-par-point (tous les pixels via I/O port = 3-4× cycles).
+- (c) **Arch C window mapping** : memory remap HDL complexe, latence cache, debugging non-trivial.
+
+Implications projet :
+- **Phosphoric** : ajouter `src/io/vram_device.{c,h}` (32 MiB simulés en heap, ports `$0330-$033C`).
+- **OricOS kernel** : helpers `kernel_vram_read_block`, `kernel_vram_write_block`, `kernel_vram_dma`. Allocator `kernel_alloc_bank` distingue pool "live" (banks 128-159) du pool système (banks 4-127).
+- **HDL ULX3S** : DMA controller SDRAM↔BRAM, address latch + auto-increment, refresh SDRAM, controller raster.
+- **MEMORY_MAP.md §8** : refonte (live BRAM banks 128-159, cold SDRAM via I/O) — cf. ADR-19 §implications.
+
 ### ADR-11 — Sémantique du mode E vis-à-vis du NMOS 6502 (ratifiée 2026-05-07)
 Le 65C816 en mode E adopte un comportement **hybride pragmatique** :
 - **Bug `JMP ($xxFF)`** : reproduit (le high byte est lu à `(ptr & 0xFF00) | ((ptr+1) & 0xFF)`, conforme NMOS).
