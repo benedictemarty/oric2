@@ -7,6 +7,40 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.c v0.3 : true drag ✨✨
+
+### OricOS → 0.39.0
+- Boot kernel : démo true drag.
+  - **BLIT** window 2 depuis (50, 80) vers (300, 300).
+  - **FILL_RECT** clear ancienne pos (50, 80, 80, 60) en color 0.
+- Window 1 + "OS" titlebar intacts.
+
+### Démo PPM finale ULTIME — 3 actions visuelles
+**`/tmp/oricos_window_xvga.ppm`** affiche :
+- **Window 1** (20, 10) titlebar BLEUE avec **"OS"** en BLANC ✨
+- **Window 2** (300, 300) titlebar VERTE — dragged depuis (50, 80) ✨
+- Position (50, 80) tout NOIR — effacée par drag ✨
+
+### Validation
+- 541 tests OK.
+
+### Bug d'arithmétique fixé
+Confusion `$58 ↔ $18` pour MID byte de dst_addr `$031896` → fix
+trivial. Décalage visuel +16 KiB hors zone observable.
+
+### Importance
+**True drag = BLIT + CLEAR.** Première opération interactive d'un
+window manager. Sprint 3.c v0.4 ajoutera la liste de fenêtres + focus
++ drag depuis events souris/clavier.
+
+### Reportés Sprint 3.c v0.4
+- struct window_t (RAM) avec liste fixe 8 windows.
+- kernel_window_create/destroy/move/raise/lower.
+- close/minimize avec backing-store SDRAM via DMA.
+- Event-driven drag (souris/clavier).
+
+---
+
 ## [2026-05-09] — Sprint GPU-3 v0.3 : kernel_gfx_text + démo "OS" ✨✨✨
 
 ### OricOS → 0.38.0

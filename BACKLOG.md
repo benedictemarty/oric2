@@ -76,7 +76,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | **SP-GPU-HDL-2** | HDL ULX3S : BLIT engine. | SP-GPU-HDL-1 |
 | **SP-GPU-HDL-3** | HDL ULX3S : LINE Bresenham. | SP-GPU-HDL-2 |
 | **SP-GPU-HDL-4** | HDL ULX3S : TEXT engine + font ROM. | SP-GPU-HDL-3 |
-| ⚙️ **SP-3.c** | v0.2 ✅ (clos 2026-05-09) : `kernel_window_draw` + démo multi-fenêtre via BLIT (clone window 1 → window 2 + repaint titlebar). 28 ASSERTs pixel par pixel. PPM XVGA 1024×768 affiche 2 fenêtres distinctes. 540 tests OK. v0.3 reporté : true drag (BLIT + CLEAR pos1), window list / TCB par fenêtre, close/minimize (DMA backing), title text via TEXT. | SP-GPU-3 ✅ |
+| ⚙️ **SP-3.c** | v0.3 ✅ (clos 2026-05-09) : window manager basique + multi-fenêtre via BLIT + true drag (BLIT + CLEAR pos1) + title text "OS" via TEXT. PPM XVGA finale affiche 2 fenêtres distinctes (window 1 (20,10) avec "OS" titlebar bleu + window 2 (300,300) titlebar vert dragged depuis (50,80)). 541 tests OK. v0.4 reporté : window list / TCB par fenêtre, focus, close/minimize (DMA backing), event-driven drag. | SP-GPU-3 ✅ |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
 | **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like). Backing-stores en VRAM cold via DMA. | SP-3.c, OS-2.d, SP-VRAM-2 |
 
