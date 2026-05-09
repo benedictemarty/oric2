@@ -7,6 +7,30 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Phase 1 PH-cleanup-zombie : retrait kernel_hires2_* legacy 🧹
+
+### OricOS → 0.41.0
+- `kernel.s` : suppression `kernel_hires2_clear` + `kernel_fill_rect_aligned`
+  + `pattern_table` + 14 constantes ZP `HIRES2_*` + appels boot.
+  Code mort visuellement depuis ADR-19 v2 (bank `$80` invisible compositor).
+  Rendu desktop XVGA = exclusivement GPU blitter via `kernel_gfx_*`.
+
+### Phosphoric → 1.22.11-alpha
+- `tests/integration/test_oricos_hires2.c` supprimé (1 test, 20 ASSERTs).
+- `Makefile` allégé : retrait `test-oricos-hires2` + `TEST_ORICOS_HIRES2_SRCS`.
+- Module `src/video/hires_oric2.c` **conservé** (ADR-12 ULA guest 240×200
+  attribute-based, distinct du kernel asm — toujours actif compat Oric 1).
+
+### Validation
+- Build OricOS : kernel.bin 57344 bytes.
+- Build Phosphoric SDL2 : OK.
+- `make tests` : **540 OK** (= -1 vs 541, conforme suppression test_oricos_hires2).
+
+### Phase 1 — sprint suivant
+- PH-2.b campagne validation 65C816 mode E par défaut (bloquante 1.B → 1.C).
+
+---
+
 ## [2026-05-09] — Phase 1 PH-2.a : décrochage types CPU partagés (ADR-18 étape 1.A) 🧹
 
 ### Phosphoric → 1.22.10-alpha
