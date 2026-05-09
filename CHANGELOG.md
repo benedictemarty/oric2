@@ -7,6 +7,35 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Phase 1 PH-2.c.1 : retrait vtable 6502 (ADR-18 étape 1.C, partie 1) 🧹
+
+### Phosphoric → 1.22.13-alpha
+- `cpu_core.h/c` : retrait `cpu_core_vtable_6502`, `CPU_KIND_6502`, adaptateurs
+  v6502_*. cpu_core.h bascule sur `cpu_types.h` (types neutres).
+- `cpu_core_kind_from_string("6502")` : log warning + redirige `CPU_KIND_65C816`
+  (rétro-compat CLI `--cpu 6502` ; mode E = 6502 bit-à-bit prouvé PH-2.b).
+- `test_cpu_core.c` réécrit : 5 tests sélecteurs + vtable 65C816 (vs 10 avant,
+  retrait 8 `matches_direct` 6502 + 3 nouveaux 65c816, net -5 tests).
+- 535 tests OK (= -5 vs 540, conforme).
+
+### Découverte / dette PH-2.c.2
+
+Bloc inter-dépendant 6502 ↔ 65C816 plus fort que prévu :
+`cpu65c816_opcodes.c → opcode_table[opcodes.c] → cpu_set_flag[cpu6502.c]
+→ addressing.c`.
+
+Suppression effective des 3 fichiers cœur 6502 (`cpu6502.c`, `opcodes.c`,
+`addressing.c`) reportée à **PH-2.c.2** : extraction préalable de
+`opcode_table[256]` vers `src/cpu/opcode_metadata.c` neutre, refactor
+`emulator_t.cpu` (69 accès), migration des 3 tests `test_klaus_dormann`,
+`test_oric_boot_dual`, `test_paravirt_demo` vers `cpu65c816_t` mode E.
+
+### Phase 1 — sprint suivant
+- **PH-2.c.2** (à risque) : suppression effective ~2 K LOC + extractions
+  préalables.
+
+---
+
 ## [2026-05-09] — Phase 1 PH-2.b : campagne validation 65C816 mode E PASS ✅ (ADR-18 étape 1.B)
 
 ### Phosphoric → 1.22.12-alpha
