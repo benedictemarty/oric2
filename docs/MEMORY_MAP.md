@@ -146,7 +146,7 @@ Banks `$10xxxx` à `$7Fxxxx` (7 MiB) sont l'espace d'adressage utilisateur
 
 ---
 
-## 8. Banks 128-159 — VRAM "live" BRAM (ADR-19)
+## 8. Banks 128-159 — VRAM "live" BRAM (ADR-19 + ADR-20)
 
 Banks `$80xxxx` à `$9Fxxxx` (32 banks × 64 KiB = **2 MiB**) sont la
 **VRAM "live" rapide** d'OricOS, physiquement implémentés en BRAM
@@ -155,17 +155,22 @@ ECP5 côté HDL ULX3S (ADR-19, ratifiée 2026-05-09).
 Caractéristiques :
 - **Accès CPU direct** via banking 24-bit (`STA al`, `STA [dp],Y`,
   etc.). Latence 1 cycle.
+- **GPU Blitter HW** (ADR-21) lit/écrit ces banks en parallèle du
+  CPU pour exécuter les commandes graphiques.
 - **Compositor matériel ULA host** (ADR-02) lit ces banks à fréquence
-  pixel HDMI (~25 MHz pour 640×400 60Hz).
-- Capacité visée : framebuffer principal `host` (ADR-12) + 4-8
-  backing-stores fenêtres simultanément en focus.
+  pixel HDMI (40 MHz pour 800×600 60Hz selon ADR-20).
 
-Allocation typique :
-- **Bank 128** : framebuffer principal OricOS (mode HIRES Oric 2,
-  ADR-12). Lazy-alloc à la 1ère écriture par le kernel.
-- **Banks 129-159** : pool de banks live disponibles pour fenêtres
-  actives (chaque fenêtre = 1 bank dédiée si fenêtre 320×240×4bpp).
-  Allocateur `kernel_alloc_live_bank` (Sprint 3.c+).
+Allocation (ADR-20 SVGA 800×600×4bpp, 240 KiB framebuffer) :
+- **Banks 128-131** : framebuffer principal SVGA. 4 banks live
+  consécutifs pour les 240 KiB du frame.
+  - Layout préliminaire (option A — lignes alignées) :
+    - Bank 128 ($80) : lignes 0..162
+    - Bank 129 ($81) : lignes 163..325
+    - Bank 130 ($82) : lignes 326..488
+    - Bank 131 ($83) : lignes 489..599
+- **Banks 132-159** (28 banks) : pool de banks live disponibles
+  pour backing-stores fenêtres actives + buffers GPU temporaires.
+  Allocateur `kernel_alloc_live_bank` (Sprint VRAM-3) gère ce pool.
 
 ---
 

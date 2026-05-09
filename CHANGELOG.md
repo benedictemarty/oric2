@@ -7,6 +7,74 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — RÉORIENTATION MAJEURE : ADR-20 + ADR-21 ratifiées ✨✨✨
+
+### Décisions stratégiques
+
+Suite à un échange architectural avec l'utilisateur, le projet bascule
+vers une **architecture GPU-first** plutôt que CPU-direct draw.
+
+#### ADR-20 — Mode HIRES Oric 2 desktop = SVGA 800×600×4bpp
+- 800×600 pixels, 16 couleurs simultanées (palette VGA-IBM).
+- Layout 4bpp big-endian, 400 octets/ligne, 240 KiB/frame.
+- **Localisation : 4 banks live consécutifs (128-131)** dans la VRAM
+  live BRAM ECP5 (cf. ADR-19).
+- HDMI 800×600 60Hz = 40 MHz pixel clock (ULX3S OK).
+- Référence d'art : Amiga ECS, OS/2 Warp, Win 3.x SVGA.
+
+#### ADR-21 — GPU Blitter HW autonome
+- Co-processeur graphique HDL ECP5 dédié, exécute les ops de dessin
+  en parallèle du CPU.
+- Inspiration : Amiga Blitter+Copper, Atari ST DMA blitter, NES PPU.
+- 5 commandes v1 ratifiées : **CLEAR, FILL_RECT, BLIT, LINE, TEXT**.
+- Registres I/O `$0340-$034F` (16 octets) : opcode + 4 args 24-bit
+  + status + trigger + IRQ ctrl.
+- Le CPU enqueue commandes via I/O, GPU exécute, IRQ ou polling busy.
+
+### Conséquences immédiates
+
+- **Sprint 3.c retardé** : maintenant dépend de SP-GPU-3 (helpers
+  kernel `kernel_gfx_*`). Total +6-8 sem effort HDL pour les 5
+  commandes.
+- **Sprint 3.b** (`kernel_hires2_clear`, `fill_rect_aligned`) :
+  conservé comme fallback legacy mais non plus l'API publique.
+- **Pool LIVE allocator** ajusté : `BANK_LIVE_POOL_BASE = $84`
+  (= bank 132) puisque banks 128-131 réservés framebuffer SVGA.
+
+### Sprint plan révisé
+
+| Sprint | Contenu | Effort |
+|--------|---------|--------|
+| ✅ **SP-VRAM-1/2/3** | VRAM hybride + allocator (clos) | — |
+| **SP-GPU-1** | Phosphoric `gpu_device` v0.1 (CLEAR + FILL_RECT) | 2-3 j |
+| **SP-GPU-2** | Phosphoric extension (BLIT, LINE, TEXT) | 3-5 j |
+| **SP-GPU-3** | OricOS kernel `kernel_gfx_*` helpers | 2-3 j |
+| **SP-GPU-HDL-1..4** | HDL ULX3S GPU implémentation | 6-8 sem |
+| **SP-3.c** | Window manager via GPU | 5-10 j (post-GPU-3) |
+
+### Documents mis à jour
+- **CLAUDE.md §2** : ADR-20 + ADR-21 complets avec spec ports I/O,
+  commandes, palettes, layouts.
+- **MEMORY_MAP §8** : banks 128-131 réservés framebuffer SVGA, banks
+  132-159 = pool live fenêtres (28 banks dispos).
+- **BACKLOG** : nouveaux sprints SP-GPU-1/2/3 + SP-GPU-HDL-1/2/3/4.
+  ADR-20 + ADR-21 fermées dans la liste.
+
+### Code mis à jour
+- `kernel.s` : `BANK_LIVE_POOL_BASE` = $84 (bank 132). Démo allocator
+  retourne maintenant $84/$85/$86/$85.
+- `test_oricos_live_alloc` : ASSERTs ajustées.
+- 526 tests OK (aucune régression).
+
+### Importance
+**Ce sprint définit la trajectoire long-terme du projet.** OricOS
+devient un OS GPU-accélérée, comparable à Amiga/Atari ST. Le CPU se
+concentre sur la logique métier ; le GPU dessine de manière autonome.
+Trade-off accepté : effort HDL significatif (6-8 semaines pour les 5
+commandes), mais résultat = OS rétro 16-bit moderne et fluide.
+
+---
+
 ## [2026-05-09] — Sprint VRAM-3 : pool LIVE banks 129-159 ✨
 
 ### OricOS → 0.32.0

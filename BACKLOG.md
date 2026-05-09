@@ -68,8 +68,15 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ~~SP-3.b~~ | ✅ **clos 2026-05-09 (v0.2)** : `kernel_hires2_clear` + `kernel_fill_rect_aligned` (rectangles 8-px-aligned X) + boot kernel intégré (clear blue + rect red 80x80 centre). Bug Phosphoric ASL/LSR/ROL/ROR M=0 trouvé et fixé en cours de route (cf. Phosphoric/CHANGELOG). v0.3 reporté : `pixel_set` arbitraire, blit, bascule TEXT↔HIRES via registre I/O. | Pré-req SP-3.a ✅ |
 | ~~SP-VRAM-1~~ | ✅ **clos 2026-05-09** : `src/io/vram_device.{c,h}` simulant 16 MiB SDRAM via I/O `$0330-$033C` + DMA synchrone. 9 tests unitaires (init, address round-trip, auto-increment, wrap, DMA bidirectionnel, LEN=0=64K). 524 tests OK (+9). | ADR-19 ✅ |
 | ~~SP-VRAM-2~~ | ✅ **clos 2026-05-09** : `kernel_vram_write_block`, `kernel_vram_read_block`, `kernel_vram_dma` (OricOS) + test boot intégration (Phosphoric). 525 tests OK (+1). | SP-VRAM-1 ✅ |
-| ~~SP-VRAM-3~~ | ✅ **clos 2026-05-09** : pool LIVE banks 129-159 (= $81..$9F, 31 banks). `kernel_alloc_live_bank` / `kernel_free_live_bank` (LIFO + bump). Bank 128 réservé framebuffer principal. Robustesse DMA : timeout 256 polls (fix boucle infinie potentielle si vram absent). 526 tests OK (+1). | SP-VRAM-2 ✅ |
-| **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar (utilise live bank). | SP-VRAM-3 |
+| ~~SP-VRAM-3~~ | ✅ **clos 2026-05-09 (v0.2)** : pool LIVE banks 132-159 (= $84..$9F, 28 banks) suite ADR-20 ratifiée (banks 128-131 réservés framebuffer SVGA 800×600×4bpp). `kernel_alloc_live_bank`/`free_live_bank` (LIFO+bump). Robustesse DMA : timeout 256 polls. 526 tests OK. | SP-VRAM-2 ✅ |
+| **SP-GPU-1** | Phosphoric : `src/io/gpu_device.{c,h}` simulant le GPU Blitter (ADR-21). v0.1 : commande CLEAR + FILL_RECT synchrone. Tests unitaires. | ADR-21 ✅ |
+| **SP-GPU-2** | Phosphoric : étendre gpu_device avec BLIT, LINE, TEXT. Tests étendus. | SP-GPU-1 |
+| **SP-GPU-3** | OricOS kernel : helpers `kernel_gfx_clear`, `kernel_gfx_fill_rect`, etc. Refactor `kernel_hires2_*` vers `kernel_gfx_*` (ou les marquer legacy). | SP-GPU-1 |
+| **SP-GPU-HDL-1** | HDL ULX3S : controller GPU minimal (CLEAR + FILL_RECT). | SP-GPU-3 |
+| **SP-GPU-HDL-2** | HDL ULX3S : BLIT engine. | SP-GPU-HDL-1 |
+| **SP-GPU-HDL-3** | HDL ULX3S : LINE Bresenham. | SP-GPU-HDL-2 |
+| **SP-GPU-HDL-4** | HDL ULX3S : TEXT engine + font ROM. | SP-GPU-HDL-3 |
+| **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar via GPU commands `kernel_gfx_*`. | SP-GPU-3 |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
 | **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like). Backing-stores en VRAM cold via DMA. | SP-3.c, OS-2.d, SP-VRAM-2 |
 
@@ -126,6 +133,8 @@ unilatéralement.
 | **ADR-17** | API kernel publique exposée à userland (call gates, ABI) |
 | **ADR-18** | Sort du 6502 Phosphoric (cf. DEC-1) |
 | ~~ADR-19~~ | ✅ **ratifiée 2026-05-09 (Arch D hybride : BRAM live banks 128-159 + SDRAM cold via I/O $0330-$033C)**, déplacée vers `CLAUDE.md` §2. MEMORY_MAP §8/9 refondu. |
+| ~~ADR-20~~ | ✅ **ratifiée 2026-05-09 (mode HIRES Oric 2 desktop = SVGA 800×600×4bpp 16 couleurs, banks 128-131)**, déplacée vers `CLAUDE.md` §2. |
+| ~~ADR-21~~ | ✅ **ratifiée 2026-05-09 (GPU Blitter HW autonome, 5 commandes v1 : CLEAR/FILL_RECT/BLIT/LINE/TEXT, ports I/O $0340-$034F)**, déplacée vers `CLAUDE.md` §2. |
 
 ---
 

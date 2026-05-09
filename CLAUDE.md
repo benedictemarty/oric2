@@ -194,6 +194,132 @@ Modes vidéo additionnels (mode TEXT 40×28 compat Oric 1, modes
 étendus 320×240+ pour le desktop OricOS) restent ouverts à de futurs
 ADR (notamment lors de B4 v2).
 
+### ADR-21 — GPU Blitter HW autonome (ratifiée 2026-05-09)
+OricOS adopte une **architecture GPU command-based** où un co-processeur graphique HDL ECP5 dédié exécute les opérations de dessin en parallèle du CPU 65C816. Le CPU envoie des commandes via I/O ports, le GPU les exécute en accédant directement à la mémoire (BRAM live + SDRAM cold via Arch D / ADR-19).
+
+**Inspiration** : Amiga Blitter + Copper, Atari ST DMA blitter, NES PPU, Apple IIgs Mega II VOC. Le CPU se concentre sur la logique métier ; le GPU s'occupe du dessin.
+
+**Registres I/O ($0340-$034F)** en bank 0 :
+
+| Adresse | Registre | R/W | Description |
+|---------|----------|-----|-------------|
+| `$0340` | `GPU_CMD_OP` | W | opcode 8-bit |
+| `$0341-$0343` | `GPU_ARG1_{LO,MID,HI}` | W | argument 1 (24-bit) |
+| `$0344-$0346` | `GPU_ARG2_{LO,MID,HI}` | W | argument 2 |
+| `$0347-$0349` | `GPU_ARG3_{LO,MID,HI}` | W | argument 3 |
+| `$034A-$034C` | `GPU_ARG4_{LO,MID,HI}` | W | argument 4 |
+| `$034D` | `GPU_STATUS` | R | bit 7=busy, 6=err, 5=queue_full, 0=done |
+| `$034E` | `GPU_TRIGGER` | W | any value → enqueue command |
+| `$034F` | `GPU_INT_CTRL` | R/W | IRQ enable/clear |
+
+**Commandes v1 ratifiées (5 opcodes)** :
+
+| Opcode | Nom | ARG1 | ARG2 | ARG3 | ARG4 |
+|--------|-----|------|------|------|------|
+| `$01` | `CLEAR` | bank target ($80..$83) | color (0..15) | — | — |
+| `$02` | `FILL_RECT` | bank target | (x, y) packed | (w, h) packed | color |
+| `$03` | `BLIT` | src_addr 24-bit | dst_addr 24-bit | (w, h) packed | flags (mask, ROP) |
+| `$04` | `LINE` | bank target | (x1, y1) | (x2, y2) | color (Bresenham) |
+| `$05` | `TEXT` | font_addr 24-bit | string_addr 24-bit | (x, y) packed | (color_fg, len) |
+
+**Format packed** :
+- (x, y) : `LO` = x_lo, `MID` = x_hi (1 bit) | y_lo (7 bits), `HI` = y_hi (3 bits) — supporte x ≤ 1023, y ≤ 1023. v1 800×600 utilise x ≤ 799, y ≤ 599.
+- (w, h) : pareil, w_max = h_max = 1023.
+
+**Commandes v2 reportées** :
+- `SPRITE_DEF` / `SPRITE_MOVE` : sprites HW (cursor souris, anim).
+- `SCROLL` : smooth scroll fenêtre.
+- `COPPER_LIST` : raster effects (couleur/scroll changeant par scanline).
+
+**Modèle d'utilisation typique** (depuis kernel ou app C) :
+```
+Helper : kernel_gfx_clear(bank=$80, color=4)
+  → écrit registres, trigger, poll busy.
+
+Asynchrone :
+  trigger commande, le CPU fait autre chose,
+  reçoit IRQ "done" en fin d'exec.
+```
+
+Le GPU exécute la commande **en parallèle du CPU** : pendant que le GPU dessine, le CPU peut faire la logique applicative. Le GPU lit/écrit dans la mémoire (bank live BRAM ou SDRAM cold) sans intervention CPU.
+
+**Implications projet** :
+- **Phosphoric** : ajouter `src/io/gpu_device.{c,h}` simulant le GPU. v0.1 synchrone (commandes "instantanées"), v0.2 async avec cycles.
+- **OricOS kernel** : helpers `kernel_gfx_clear`, `kernel_gfx_fill_rect`, `kernel_gfx_blit`, `kernel_gfx_line`, `kernel_gfx_text`. Refactor de `kernel_hires2_*` (Sprint 3.b) vers cette API.
+- **HDL ULX3S** : implémentation GPU ECP5 — **projet majeur (~6-8 semaines)** pour les 5 commandes. Décomposition par command :
+  - SP-GPU-HDL-1 : CLEAR + FILL_RECT (~2 semaines)
+  - SP-GPU-HDL-2 : BLIT (~2 semaines)
+  - SP-GPU-HDL-3 : LINE Bresenham (~1 semaine)
+  - SP-GPU-HDL-4 : TEXT avec font ROM (~2 semaines)
+
+**Conséquences sur ADR existantes** :
+- **ADR-12** (HIRES Oric 2 240×200×3bpp) : reste valide pour **ULA guest** uniquement (compat Oric 1). Plus utilisée pour desktop.
+- **ADR-19** (VRAM hybride) : conservée. BRAM live = framebuffer principal cible GPU. SDRAM cold = backing-stores + assets (fontes, sprites).
+- **Sprint 3.b** (`kernel_hires2_clear`, `kernel_fill_rect_aligned`) : code conservé comme **legacy fallback** mais l'API publique kernel devient `kernel_gfx_*`.
+
+Alternatives écartées :
+- (a) **Approche B hybride progressif** (v1 CPU+DMA, v2 GPU) : refactor kernel douloureux à v2.
+- (b) **CPU-only** : trop lent pour résolution > 320×240 et apps fluides.
+
+### ADR-20 — Mode HIRES Oric 2 desktop : 800×600×4bpp SVGA (ratifiée 2026-05-09)
+Avec GPU Blitter HW (ADR-21) qui décharge le CPU, OricOS vise une résolution desktop **ambitieuse SVGA** :
+
+- **Résolution** : 800×600 pixels (format 4:3 SVGA standard).
+- **Profondeur** : 4 bits par pixel = 16 couleurs simultanées.
+- **Palette** : 16 couleurs fixes style VGA-IBM (v2 indexable 16 sur 4096).
+- **Layout pixel** : 2 pixels groupés en 8 bits, big-endian :
+  - Octet n bits [7:4] = pixel 0 (gauche)
+  - Octet n bits [3:0] = pixel 1 (droite)
+- **Adressage** : 800/2 = **400 octets/ligne** × 600 lignes = **240 000 octets/frame**.
+- **Localisation** : **4 banks live BRAM** (128-131) selon ADR-19.
+
+**Layout 4 banks (préliminaire, à figer en SP-GPU-1)** :
+- Option A — **lignes alignées par bank** (recommandé HDL) :
+  - Bank 128 : lignes 0..162 (163 lignes × 400 = 65 200 octets, padding 336 bytes)
+  - Bank 129 : lignes 163..325
+  - Bank 130 : lignes 326..488
+  - Bank 131 : lignes 489..599 (111 lignes, 44 400 octets utilisés)
+- Option B — packing strict 240 KiB linéaires sans padding (ligne cross-bank).
+
+**Palette VGA-IBM standard** :
+
+| Idx | Nom | RGB |
+|-----|-----|-----|
+| 0 | black | (0,0,0) |
+| 1 | blue | (0,0,170) |
+| 2 | green | (0,170,0) |
+| 3 | cyan | (0,170,170) |
+| 4 | red | (170,0,0) |
+| 5 | magenta | (170,0,170) |
+| 6 | brown | (170,85,0) |
+| 7 | lightgray | (170,170,170) |
+| 8 | darkgray | (85,85,85) |
+| 9 | lightblue | (85,85,255) |
+| 10 | lightgreen | (85,255,85) |
+| 11 | lightcyan | (85,255,255) |
+| 12 | lightred | (255,85,85) |
+| 13 | lightmagenta | (255,85,255) |
+| 14 | yellow | (255,255,85) |
+| 15 | white | (255,255,255) |
+
+**HDMI** : 800×600 60Hz = 40 MHz pixel clock. Largement supporté ULX3S (LFE5U-85F PLL OK).
+
+Justification :
+- **Ambitieuse mais réaliste** avec GPU autonome (ADR-21). Le CPU n'a plus à dessiner.
+- **Référence d'art** : Amiga ECS (640×512×4bpp), OS/2 Warp, Win 3.1 (640×480×16 ou SVGA add-on).
+- **Productivité** : ≈ 6× plus de surface qu'un Oric 1 historique.
+- **Pixel-square 4:3** : fidèle aux standards 80s/90s.
+
+Alternatives écartées :
+- 320×240×4bpp : trop modeste vu que GPU n'est plus bottleneck.
+- 640×480×4bpp : VGA standard, mais moins ambitieux.
+- 1024×768×4bpp : 393 KiB = 6 banks live, raster timing 65 MHz tendu LFE5U-85F. Reportable v2.
+
+Implications :
+- **Phosphoric** : module `video/hires_oric2_svga.{c,h}` (ou réutilisation refactorée du module ADR-12).
+- **OricOS kernel** : constantes `HIRES2X_W=800`, `HIRES2X_H=600`, `HIRES2X_BPL=400`, `HIRES2X_FB_BANKS=4`.
+- **HDL ULX3S** : raster controller multi-bank (lit 4 banks BRAM séquentiellement par scanline).
+
 ### ADR-19 — VRAM hybride : BRAM live + SDRAM cold via I/O (ratifiée 2026-05-09)
 OricOS adopte une architecture VRAM **à deux niveaux** pour combiner accès pixel direct rapide et capacité de stockage massive :
 
