@@ -7,6 +7,31 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint VRAM-1 : vram_device implémenté ✨
+
+### Phosphoric (oric2-golden-model)
+- `src/io/vram_device.{c,h}` : émulation VRAM cold SDRAM 16 MiB v1
+  via I/O ports `$0330-$033C`.
+- API : init, cleanup, read/write registers, peek/poke direct.
+- Auto-increment ADDR sur DATA + DMA synchrone bidirectionnel
+  (SDRAM↔bank).
+- 9 tests unitaires couvrent init, address round-trip, auto-inc,
+  wrap-around, DMA dans les 2 sens, LEN=0=64KiB, registres.
+
+### Validation
+- 524 tests OK (+9 nouveaux, aucune régression).
+
+### Importance
+**Première brique d'Arch D opérationnelle.** OricOS pourra accéder à
+16 MiB de VRAM cold via I/O, avec DMA HW pour blits massifs sans
+cycle CPU. Sprint VRAM-2 (kernel API) suit naturellement.
+
+### Reportés v0.2
+- DMA asynchrone (busy bit, IRQ optionnel).
+- Extension à 32 MiB (24-bit + bit dans DMA_CTRL).
+
+---
+
 ## [2026-05-09] — ADR-19 ratifiée : VRAM hybride (BRAM live + SDRAM cold) ✨
 
 ### Décision stratégique architecturale
