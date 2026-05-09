@@ -7,6 +7,32 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Phase 1 PH-2.b : campagne validation 65C816 mode E PASS ✅ (ADR-18 étape 1.B)
+
+### Phosphoric → 1.22.12-alpha
+- `src/main.c` : défaut `emu.cpu_kind = CPU_KIND_65C816` (était CPU_KIND_6502).
+  Mode E (E=1) reproduit le comportement 6502 strict (cycle-exact + ADR-11
+  hybride : bug JMP indirect, opcodes illégaux NMOS = NOP, $EB alias SBC#).
+- Tests : 540 OK (aucune régression).
+
+### Validation go/no-go bloquante 1.B → 1.C
+
+| Critère | ROM 1.0 | ROM 1.1 | Tolérance |
+|---|---|---|---|
+| Diff PPM bit-à-bit (20M cycles) | identique ✓ | identique ✓ | exact |
+| Bench overhead 65C816 vs 6502 | +4.6 % | +4.6 % | ≤ 5 % ✓ |
+| Suite tests Phosphoric | 540/540 ✓ | (idem) | aucune régression |
+
+**GO pour étape 1.C** : suppression effective cpu6502.c, opcodes.c,
+addressing.c, cpu_core_vtable_6502, CPU_KIND_6502, test_cpu.c, réécriture
+test_cpu_core.c en test_cpu816_core.c.
+
+### Phase 1 — sprint suivant
+- PH-2.c étape 1.C : suppression effective ~2 K LOC.
+- PH-2.d étape 1.D : traçage MADR + closure ADR-18.
+
+---
+
 ## [2026-05-09] — Phase 1 PH-cleanup-zombie : retrait kernel_hires2_* legacy 🧹
 
 ### OricOS → 0.41.0
