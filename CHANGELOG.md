@@ -7,6 +7,37 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint GPU-2 partiel : BLIT + LINE ajoutés ✨
+
+### Phosphoric (oric2-golden-model)
+- **`GPU_OP_BLIT ($03)`** : copie de bloc rectangulaire SDRAM → SDRAM.
+  v0.1 limites : src/dst byte-alignés, pas d'overlap, pas de
+  transparency. BPL hardcodé GPU_XVGA_BPL=512.
+- **`GPU_OP_LINE ($04)`** : tracé Bresenham 4bpp.
+  Helper `gpu_set_pixel` mutualise le mask 4bpp gauche/droit.
+- 5 tests supplémentaires : BLIT 1 ligne, BLIT rect multi-ligne,
+  LINE horizontale, verticale, diagonale.
+- 539 tests OK (534 → 539, +5).
+
+### Reportés Sprint GPU-2 v0.3
+- **TEXT** : rendu fonte HW (font ROM + string addr). Demande font
+  ROM externe + caractère par caractère via blit.
+- BLIT v0.2 : alignement pixel-arbitraire, overlap, transparency, ROP.
+
+### État GPU complet (v0.2 partiel)
+| Commande | Status | Notes |
+|----------|--------|-------|
+| CLEAR | ✅ v0.1 | OK |
+| FILL_RECT | ✅ v0.1 | x/y/w/h 8-bit |
+| BLIT | ✅ v0.1 | byte-aligned, no overlap |
+| LINE | ✅ v0.1 | Bresenham 8-bit coords |
+| TEXT | ⏳ v0.3 | font ROM à venir |
+
+Avec CLEAR + FILL_RECT + BLIT + LINE, **un window manager basique
+peut être construit en SP-3.c** sans attendre TEXT.
+
+---
+
 ## [2026-05-09] — Sprint GPU-3 : kernel_gfx_* opérationnels ✨
 
 ### OricOS → 0.34.0

@@ -70,7 +70,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ~~SP-VRAM-2~~ | ✅ **clos 2026-05-09** : `kernel_vram_write_block`, `kernel_vram_read_block`, `kernel_vram_dma` (OricOS) + test boot intégration (Phosphoric). 525 tests OK (+1). | SP-VRAM-1 ✅ |
 | ~~SP-VRAM-3~~ | ✅ **clos 2026-05-09 (v0.2)** : pool LIVE banks 132-159 (= $84..$9F, 28 banks) suite ADR-20 ratifiée (banks 128-131 réservés framebuffer SVGA 800×600×4bpp). `kernel_alloc_live_bank`/`free_live_bank` (LIFO+bump). Robustesse DMA : timeout 256 polls. 526 tests OK. | SP-VRAM-2 ✅ |
 | ~~SP-GPU-1~~ | ✅ **clos 2026-05-09** : `src/io/gpu_device.{c,h}` simulant GPU Blitter (ADR-21). v0.1 : CLEAR + FILL_RECT synchrones. Ports I/O $0340-$034F. 7 tests unitaires (init, args round-trip, CLEAR, FILL_RECT aligned, FILL_RECT mask intra-octet, opcode inconnu err, CLEAR full XVGA). 533 tests OK (+7). | ADR-21 ✅ |
-| **SP-GPU-2** | Phosphoric : étendre gpu_device avec BLIT, LINE, TEXT. Tests étendus. | SP-GPU-1 |
+| ⚙️ **SP-GPU-2** | v0.2 partiel ✅ (clos 2026-05-09) : **BLIT + LINE** ajoutés à gpu_device. v0.1 limites BLIT (alignement byte, no overlap, no transparency). LINE Bresenham 8-bit coords. 5 tests supplémentaires (12 total). v0.3 reporté : **TEXT** (font ROM, plus lourd) + BLIT v0.2 (pixel-aligned, overlap, transparency). | SP-GPU-1 ✅ |
 | ⚙️ **SP-GPU-3** | v0.1 ✅ (clos 2026-05-09) : `kernel_gfx_clear` + `kernel_gfx_fill_rect` (OricOS) + test boot intégration (Phosphoric). 534 tests OK (+1). v0.2 reporté : `kernel_gfx_blit/line/text` (dépend SP-GPU-2), IRQ-based wait, refactor `kernel_hires2_*` legacy. | SP-GPU-1 ✅ |
 | **SP-GPU-HDL-1** | HDL ULX3S : controller GPU minimal (CLEAR + FILL_RECT). | SP-GPU-3 |
 | **SP-GPU-HDL-2** | HDL ULX3S : BLIT engine. | SP-GPU-HDL-1 |
