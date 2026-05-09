@@ -7,6 +7,47 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Programme état-de-l'art Phase 0 close 🏛️
+
+Lancement d'un programme de **remise au top de l'état de l'art** sur 8 semaines, 4 axes parallèles (hygiène d'ingénierie, toolchain & CI moderne, élargissement architectural, process & doc publiable). Phase 0 = décisions bloquantes.
+
+### Décisions cadre
+- **ADR-18 modalité** : retrait net du 6502 post-validation (pas de flag LEGACY_6502). Critère go/no-go : 541 tests verts + bench ≤ 5 % + boot interactif ROM 1.0/1.1.
+- **CI** : GitHub Actions sur repos publics `benedictemarty/{oric2, oric2-golden-model, OricOS}`.
+- **Doc** : site mkdocs Material public sur GitHub Pages.
+
+### ADR ratifiées (3)
+- **ADR-16** — Driver model OricOS : hybride event-driven + sync, sans struct ops v1, table dispatch IRQ `$01:5680`, ring buffer kbd 16 keycodes `$01:5860`. Cf. `docs/adr/0016-driver-model.md` et `CLAUDE.md` §2.
+- **ADR-17** — ABI syscall userland : 18 syscalls v1, `cop #$AA` + table dispatch `$01:5750`, sentinelle `A=$FF` errno bank 1 `$5760`, versioning par opcode immediate (v2 future = `cop #$AB`). Débloque Sprint 4 userland C. Cf. `docs/adr/0017-abi-syscall-userland.md` et `CLAUDE.md` §2.
+- **ADR-18** — Retrait du 6502 dans Phosphoric : retrait net post-validation. DEC-1 actée. Plan d'exécution 4 étapes en Phase 1. Cf. `docs/adr/0018-retrait-6502.md` et `CLAUDE.md` §2.
+
+### ADR parquée v2 (1)
+- **ADR-15** — Isolation mémoire post-v1 : parquée v2 avec critères de réouverture explicites (apps non-trusted OU HW-2 mûr OU 2026-12-31). Évite décision prématurée non-instruisable. Cf. `docs/adr/0015-isolation-memoire-post-v1.md` et `CLAUDE.md` §3.
+
+### Décisions stratégiques actées
+- **DEC-1** ✅ actée (cf. ADR-18).
+- **DEC-2** ✅ actée : HW-1 (contrat HDL ↔ golden model) rédigé en Phase 0/1 (squelette `docs/CONTRACT_HDL.md` créé) ; HDL effectif (HW-2..HW-6, SP-GPU-HDL-1..4) reporté post-programme S9+.
+- **DEC-4** ✅ fusionnée avec ADR-15 parquée.
+
+### Discipline d'architecture
+- **Moratoire ADR formalisé** dans `CLAUDE.md` §10 : aucune nouvelle ratification sans (1) dossier d'instruction écrit, (2) ≥ 50 % impl, (3) cohérence ADR existantes. Liste blanche : révisions mineures, parking explicite, révisions tooling. Origine : pattern de ratification compulsive observé 2026-05-09 (3 ADR ratifiées + 2 révisées le même jour) malgré recommandation 2026-05-08.
+
+### Documentation produite
+- `docs/CONTRACT_HDL.md` — squelette contrat HDL ↔ golden model (HW-1, structure complète, contenu détaillé Phase 1).
+- `docs/adr/README.md` — index MADR + procédure de migration progressive.
+- `docs/adr/0015-isolation-memoire-post-v1.md`, `0016-driver-model.md`, `0017-abi-syscall-userland.md`, `0018-retrait-6502.md`.
+- `CLAUDE.md` mis à jour : ADR-16/17/18 ajoutés §2, parking ADR-15 §3, moratoire §10, révision v0.2.
+- `BACKLOG.md` mis à jour : DEC-1/2 actées, ADR ratifiées, HW-1 promu NOW P0, sprints PH-2.a..d + OS-2.f.v2 ajoutés.
+
+### Phase 1 démarrée (S2-S3)
+Sprints à exécuter : HW-1 (contenu détaillé), PH-2.a..d (retrait 6502), PH-cleanup-zombie (`kernel_hires2_*`), OS-2.f.v2 (table dispatch syscall), OS-2.d (clavier IRQ-driven, débloqué par ADR-16).
+
+### Aucune régression code
+- Pas de modification de code C ou asm en Phase 0. 541 tests OK conservés.
+- Modifications limitées à : `CLAUDE.md`, `BACKLOG.md`, `CHANGELOG.md` (workspace, OricOS, Phosphoric), création `docs/CONTRACT_HDL.md`, `docs/adr/*`.
+
+---
+
 ## [2026-05-09] — Sprint 3.c v0.4 : 3e fenêtre démo palette ✨
 
 ### OricOS → 0.40.0

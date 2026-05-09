@@ -11,13 +11,28 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 ---
 
-## NOW — itération courante (2026-05-08 → 2026-05-22)
+## NOW — itération courante (2026-05-09 → fin Phase 1, programme état-de-l'art)
+
+### Priorité 0 — Programme état-de-l'art (kickoff 2026-05-09)
+
+Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (mémoire). Programme 8 semaines, 4 axes parallèles. Phase 0 close 2026-05-09 ; Phase 1 (assainissement) démarre.
+
+| ID | Titre | Estim. | Phase | Pré-req |
+|----|-------|--------|-------|---------|
+| ~~PHASE0~~ | ✅ **clos 2026-05-09** : décisions cadre (ADR-18 retrait net, CI=GitHub Actions public, doc=GitHub Pages) + ratification ADR-16/17/18 + parking ADR-15 v2 + DEC-1/DEC-2 actées + moratoire ADR formalisé + squelette `docs/CONTRACT_HDL.md` créé. | — | Phase 0 | — |
+| **HW-1** | Contrat HDL ↔ golden model — détail des sections vides du squelette `docs/CONTRACT_HDL.md`. **Promu NOW P0 suite DEC-2.** | 4-5 j | Phase 1 | PHASE0 ✅ |
+| **PH-2.a** | Étape 1.A ADR-18 — décrochage types partagés (extraire `memory_t`, `cpu_irq_source_t`, `cpu_flags_t`, `IRQF_*` vers `include/cpu/cpu_types.h`). | ½ j | Phase 1 | PHASE0 ✅ |
+| **PH-2.b** | Étape 1.B ADR-18 — campagne validation 65C816 mode E par défaut. **Bloquante** : 541 tests verts + bench ≤ 5 % + boot interactif ROM 1.0/1.1. | 1 j | Phase 1 | PH-2.a |
+| **PH-2.c** | Étape 1.C ADR-18 — suppression effective cpu6502.c, opcodes.c, addressing.c, cpu_core_vtable_6502, test_cpu.c, réécriture test_cpu_core.c. | ½ j | Phase 1 | PH-2.b ✅ go |
+| **PH-2.d** | Étape 1.D ADR-18 — création `docs/adr/0018-retrait-6502.md` MADR + traçage CHANGELOG. | ½ j | Phase 1 | PH-2.c |
+| **PH-cleanup-zombie** | Retrait `kernel_hires2_*` zombie (legacy ADR-19 v2, jamais appelé en boot courant). | ½ j | Phase 1 | — |
+| **OS-2.f.v2** | COP handler v0.2 — table dispatch syscall complète selon ADR-17 (table `$01:5750`, 18 syscalls + sys_invalid). | 2 j | Phase 1 | PHASE0 ✅ |
 
 ### Priorité 1 — Fondations OS bloquantes (avant tout sprint GUI)
 
 | ID | Titre | Estim. | Sprint | Pré-req |
 |----|-------|--------|--------|---------|
-| **OS-2.d** | Driver clavier Oric 1 (matrice VIA PB) | 3-5 j | OricOS | — |
+| **OS-2.d** | Driver clavier Oric 1 (matrice VIA PB) — IRQ-driven event queue 16 keycodes selon ADR-16. | 3-5 j | OricOS | ADR-16 ✅ |
 | **OS-2.e** | Driver console générique (`print_char`, `print_string`, cursor, scroll) | 2-3 j | OricOS | — |
 | ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
 | ~~OS-2.g~~ | ✅ **clos 2026-05-08** (v0.1 : TCB table 16 + bitmap, scheduler refactored, ADR-14 ratifiée. v0.2 task_create dynamique reporté). | — | OricOS | — |
@@ -99,12 +114,12 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 | ID | Titre | Risque si différé |
 |----|-------|-------------------|
-| **HW-1** | Définir contrat HDL ↔ golden model (interface BRAM, timing) | 🔴 écart Phosphoric/HDL |
-| **HW-2** | Port 65C816 ECP5 | |
-| **HW-3** | ULA host + guest en HDL | |
-| **HW-4** | Compositor HDL réel | Prérequis OS-5 |
-| **HW-5** | SD SPI controller | |
-| **HW-6** | HDMI tx | |
+| ~~HW-1~~ | ✅ **promu NOW P0 le 2026-05-09 (DEC-2)**. Squelette `docs/CONTRACT_HDL.md` créé Phase 0 ; détail Phase 1. | — |
+| **HW-2** | Port 65C816 ECP5 — démarrage S9+ (post-programme état-de-l'art) | |
+| **HW-3** | ULA host + guest en HDL — démarrage S9+ | |
+| **HW-4** | Compositor HDL réel — démarrage S9+ | Prérequis OS-5 |
+| **HW-5** | SD SPI controller — démarrage S9+ | |
+| **HW-6** | HDMI tx — démarrage S9+ | |
 
 ---
 
@@ -112,10 +127,10 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 
 | Décision | Question | Échéance souhaitée |
 |----------|----------|--------------------|
-| **DEC-1** | Sort du 6502 dans Phosphoric : retrait après B1.6 stable ou cohabitation perpétuelle ? | Avant Sprint 3 |
-| **DEC-2** | Track HDL : démarrer en parallèle ou attendre OS v1 ? | Q2 2026 |
+| ~~DEC-1~~ | ✅ **actée 2026-05-09 (Phase 0 programme état-de-l'art)** : retrait net 6502 post-validation (cf. ADR-18 ratifiée CLAUDE.md §2). Critère go/no-go : 541 tests verts + bench ≤ 5 % + boot interactif ROM 1.0/1.1. Exécution Phase 1 du programme. | — |
+| ~~DEC-2~~ | ✅ **actée 2026-05-09 (Phase 0 programme état-de-l'art)** : HW-1 (contrat HDL ↔ golden model) rédigé en Phase 0/1 (squelette `docs/CONTRACT_HDL.md` créé). Implémentation HDL effective (HW-2..HW-6, SP-GPU-HDL-1..4) reportée post-programme S9+ pour préserver focus single-developer. | — |
 | ~~DEC-3~~ | ✅ **actée 2026-05-09** : llvm-mos **conservé** pour userland v1 mais en mode N **8-bit native** uniquement (apps mono-bank). Pas de fallback asm-only complet. Apps multi-bank → asm 65C816. Cf. ADR-05 v2 + `docs/TC-llvmmos.md`. | — |
-| **DEC-4** | ADR-04 v2 : MMU custom HDL ou MPU à segments ? | Q4 2026 |
+| ~~DEC-4~~ | ✅ **fusionnée avec ADR-15 parquée v2 (2026-05-09)** : critères de réouverture explicites (apps non-trusted OU HW-2 mûr OU 2026-12-31). Cf. CLAUDE.md §3. | — |
 
 ---
 
@@ -128,10 +143,10 @@ unilatéralement.
 |-----|-------|
 | ~~ADR-13~~ | ✅ **ratifiée 2026-05-08 (option a : COP + table)**, déplacée vers `CLAUDE.md` §2 |
 | ~~ADR-14~~ | ✅ **ratifiée 2026-05-08** (table fixe 16 + bitmap free, layout 20B), déplacée vers `CLAUDE.md` §2 |
-| **ADR-15** | Stratégie d'isolation mémoire post-v1 (MMU custom HDL ?) |
-| **ADR-16** | Driver model (event-driven / polling / IRQ-driven) |
-| **ADR-17** | API kernel publique exposée à userland (call gates, ABI) |
-| **ADR-18** | Sort du 6502 Phosphoric (cf. DEC-1) |
+| **ADR-15** | **Parquée v2 2026-05-09** (Phase 0 programme état-de-l'art). Critères de réouverture : apps non-trusted ratifiées OU HW-2 mûr OU 2026-12-31. Préparation draft `docs/adr/0015-isolation-v2-DRAFT.md` en Phase 4. Cf. `CLAUDE.md` §3. |
+| ~~ADR-16~~ | ✅ **ratifiée 2026-05-09 (Phase 0)** : modèle hybride event-driven (clavier/audio/GPU async) + sync (FAT32/console/GPU sync v1), pas de struct ops formelle v1, table dispatch IRQ `$01:5680`, ring buffer kbd 16 keycodes `$01:5860`. Cf. `CLAUDE.md` §2. |
+| ~~ADR-17~~ | ✅ **ratifiée 2026-05-09 (Phase 0)** : 18 syscalls v1, COP `#$AA` + table dispatch `$01:5750`, convention sentinelle `A=$FF` errno bank 1 `$5760`, versioning par opcode immediate (v2 future = `#$AB`). Débloque Sprint 4 userland C. Cf. `CLAUDE.md` §2. |
+| ~~ADR-18~~ | ✅ **ratifiée 2026-05-09 (Phase 0)** : retrait net 6502 post-validation. DEC-1 actée. Plan d'exécution 4 étapes en Phase 1 du programme. Critère go/no-go : 541 tests verts + bench ≤ 5 % + boot interactif ROM. Cf. `CLAUDE.md` §2. |
 | ~~ADR-19~~ | ✅ **ratifiée 2026-05-09**, **révisée v2 2026-05-09** suite ADR-21 : VRAM en SDRAM unifiée (32 MiB hors banking, accès GPU direct + I/O CPU). Banks 128-191 redeviennent RAM extra apps. BRAM ECP5 = caches GPU internes invisibles CPU. Cf. `CLAUDE.md` §2. |
 | ~~ADR-20~~ | ✅ **ratifiée 2026-05-09**, **révisée v3 2026-05-09** : mode HIRES Oric 2 desktop = **XVGA 1024×768×4bpp** 16 couleurs, framebuffer en SDRAM. v1 240×200×3bpp (compat ULA guest), v2 SVGA, **v3 XVGA actuelle**. Cf. `CLAUDE.md` §2. |
 | ~~ADR-21~~ | ✅ **ratifiée 2026-05-09 (GPU Blitter HW autonome, 5 commandes v1 : CLEAR/FILL_RECT/BLIT/LINE/TEXT, ports I/O $0340-$034F)**, déplacée vers `CLAUDE.md` §2. |

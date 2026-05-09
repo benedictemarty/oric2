@@ -388,6 +388,127 @@ Alternatives écartées :
 - (a) Strict NMOS — exigerait d'ajouter les opcodes illégaux dans les deux cœurs ; gain compat infinitésimal.
 - (b) WDC strict — exigerait de retirer le bug JMP indirect du 6502 existant ; casse `test_cpu_indirect_jmp_bug` et potentiellement quelques logiciels Oric 1.
 
+### ADR-16 — Driver model OricOS (ratifiée 2026-05-09)
+
+OricOS adopte un **modèle hybride** pour ses drivers. Pas de struct ops formelle en v1 ; le kernel reste monolithique avec convention de nommage `kernel_<drv>_<op>`.
+
+**Classe 1 — IRQ-driven event queue** (latence faible critique) :
+
+| Driver | Source IRQ | Event queue | Wakeup userland |
+|---|---|---|---|
+| Clavier (OS-2.d) | VIA T1 | ring buffer 16 keycodes en bank 1 `$5860` | `SYS_GET_KEY` (non-bloquant), `SYS_READ_CHAR` (bloquant) |
+| Audio AY (OS-4.a) | VIA T2 ou tick NMI | feed AY registers depuis buffer | non exposé v1 |
+| GPU async (ADR-21 v2) | GPU IRQ done | flag bit + callback | (futur) |
+| Timer ms | NMI tick scheduler | TCB blocked list | wake on counter |
+
+**Classe 2 — Sync/blocking** : FAT32 (`kernel_fat_*`), console (`kernel_print_*`), GPU sync v1 (`kernel_gfx_*`), bank alloc (`kernel_alloc_bank`).
+
+**Classe 3 — Polling idle** : aucun en v1, réservé futur.
+
+**Mécanisme IRQ formalisé** :
+```
+IRQ matériel mode N → vecteur $00FFEE
+  → trampoline bank 0 ($0140 : JML $01:5600)
+  → kernel_irq_dispatch (bank 1 $5600)
+       lit VIA_IFR
+       cas T1 (timer)  → kernel_kbd_scan + kernel_sched_tick
+       cas T2 (audio)  → kernel_audio_tick (futur)
+       cas autre       → ignore + ack
+       RTI
+```
+Table dispatch IRQ à **`$01:5680`** (8 entrées × 2B = 16B), indexée par bit IFR. Drivers s'enregistrent dynamiquement via `driver_init`.
+
+**Convention ring buffer events** : slot fixe en bank 1 (~16 entrées × N bytes), head/tail 8-bit zero-page kernel, sentinelle pop=0 cohérente avec ADR-17.
+
+Référence d'art : SymbOS (8-bit, IRQ-driven hybride).
+
+Alternatives écartées :
+- **(a) Tout IRQ-driven** : refactor FAT32/console/bank alloc en async, surcoût sans bénéfice. Rejette pattern existant.
+- **(c) Struct ops formelle dès v1** : surcoût indirection asm 65C816 (jsr (vtable,X) au lieu de jsr label) sans modules dynamiques. Coût RAM ~10-20B par driver.
+
+**v2 ouvertures parquées** : struct ops si modules dynamiques chargeables, driver discoverability runtime, hot-reload debug. Réouverture déclenchée par besoin réel module dynamique ou multi-OS host.
+
+### ADR-17 — ABI kernel publique exposée à userland (ratifiée 2026-05-09)
+
+OricOS expose 18 syscalls v1 stables aux apps userland (asm + C llvm-mos), via `cop #$AA` + table dispatch en bank 1.
+
+**Mécanisme d'entrée** : `cop #imm` où `imm` = signature ABI version.
+- v1 = `$AA` (déjà en place v0.1)
+- v2 future = `$AB` (versioning par opcode immediate, statique, dispatch séparé, apps v1 préservées éternellement)
+
+**Convention d'appel canonique (ABI v1)** :
+- **Entrée** : `A` = numéro syscall (0..63), `X` et `Y` = args 8-bit
+- **Sortie** : `A` = valeur retour 8-bit, `Y` = high byte si retour 16-bit
+- **Préservés par le kernel** : `X` (sauf retour multi-byte), `D` (DPR), `DBR`, `PBR`, pile
+- **Args > 2 bytes** : bloc d'args en zero-page kernel-réservée `$D0-$DF` (8 bytes)
+
+**Convention d'erreur (sentinelle)** :
+- `A = $FF` → erreur, code dans variable kernel `errno` (bank 1 `$5760`, exposée par `SYS_GETERRNO` ou lecture directe DBR=0).
+- `A = $00..$FE` → succès (valeur ou status).
+- Justification : compat immédiate llvm-mos C sans intrinsics ni inline asm. `if (sys_x() == 0xFF) handle_error();` trivial.
+
+**Liste syscalls v1 (18 syscalls)** :
+
+| # | Nom | Args | Retour |
+|---|---|---|---|
+| `$01` | SYS_PRINT_CHAR | X=char | — |
+| `$02` | SYS_PRINT_STRING | X/Y=str_ptr (DBR-rel) | — |
+| `$03` | SYS_READ_CHAR | bloquant | A=char |
+| `$04` | SYS_EXIT | X=exit_code | n/a |
+| `$05` | SYS_YIELD | — | — |
+| `$06` | SYS_GET_KEY | non-bloquant | A=keycode/0 |
+| `$07` | SYS_FAT_OPEN | X/Y=name_ptr | A=fd, $FF=err |
+| `$08` | SYS_FAT_READ | bloc zp | A=nbytes, $FF=err |
+| `$09` | SYS_FAT_CLOSE | X=fd | — |
+| `$0A` | SYS_PANIC | X/Y=code | n/a |
+| `$0B` | SYS_ALLOC_BANK | — | A=bank, $FF=err |
+| `$0C` | SYS_FREE_BANK | X=bank | — |
+| `$0D` | SYS_GFX_CLEAR | bloc zp | A=$00/$FF |
+| `$0E` | SYS_GFX_FILL_RECT | bloc zp | A=$00/$FF |
+| `$0F` | SYS_GFX_BLIT | bloc zp | A=$00/$FF |
+| `$10` | SYS_GFX_LINE | bloc zp | A=$00/$FF |
+| `$11` | SYS_GFX_TEXT | bloc zp | A=$00/$FF |
+| `$12` | SYS_SLEEP_MS | X/Y=ms16 | — |
+
+Slots `$00`, `$13-$3F` réservés extensions v1+. Slots `$40-$7F` réservés futur. Slots `$80-$FF` réservés signaux/contrôle système.
+
+**Dispatch v0.2 (table)** :
+- Table `syscall_table` à bank 1 `$5750`, 64 entrées × 2 octets = 128 B.
+- Handler : `cmp #$40 ; bcs sys_invalid ; asl A ; tax ; jsr (syscall_table,X)`.
+- v0.1 actuelle (cmp/bne hardcoded sur SYS_PRINT_CHAR) sera migrée en table dès Phase 1.
+
+**Bundle versioning** : header `version=$01` (offset +4) déjà en place ADR-08. Apps v1 marquées version=1, ABI v2 future utilisera version=2.
+
+Alternatives écartées :
+- **(α) Carry flag** style GS/OS : élégant asm, mais llvm-mos C n'expose pas le carry. Bloque agilité Sprint 4 userland C.
+- **(γ) Y=errno + A=value** : ABI calling convention non standard llvm-mos, intrinsics requis.
+- **Liste minimale 10 syscalls** : couvre Sprint 4 strict mais re-design ABI à prévoir pour ajouter GFX/bank alloc.
+
+**Impact** : ABI = contrat long terme. Toute app compilée avec `cop #$AA` doit fonctionner sur toute version v1.x du kernel. Cohérent avec ADR-13 (mécanisme syscall) et ADR-08 (bundle).
+
+### ADR-18 — Sort du 6502 dans Phosphoric (ratifiée 2026-05-09)
+
+Le cœur 6502 historique de Phosphoric est **retiré** post-validation, au profit du 65C816 mode E unique. Décision actée dans le cadre du programme « état de l'art » (DEC-1 close).
+
+**Modalité retenue** : retrait net post-validation. Pas de flag compile-time `LEGACY_6502`. Pas de cohabitation perpétuelle.
+
+**Plan d'exécution (Phase 1 du programme)** :
+
+1. **Étape 1.A — Décrochage des types partagés** (~½ j) : extraire `memory_t`, `cpu_irq_source_t`, `cpu_flags_t`, `IRQF_*` de `cpu6502.h` vers `include/cpu/cpu_types.h` neutre. Tous les consommateurs (debugger, trace, profiler, emulator.h, tests) incluent `cpu_types.h`.
+2. **Étape 1.B — Campagne de validation 65C816 mode E** (~1 j, **bloquante**) : bascule défaut `emu.cpu_kind = CPU_KIND_65C816`. Migration `test_klaus_dormann.c`, `test_oric_boot_dual.c`, `test_paravirt_demo.c` vers mode E. Audit shifts/rotations zp/abs M=0 (dette identifiée).
+3. **Étape 1.C — Suppression effective** (~½ j, après go) : `src/cpu/cpu6502.c` (166), `src/cpu/opcodes.c` (572), `src/cpu/addressing.c` (113), `include/cpu/cpu6502.h`, `cpu_core_vtable_6502`, `CPU_KIND_6502`, `tests/unit/test_cpu.c` (1103, redondant avec test_cpu65c816_e_mode.c). Réécriture `test_cpu_core.c` (199) en `test_cpu816_core.c`.
+4. **Étape 1.D — Traçage** (~½ j) : ADR-18 → §2 (ce paragraphe), `docs/adr/0018-retrait-6502.md` MADR, BACKLOG, CHANGELOG.
+
+**Critère go/no-go (1.B → 1.C)** : **541 tests verts + bench ≤ 5 % + boot interactif ROM Oric 1 1.0 et 1.1**. Triple filet conforme contrainte CLAUDE.md §7. Si l'un échoue, on diagnostique, on ne supprime pas.
+
+Justification : mode E déjà validé (Klaus Dormann passe, ROM Oric 1 boote). Cohabitation indéfinie ferait ~10 K LOC de surface de maintenance dupliquée pour gain de protection régressive marginal vu la couverture de tests existante. Vtable `cpu_core_vtable_t` permet le retrait chirurgical.
+
+Alternatives écartées :
+- **(b) Flag compile-time `LEGACY_6502`** : maintient les 2 cœurs disponibles via `-DLEGACY_6502`. Redoute un retour arrière qu'aucun signal technique ne justifie. Coût maintenance résiduel.
+- **(c) Cohabitation perpétuelle** : dette de maintenance permanente, deux suites de tests à maintenir, aucun bénéfice après validation 1.B.
+
+**Impact** : surface de maintenance Phosphoric divisée par ~2 (~10 K LOC supprimées). HDL ULX3S devra implémenter un seul cœur (65C816) avec mode E hybride pragmatique (ADR-11). DEC-1 actée.
+
 ---
 
 ## 3. Décisions ouvertes (ADR à instruire — NE PAS trancher unilatéralement)
@@ -403,38 +524,30 @@ expliciter avant d'avancer.
 
 ### ~~ADR-14~~ → ratifiée 2026-05-08, déplacée vers §2 (table fixe 16 + bitmap free)
 
-### ADR-15 — Isolation mémoire post-v1
-**Question** : à quoi ressemble la v2 d'ADR-04 ?
+### ~~ADR-16~~ → ratifiée 2026-05-09, déplacée vers §2 (modèle hybride event-driven + sync, sans struct ops v1)
+
+### ~~ADR-17~~ → ratifiée 2026-05-09, déplacée vers §2 (18 syscalls, COP `$AA`, sentinelle `A=$FF`, table dispatch)
+
+### ~~ADR-18~~ → ratifiée 2026-05-09, déplacée vers §2 (retrait net 6502 post-validation, DEC-1 actée)
+
+### ADR-15 — Isolation mémoire post-v1 (parquée v2 — 2026-05-09)
+
+**Statut** : décision **parquée** au programme état-de-l'art Phase 0. Pas tranchée maintenant car aucun des 3 instruments d'instruction n'est disponible : pas de HDL ULX3S existant pour mesurer le budget BRAM/LUT, pas d'apps non-trusted en v1 (ADR-04 « OS de confiance »), pas de prototype des 3 alternatives.
+
+**Question initiale** : à quoi ressemble la v2 d'ADR-04 ?
 - (a) MMU custom HDL ECP5 (translation table par bank, BRAM).
 - (b) MPU à segments avec privilege bits (kernel/user).
 - (c) Banking matériel étendu avec tags d'accès.
 
-**Impact** : multitâche robuste, exécution apps non-trusted. Pour Q4 2026.
+**Critères de réouverture** : ADR-15 doit être réouverte dès qu'**au moins l'un** des 3 jalons suivants est atteint :
 
-### ADR-16 — Driver model
-**Question** : comment un driver est structuré dans OricOS ?
-- IRQ-driven pur (handler + queue ?).
-- Polling depuis idle task ?
-- Hybride avec callback registration ?
-- Quelle interface (struct ops ? jump table ?) ?
+1. **Apps non-trusted ratifiées** (ouverture marketplace OricOS, code tiers exécuté, ou guest Oric 1 enrichi) — bascule modèle « OS de confiance » vers « OS multi-tenant ».
+2. **HDL ULX3S à maturité HW-2** (port 65C816 ECP5 fonctionnel + contrat HW-1 figé) — budget BRAM/LUT restant connu, MMU custom vs MPU chiffrable.
+3. **Date plancher 2026-12-31** — sécurité temporelle, force la réouverture même si jalons 1/2 pas atteints.
 
-**Impact** : forme tous les drivers à venir (clavier, FAT32, audio).
+**Préparation préalable** : draft `docs/adr/0015-isolation-v2-DRAFT.md` à initier en Phase 4 du programme (Q3 2026), pré-instruisant les 3 options avec données budgétaires ECP5 LFE5U-85F (416 KB BRAM dont caches GPU/compositor déjà alloués), références projets retro avec MMU custom, coûts HDL typiques.
 
-### ADR-17 — API kernel publique exposée à userland
-**Question** : quelle ABI stable expose-t-on à une app C ?
-- Liste minimale syscalls v1 (`open/read/write/close/exec/exit/alloc_bank/...`).
-- Convention d'appel (registres, stack frame).
-- Versioning de l'ABI.
-
-**Impact** : ABI = contrat long terme. Décide avec ADR-13.
-
-### ADR-18 — Sort du 6502 dans Phosphoric
-**Question** : maintient-on la cohabitation 6502/65C816 indéfiniment ?
-- (a) Retrait du 6502 après B1.6 stable (mode E remplace tout).
-- (b) Cohabitation perpétuelle (régression-protection).
-- (c) Bascule conditionnelle compile-time (`-DLEGACY_6502`).
-
-**Impact** : surface de maintenance Phosphoric, dette doublée actuellement.
+**Impact** : multitâche robuste, exécution apps non-trusted.
 
 ---
 
@@ -571,6 +684,23 @@ Le compteur de tests autoritatif est dans `Phosphoric/VERSION_TRACKING`. Le crit
 - Le jalon courant (§4) est mis à jour à chaque transition B1→B2→B3→B4.
 - Si Claude Code identifie une décision implicite non documentée, il l'ajoute en §3 comme ADR ouverte plutôt que de trancher.
 
+### Moratoire de ratification ADR (instauré 2026-05-09)
+
+Aucune nouvelle ADR ne peut être ratifiée tant que **toutes** les conditions suivantes ne sont pas réunies :
+
+1. **Dossier d'instruction écrit** : contexte chiffré, ≥ 2 alternatives chiffrées (coût/bénéfice), recommandation senior tracée. Pas de ratification verbale.
+2. **Implémentation prête** : ≥ 50 % de l'implémentation de référence existe en code testé, OU jalon dur ≤ 4 semaines justifie la ratification anticipée.
+3. **Cohérence ADR existantes** : pas de contradiction non-explicite avec les ADR §2 ratifiées. Toute révision rétroactive (vN→vN+1) suit la même règle.
+
+**Liste blanche** :
+- **Révisions mineures** d'une ADR ratifiée (clarifications, typos, mises à jour de chiffres factuels) : permises sans dossier complet, mention au CHANGELOG.
+- **Parking explicite** d'une ADR ouverte vers v2/v3 avec critères de réouverture : permis (n'engage pas d'implémentation).
+- **Révisions techniques bloquantes** suite à découverte d'incompatibilité tooling (e.g. ADR-05 v2 suite TC-llvmmos) : permises avec dossier raccourci documenté.
+
+**Audit** : toute nouvelle ratification doit citer ce paragraphe et confirmer la conformité aux 3 conditions. Une ratification non-conforme est traitée comme bug d'architecture à corriger immédiatement.
+
+Origine : critique architecte 2026-05-08 (cf. `BACKLOG.md` annexe) recommandait de geler les nouvelles ratifications jusqu'à 50 % d'implémentation. Le 2026-05-09, 3 ADR (19, 20, 21) ont été ratifiées en une journée, dont 2 révisées la même journée — pattern préoccupant. Le moratoire formalise le frein.
+
 ---
 
-*Dernière révision : v0.1 — initialisation projet Oric 2.*
+*Dernière révision : v0.2 — Phase 0 du programme état-de-l'art (2026-05-09) : ratification ADR-16 (driver model), ADR-17 (ABI syscall), ADR-18 (retrait 6502), parking ADR-15 v2, instauration du moratoire ADR.*
