@@ -7,6 +7,42 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.c v0.2 : Multi-fenêtre via BLIT ✨✨
+
+### OricOS → 0.37.0
+- Démo multi-fenêtre :
+  - Window 1 (kernel_window_draw) : (20, 10) titlebar blue.
+  - **BLIT clone** : window 1 → position (50, 80).
+  - **FILL_RECT repaint** titlebar window 2 en green pour distinction.
+- 10 ASSERTs supplémentaires (window 2 frame + titlebar green + body).
+
+### Démo PPM
+Le PPM `/tmp/oricos_window_xvga.ppm` montre maintenant **2 fenêtres
+distinctes** sur fond noir XVGA 1024×768 :
+- Window 1 en (20, 10) titlebar bleu.
+- Window 2 en (50, 80) titlebar vert (clone via BLIT puis repaint).
+
+### Importance
+**Premier multifenêtré OricOS** via le pipeline GPU. Démontre :
+1. **BLIT HW** clone/déplace une fenêtre en quelques µs.
+2. **Composition multi-couche** : repaint d'un élément d'une fenêtre
+   clonée via FILL_RECT.
+3. **Pipeline complet** boot kernel → kernel_gfx_blit → I/O GPU →
+   gpu_device exec → SDRAM, validé pixel par pixel.
+
+### Implémentation
+- Erreur d'arithmétique 80×512 corrigée (40960 vs 41000) : dst_addr
+  = $00C000 + 40985 = $016019.
+- BLIT v0.1 byte-aligned : x src/dst pairs (20, 50 OK).
+
+### Reportés Sprint 3.c v0.3
+- True drag : BLIT + CLEAR pos1 (effacer original).
+- Window list / TCB par fenêtre.
+- `kernel_window_close/minimize` (backing SDRAM via DMA).
+- Title text via `kernel_gfx_text` (dépend SP-GPU-2 v0.3).
+
+---
+
 ## [2026-05-09] — Sprint 3.c v0.1 : Window manager basique ✨✨
 
 ### OricOS → 0.36.0
