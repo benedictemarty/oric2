@@ -68,7 +68,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | ~~SP-3.b~~ | ✅ **clos 2026-05-09 (v0.2)** : `kernel_hires2_clear` + `kernel_fill_rect_aligned` (rectangles 8-px-aligned X) + boot kernel intégré (clear blue + rect red 80x80 centre). Bug Phosphoric ASL/LSR/ROL/ROR M=0 trouvé et fixé en cours de route (cf. Phosphoric/CHANGELOG). v0.3 reporté : `pixel_set` arbitraire, blit, bascule TEXT↔HIRES via registre I/O. | Pré-req SP-3.a ✅ |
 | ~~SP-VRAM-1~~ | ✅ **clos 2026-05-09** : `src/io/vram_device.{c,h}` simulant 16 MiB SDRAM via I/O `$0330-$033C` + DMA synchrone. 9 tests unitaires (init, address round-trip, auto-increment, wrap, DMA bidirectionnel, LEN=0=64K). 524 tests OK (+9). | ADR-19 ✅ |
 | ~~SP-VRAM-2~~ | ✅ **clos 2026-05-09** : `kernel_vram_write_block`, `kernel_vram_read_block`, `kernel_vram_dma` (OricOS) + test boot intégration (Phosphoric). 525 tests OK (+1). | SP-VRAM-1 ✅ |
-| **SP-VRAM-3** | Refactor allocator : pool "live" (banks 128-159) distinct du pool système (banks 4-127). `kernel_alloc_live_bank`, `kernel_free_live_bank`. | SP-VRAM-2 |
+| ~~SP-VRAM-3~~ | ✅ **clos 2026-05-09** : pool LIVE banks 129-159 (= $81..$9F, 31 banks). `kernel_alloc_live_bank` / `kernel_free_live_bank` (LIFO + bump). Bank 128 réservé framebuffer principal. Robustesse DMA : timeout 256 polls (fix boucle infinie potentielle si vram absent). 526 tests OK (+1). | SP-VRAM-2 ✅ |
 | **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar (utilise live bank). | SP-VRAM-3 |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
 | **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like). Backing-stores en VRAM cold via DMA. | SP-3.c, OS-2.d, SP-VRAM-2 |

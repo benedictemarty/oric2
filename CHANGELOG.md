@@ -7,6 +7,36 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint VRAM-3 : pool LIVE banks 129-159 ✨
+
+### OricOS → 0.32.0
+- **`kernel_alloc_live_bank`** / **`kernel_free_live_bank`** : pool
+  séparé pour fenêtres GUI live (banks 129-159 = $81..$9F).
+- Bank 128 réservé framebuffer principal HIRES Oric 2 (ADR-12).
+- Storage allocator live : `BANK_LIVE_NEXT/FREE_LIST/FREE_TOP` en
+  bank 1 zone $015458/$0154C0/$0154D0.
+- Boot kernel : démo alloc 3 + free 1 + alloc 1, sentinels à
+  BANK_LIVE_DEMO ($015468).
+
+#### Robustesse DMA
+- `kernel_vram_dma` : timeout 256 polls dans `vdma_wait` (fix boucle
+  infinie potentielle si vram_device absent ou stuck).
+
+### Phosphoric (oric2-golden-model)
+- Test `test_oricos_live_alloc_demo` : ASSERT séquence
+  $81 $82 $83 $82 (3 alloc + free + alloc LIFO).
+- 526 tests OK (+1).
+
+### Architecture
+**Deux pools de banks distincts** :
+- Pool système (banks 4-127) pour code/data apps.
+- Pool live (banks 129-159) pour fenêtres GUI live.
+
+SP-3.c (window manager) pourra allouer 1 bank live par fenêtre
+active sans interférer avec le pool d'apps.
+
+---
+
 ## [2026-05-09] — Sprint VRAM-2 : kernel API vram_* opérationnelle ✨
 
 ### OricOS → 0.31.0
