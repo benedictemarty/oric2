@@ -7,6 +7,51 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint GPU-3 v0.3 : kernel_gfx_text + démo "OS" ✨✨✨
+
+### OricOS → 0.38.0
+- **`kernel_gfx_text`** : 5e helper kernel via GPU TEXT.
+- **API kernel_gfx_* 100% complète** (5/5) :
+  ✅ clear, fill_rect, blit, line, text.
+- Mini-fonte 8×8 'O' + 'S' embedded en bank 1 + string "OS\\0".
+- Boot kernel : pré-charge fonte/string en SDRAM via
+  `kernel_vram_write_block`, puis TEXT pour titrer "OS" en blanc
+  dans la titlebar bleue de window 1.
+
+### Démo PPM finale
+**`/tmp/oricos_window_xvga.ppm`** affiche maintenant **2 fenêtres
+GUI complètes** :
+- Window 1 (20, 10) titlebar bleue **avec "OS" en blanc** ✨
+- Window 2 (50, 80) clone titlebar verte (BLIT + repaint)
+
+### Validation
+- 541 tests OK.
+- 6 nouveaux ASSERTs pour les pixels TEXT.
+
+### État architecture finale
+```
+ADR-21 GPU complet (5 commandes Phosphoric + 5 kernel helpers) :
+  Phosphoric : CLEAR + FILL_RECT + BLIT + LINE + TEXT  ✅
+  Kernel API : kernel_gfx_clear + fill_rect + blit + line + text ✅
+
+Pipeline end-to-end validé pixel par pixel :
+  Boot kernel asm 65C816
+    → kernel_vram_write_block (charge fonte SDRAM)
+    → kernel_gfx_text (commande GPU TEXT)
+    → I/O ports $0340-$034F
+    → gpu_device exec (Phosphoric)
+    → vram_peek bitmaps + gpu_set_pixel (4bpp mask)
+    → SDRAM 16 MiB
+    → vram_peek validation + PPM 1024×768 visible
+```
+
+### Reportés
+- v0.4 : color_bg, fonte taille variable, BLIT pixel-aligned/overlap.
+- SP-3.c v0.3 : window list / TCB par fenêtre, true drag, close/min.
+- SP-GPU-HDL-1..4 : implémentation HDL ULX3S (~6-8 sem).
+
+---
+
 ## [2026-05-09] — Sprint GPU-2 v0.3 : TEXT (ADR-21 complet) ✨✨✨
 
 ### Phosphoric (oric2-golden-model)
