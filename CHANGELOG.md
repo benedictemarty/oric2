@@ -7,6 +7,54 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-09] — Sprint 3.c v0.1 : Window manager basique ✨✨
+
+### OricOS → 0.36.0
+- **`kernel_window_draw`** : helper kernel asm 65C816 qui dessine
+  1 fenêtre rectangulaire via 6 commandes GPU séquentielles.
+- Args ZP : WIN_BASE (24-bit), WIN_X/Y/W/H, WIN_TITLEBAR_H,
+  WIN_COLOR_FRAME/TITLE/BODY (4-bit chacun).
+- Algorithme :
+  1. FILL_RECT body entier (color body).
+  2. FILL_RECT titlebar par-dessus (color title).
+  3-6. 4 LINEs Bresenham (color frame) pour cadre 1 pixel.
+
+### Boot kernel intégré (démo)
+- CLEAR fond noir 32 KiB à $00C000.
+- kernel_window_draw(base=$00C000, x=20, y=10, w=80, h=60, titlebar=8,
+  frame=0=black, title=1=blue, body=7=lightgray).
+
+### Phosphoric (oric2-golden-model)
+- Test `test_oricos_window_draw` : valide 18 pixels assertions
+  (4 coins frame + 4 milieux bords + 3 titlebar + 3 body +
+  4 hors fenêtre).
+- 540 tests OK (539 → 540, +1).
+
+### Importance — première fenêtre GUI OricOS
+**Pipeline complet end-to-end** validé du boot kernel asm jusqu'aux
+pixels SDRAM via le GPU autonome :
+```
+Boot kernel (asm 65C816)
+  → kernel_window_draw
+  → kernel_gfx_fill_rect/line
+  → I/O ports $0340-$034F
+  → gpu_device (Phosphoric C)
+  → exec FILL_RECT + LINE Bresenham
+  → vram_device SDRAM
+  → vram_peek validation pixel par pixel
+```
+
+Sprint 3.c v0.1 démontre **OricOS dessine une vraie fenêtre GUI**.
+
+### Reportés Sprint 3.c v0.2
+- `kernel_window_move(id, dx, dy)` via BLIT (drag fenêtre).
+- `kernel_window_close` / `kernel_window_minimize` (backing-store
+  SDRAM via DMA).
+- Multifenêtré (TCB par fenêtre, focus management).
+- Title text via `kernel_gfx_text` (dépend SP-GPU-2 v0.3 font ROM).
+
+---
+
 ## [2026-05-09] — Sprint GPU-3 v0.2 : kernel_gfx_blit + line ✨
 
 ### OricOS → 0.35.0

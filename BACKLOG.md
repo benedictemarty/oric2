@@ -76,7 +76,7 @@ parce qu'ils touchent des fondamentaux non-triviaux.
 | **SP-GPU-HDL-2** | HDL ULX3S : BLIT engine. | SP-GPU-HDL-1 |
 | **SP-GPU-HDL-3** | HDL ULX3S : LINE Bresenham. | SP-GPU-HDL-2 |
 | **SP-GPU-HDL-4** | HDL ULX3S : TEXT engine + font ROM. | SP-GPU-HDL-3 |
-| **SP-3.c** | Compositor logique : 1 fenêtre rectangulaire avec frame + title bar via GPU commands `kernel_gfx_*`. | SP-GPU-3 |
+| ⚙️ **SP-3.c** | v0.1 ✅ (clos 2026-05-09) : `kernel_window_draw` (OricOS) dessine 1 fenêtre via GPU (FILL_RECT body+titlebar + 4 LINEs cadre). Test boot 1 fenêtre 80×60 valide pixels frame/title/body. 540 tests OK. v0.2 reporté : `kernel_window_move` (BLIT drag), `kernel_window_close/minimize` (backing SDRAM via DMA), multifenêtré, title text via TEXT. | SP-GPU-3 ✅ |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
 | **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like). Backing-stores en VRAM cold via DMA. | SP-3.c, OS-2.d, SP-VRAM-2 |
 
