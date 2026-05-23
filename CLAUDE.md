@@ -290,6 +290,31 @@ Alternatives écartées : (a) matrice Oric 1 réutilisée (scan ~830 cyc > tick,
 pas de séparation host/guest, dette HDL reportée) ; (b) clavier natif seul
 (casse ADR-10, le guest n'a plus de matrice). Cf. `docs/adr/0022-clavier-oric2-paravirt.md`.
 
+### ADR-23 — Console OricOS : flux de caractères, backend interchangeable (ratifiée 2026-05-24)
+
+Le console kernel OricOS est un **flux de caractères** ; le backend d'affichage
+est un **détail d'implémentation interchangeable**. Backend v1 = mode texte
+Oric 1 (`$BB80`, ULA, 40×28) en **bootstrap** ; cible = `kernel_gfx_text` (GPU,
+ADR-21) sur framebuffer XVGA (ADR-20).
+
+**Règle d'or** : l'ABI publique (`kernel_print_char`/`print_string`,
+`SYS_PRINT_CHAR`/`SYS_PRINT_STRING`) ne doit **jamais** exposer de géométrie
+(40×28), d'adresse écran (`$BB80`), de curseur en adresse linéaire, ni de
+sémantique d'attribut sériel Oric 1. Ces éléments restent privés au backend.
+
+**Contraintes de bordure** : (1) aucun futur syscall de positionnement/couleur
+calqué Oric 1 (cibler le modèle XVGA, via révision ADR-17) ; (2) pas d'app
+userland supposant 40×28/`$BB80`/attributs avant que le backend GPU console
+existe (fenêtre de risque = Sprint 4) ; (3) `$BB80`/40×28 = détail privé (seules
+fuites tolérées : assertions de test) ; (4) à terme le mode texte Oric 1
+redevient exclusivement guest (ADR-02).
+
+Justification : la dette du backend Oric 1 reste **légère et bornée** (~140
+lignes asm, ABI déjà agnostique) tant que la règle d'or tient ; migration GPU =
+réécriture locale derrière l'API. Alternatives écartées : (a) figer le texte
+Oric 1 comme mode officiel Oric 2 (attribute clash, incompatible XVGA) ; (b)
+bascule GPU immédiate (retarde le boot/debug). Cf. `docs/adr/0023-console-flux-caracteres.md`.
+
 ### ADR-20 — Mode HIRES Oric 2 desktop : 1024×768×4bpp XVGA (ratifiée 2026-05-09, **révisée v3 2026-05-09** : SVGA → XVGA après simplification ADR-19 v2)
 
 Avec GPU Blitter HW (ADR-21) qui décharge le CPU + VRAM SDRAM unifiée (ADR-19 v2) qui retire la contrainte BRAM, OricOS vise une résolution desktop **XVGA** :

@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — ADR-23 : console flux de caractères, backend interchangeable
+
+### Architecture
+- **ADR-23 ratifiée** : le console OricOS est un flux de caractères ; le backend
+  d'affichage est interchangeable (Oric 1 text `$BB80` en bootstrap → GPU XVGA
+  cible, ADR-20/21). **Règle d'or** : l'ABI (`kernel_print_*`/`SYS_PRINT_*`)
+  n'expose jamais géométrie/adresse écran/curseur linéaire/attribut Oric 1.
+  Borne la dette du backend Oric 1 à « légère ». `docs/adr/0023-console-flux-caracteres.md`.
+- Contrainte clé : pas de syscall texte calqué Oric 1, pas d'app userland
+  supposant 40×28 avant le backend GPU (fenêtre de risque = Sprint 4).
+
 ## [2026-05-23] — OS-2.e.2 : console CR + scroll up
 
 ### OricOS → OS-2.e (clos)
