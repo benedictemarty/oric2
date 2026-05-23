@@ -52,7 +52,7 @@ Vtable formelle pour chaque driver, même mono-instance. Prépare v2 modules dyn
 
 | Driver | Source IRQ | Event queue | Wakeup userland |
 |---|---|---|---|
-| Clavier (OS-2.d) | VIA T1 | ring buffer 16 keycodes en bank 1 `$5860` | SYS_GET_KEY (non-bloquant), SYS_READ_CHAR (bloquant) |
+| Clavier (OS-2.d) | IRQ contrôleur KBD2 `$0350-$035F` (révisé ADR-22, 2026-05-23 ; était VIA T1 scan) | ring buffer 16 keycodes en bank 1 `$5860` | SYS_GET_KEY (non-bloquant), SYS_READ_CHAR (bloquant) |
 | Audio AY (OS-4.a) | VIA T2 ou tick NMI | feed AY registers depuis buffer | non exposé v1 |
 | GPU async (ADR-21 v2) | GPU IRQ done | flag bit + callback | (futur) |
 | Timer ms | NMI tick scheduler | TCB blocked list | wake on counter |

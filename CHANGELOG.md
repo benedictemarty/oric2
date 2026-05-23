@@ -7,6 +7,28 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-23] — OS-2.d : clavier Oric 2 paravirtualisé (ADR-22)
+
+### Architecture
+- **ADR-22 ratifiée** : clavier Oric 2 paravirtualisé hybride (modèle double-ULA
+  d'ADR-02). Une source physique → contrôleur KBD2 moderne (hôte OricOS,
+  FIFO ASCII + IRQ) **+** matrice Oric 1 virtuelle (guest, compat ADR-10).
+  `docs/adr/0022-clavier-oric2-paravirt.md`. Révise la ligne clavier d'ADR-16.
+
+### Phosphoric → 1.22.21-alpha
+- **`src/io/kbd2_device.{c,h}`** : contrôleur KBD2 (FIFO 16 ASCII host, IRQ
+  `IRQF_KBD2`, matrice virtuelle guest). Registres I/O `$0350-$035F`, gated
+  `--machine oric2`. 9 tests device + 1 test intégration. 545 tests verts.
+
+### OricOS → OS-2.d
+- Driver clavier réécrit IRQ-driven : `kernel_kbd_poll` draine la FIFO KBD2 →
+  ring `$5860` ; `SYS_GET_KEY`/`SYS_READ_CHAR` câblés (étaient stubs). Scan
+  matriciel VIA/PSG retiré (keymap déplacée côté contrôleur).
+
+### Gouvernance
+- Direction (hybride) + ratification anticipée ADR-22 décidées par l'humain
+  (exception moratoire condition 2 : jalon OS-2.d ≤ 4 semaines).
+
 ## [2026-05-23] — OS-2.f.v2 + opcodes 65C816 $7C/$FC (Absolute Indexed Indirect)
 
 ### Phosphoric → 1.22.20-alpha

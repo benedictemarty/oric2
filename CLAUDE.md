@@ -266,6 +266,30 @@ Alternatives écartées :
 - (a) **Approche B hybride progressif** (v1 CPU+DMA, v2 GPU) : refactor kernel douloureux à v2.
 - (b) **CPU-only** : trop lent pour résolution > 320×240 et apps fluides.
 
+### ADR-22 — Clavier Oric 2 paravirtualisé hybride (ratifiée 2026-05-23)
+
+L'entrée clavier Oric 2 suit le modèle **double-ULA d'ADR-02** : une source
+physique de touches alimente deux chemins matériels distincts.
+
+- **Hôte OricOS** : contrôleur clavier Oric 2 natif **IRQ-driven**, registres
+  `$0350-$035F` (bank 0). FIFO d'ASCII (keymap faite côté HW/modèle, pas dans le
+  kernel) ; IRQ sur touche ; l'hôte ne scanne plus la matrice.
+- **Guest Oric 1** : matrice 8×8 virtuelle alimentée par le même contrôleur,
+  lue via le chemin VIA PB / PSG R14 normal (compat stricte ADR-10 préservée).
+  Routage par le bit `route_to_guest` de `KBD2_CTRL`.
+
+**Registres** : `$0350` STATUS (data_ready/overflow/guest_focus), `$0351` DATA
+(pop FIFO ASCII), `$0352` CTRL (IRQ enable / clear / route_to_guest), `$0353`
+MOD (SHIFT/CTRL/FUNCT/CAPS), `$0354-$035F` réservé v2.
+
+**Impact** : révise la ligne clavier d'ADR-16 (source VIA T1 scan → IRQ KBD2) ;
+ring kernel `$5860` et ABI syscall (ADR-17 SYS_GET_KEY/READ_CHAR) inchangés.
+Phosphoric modélise `src/io/kbd2_device.{c,h}` (gated `--machine oric2`).
+
+Alternatives écartées : (a) matrice Oric 1 réutilisée (scan ~830 cyc > tick,
+pas de séparation host/guest, dette HDL reportée) ; (b) clavier natif seul
+(casse ADR-10, le guest n'a plus de matrice). Cf. `docs/adr/0022-clavier-oric2-paravirt.md`.
+
 ### ADR-20 — Mode HIRES Oric 2 desktop : 1024×768×4bpp XVGA (ratifiée 2026-05-09, **révisée v3 2026-05-09** : SVGA → XVGA après simplification ADR-19 v2)
 
 Avec GPU Blitter HW (ADR-21) qui décharge le CPU + VRAM SDRAM unifiée (ADR-19 v2) qui retire la contrainte BRAM, OricOS vise une résolution desktop **XVGA** :
@@ -401,7 +425,7 @@ OricOS adopte un **modèle hybride** pour ses drivers. Pas de struct ops formell
 
 | Driver | Source IRQ | Event queue | Wakeup userland |
 |---|---|---|---|
-| Clavier (OS-2.d) | VIA T1 | ring buffer 16 keycodes en bank 1 `$5860` | `SYS_GET_KEY` (non-bloquant), `SYS_READ_CHAR` (bloquant) |
+| Clavier (OS-2.d) | IRQ contrôleur KBD2 (`$0350-$035F`, ADR-22) | ring buffer 16 keycodes en bank 1 `$5860` | `SYS_GET_KEY` (non-bloquant), `SYS_READ_CHAR` (bloquant) |
 | Audio AY (OS-4.a) | VIA T2 ou tick NMI | feed AY registers depuis buffer | non exposé v1 |
 | GPU async (ADR-21 v2) | GPU IRQ done | flag bit + callback | (futur) |
 | Timer ms | NMI tick scheduler | TCB blocked list | wake on counter |

@@ -35,6 +35,7 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | 19 | VRAM SDRAM unifiée (v2) | 2026-05-09 | cf. CLAUDE.md §2 |
 | 20 | XVGA 1024×768×4bpp (v3) | 2026-05-09 | cf. CLAUDE.md §2 |
 | 21 | GPU Blitter HW autonome | 2026-05-09 | cf. CLAUDE.md §2 |
+| 22 | [Clavier Oric 2 paravirtualisé](0022-clavier-oric2-paravirt.md) | 2026-05-23 | hybride : contrôleur KBD2 hôte + matrice virtuelle guest |
 
 ### Ouvertes / parquées (CLAUDE.md §3)
 
