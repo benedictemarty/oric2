@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — OS-2.i.v2 : modèle d'erreur kernel (log ring buffer)
+
+### OricOS → OS-2.i (clos)
+- Log ring buffer 8 entrées (level, code) en bank 1 `$54E0`, circulaire.
+  Codes nommés (`ERR_BANK_EXHAUSTED`/`BAD_SYSCALL`/...), niveaux INFO/WARN/
+  ERROR/PANIC. `kernel_log_write`/`kernel_log_init`.
+- Points câblés : `kernel_panic`, `cop_invalid` (syscall invalide), `alloc_none`
+  (pool épuisé). `SYS_PANIC` journalise.
+
+### Phosphoric → 1.22.23-alpha
+- `test_oricos_boot` : 3 assertions (COP invalide → log WARN/ERR_BAD_SYSCALL). 545 tests.
+
+### Jalon
+- OS-2.i clos. Jalon courant OricOS → **OS-2.j** (FAT32 SD lecture seule).
+
 ## [2026-05-24] — ADR-23 : console flux de caractères, backend interchangeable
 
 ### Architecture

@@ -37,7 +37,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
 | ~~OS-2.g~~ | ✅ **clos 2026-05-08** (v0.1 : TCB table 16 + bitmap, scheduler refactored, ADR-14 ratifiée. v0.2 task_create dynamique reporté). | — | OricOS | — |
 | ~~OS-2.h~~ | ✅ **clos 2026-05-08** (v0.1 : free list LIFO 16 entries. Bitmap reportée v0.2). | — | OricOS | — |
-| ~~OS-2.i~~ | ✅ **clos 2026-05-08** (v0.1 : kernel_panic + print_hex8 + print_nibble. Log ring + SYS_PANIC reportés v0.2). | — | OricOS | — |
+| ~~OS-2.i~~ | ✅ **clos 2026-05-08 (v0.1) + 2026-05-24 (v0.2)** : v0.1 kernel_panic + print_hex8. v0.2 : log ring buffer `$54E0` (8 entrées level/code), codes nommés (ERR_*), wiring panic/cop_invalid/alloc_none, SYS_PANIC. | — | OricOS | — |
 
 ### Priorité 1bis — Outillage Phosphoric
 
