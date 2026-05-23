@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-23] — OS-2.e.2 : console CR + scroll up
+
+### OricOS → OS-2.e (clos)
+- `kernel_print_char` gère CR (`\r`) : retour début de ligne courante.
+- `kernel_scroll_up` : scroll écran d'une ligne quand le curseur dépasse le
+  bas (lignes 1..27 → 0..26, dernière ligne effacée, INK restauré). Remplace
+  le clamp v0.1.
+
+### Phosphoric → 1.22.22-alpha
+- `test_oricos_boot` : 4 assertions validant scroll + CR (self-tests kernel
+  exécutés avant `clear_screen`, résultats en bank 1). 545 tests verts.
+
+### Jalon
+- OS-2.e clos. Jalon courant OricOS → **OS-2.i** (modèle d'erreur kernel).
+
 ## [2026-05-23] — OS-2.d : clavier Oric 2 paravirtualisé (ADR-22)
 
 ### Architecture

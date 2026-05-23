@@ -33,7 +33,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | ID | Titre | Estim. | Sprint | Pré-req |
 |----|-------|--------|--------|---------|
 | ~~OS-2.d~~ | ✅ **clos 2026-05-23** (ADR-22 ratifiée : clavier Oric 2 paravirtualisé hybride. Contrôleur KBD2 `$0350-$035F` IRQ-driven, ring 16 keycodes `$5860`, SYS_GET_KEY/READ_CHAR câblés. Modèle Phosphoric `kbd2_device`. Matrice virtuelle guest différée OS-5.a). | — | OricOS | ADR-16/22 ✅ |
-| **OS-2.e** | Driver console générique (`print_char`, `print_string`, cursor, scroll) | 2-3 j | OricOS | — |
+| ~~OS-2.e~~ | ✅ **clos 2026-05-23** (print_char/print_string/cursor v0.1 + OS-2.e.2 : CR `\r` + scroll up `kernel_scroll_up`. Reporté : attribut couleur par ligne). | — | OricOS | — |
 | ~~OS-2.f~~ | ✅ **clos 2026-05-08** (v0.1 : COP handler avec dispatch hardcoded SYS_PRINT_CHAR. Table dispatch reportée v0.2). | — | OricOS | — |
 | ~~OS-2.g~~ | ✅ **clos 2026-05-08** (v0.1 : TCB table 16 + bitmap, scheduler refactored, ADR-14 ratifiée. v0.2 task_create dynamique reporté). | — | OricOS | — |
 | ~~OS-2.h~~ | ✅ **clos 2026-05-08** (v0.1 : free list LIFO 16 entries. Bitmap reportée v0.2). | — | OricOS | — |
