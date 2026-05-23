@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-23] — OS-2.f.v2 + opcodes 65C816 $7C/$FC (Absolute Indexed Indirect)
+
+### Phosphoric → 1.22.20-alpha
+- **Opcodes `$7C` (`JMP (a,x)`) et `$FC` (`JSR (a,x)`)** ajoutés au cœur 65C816.
+  Mode d'adressage Absolute Indexed Indirect : le vecteur indirect est lu dans la
+  **bank programme (PBR)**, pas en bank 0 (sémantique WDC). Mode E (NMOS Oric 1) :
+  opcodes illégaux → NOP 3 octets (ADR-11).
+- 3 tests unitaires ajoutés. 535 tests verts (532 + 3).
+
+### OricOS → OS-2.f.v2
+- **COP handler v0.2** : table de dispatch `syscall_table` (`$01:5750`, 64 entrées),
+  18 syscalls v1 ADR-17 routés via `jsr (syscall_table,x)`. Sentinelle erreur `A=$FF`.
+- 19 handlers `sys_*` (print, fat, gfx, alloc/free bank, panic, exit/yield, stubs clavier).
+
+### Lien inter-projets
+- Le dispatch syscall OricOS v0.2 reposait sur l'opcode `$FC` du golden model.
+  Celui-ci tombait dans le `default` (no-op) → tous les syscalls COP silencieusement
+  inopérants. Corrigé côté Phosphoric, ce qui débloque OS-2.f.v2.
+
 ## [2026-05-23] — Milestone B4 : Compositor logiciel + double ULA (ADR-02)
 
 ### Phosphoric → 1.22.19-alpha
