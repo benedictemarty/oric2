@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-23] — Milestone B4 : Compositor logiciel + double ULA (ADR-02)
+
+### Phosphoric → 1.22.19-alpha
+- **`compositor_render_to_rgb24()`** ajoutée : conversion ARGB8888→RGB888.
+- **`emulator_t`** étendu : `compositor_t compositor`, `compositor_fb_t compositor_output`,
+  `bool has_compositor`. Activé si `machine == ORIC_MACHINE_ORIC2`.
+- **Pipeline render B4** dans `main.c` : host 240×224 bleu OricOS (title bar 24px
+  `#285898`, desktop `#182848`), guest 240×200 ULA Oric 1 positionné à y=24,
+  composition et écriture dans `video.framebuffer` avant présentation SDL2.
+- 532 tests verts (le golden test valide l'ULA seule, non affecté par le compositor).
+
+---
+
 ## [2026-05-23] — Milestone B3 : démonstrateur bascule mode E↔N + guest Oric 1
 
 ### OricOS — kernel B3 demo
