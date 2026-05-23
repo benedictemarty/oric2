@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — PH-bootrom : boot ROM Oric 2 propre
+
+### Phosphoric → 1.22.24-alpha
+- **`src/oric2_bootrom.{c,h}`** : `oric2_bootrom_load()` construit une vraie boot
+  ROM Oric 2 16 KiB (reset `$C000` CLC;XCE;JML kernel ; trampolines IRQ/NMI/COP
+  en ROM `$FF00/$FF10/$FF20` ; vecteurs natifs + émulation).
+- **`--kernel`** boote via cette ROM au lieu de patcher `mem.rom[]` + stubs RAM
+  épars — chemin de boot représentatif du matériel (puce ROM système).
+- Test `test_oricos_bootrom_boots` (boot end-to-end via ROM). 546 tests verts.
+
+### Jalon
+- Sprint 2 OricOS clos. PH-bootrom clos. Prochaines options (BACKLOG) :
+  SP-3.e (event loop GUI), TC-llvmmos (userland C), SP-3.d (toolkit).
+
 ## [2026-05-24] — OS-2.i.v2 : modèle d'erreur kernel (log ring buffer)
 
 ### OricOS → OS-2.i (clos)

@@ -45,7 +45,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 |----|-------|--------|---------|
 | ~~PH-debug816~~ | ✅ **clos 2026-05-08** : `cpu816_get_state_string` mode E/N, debugger `regs`+`set` étendus, 2 tests unitaires. | — | — |
 | ~~PH-CI-visual~~ | ✅ **clos 2026-05-08** : test_oricos_visual + golden PPM + comparaison pixel-perfect. Empêche régressions render comme H4 (fonte). | — | — |
-| **PH-bootrom** | Refactor `--kernel` pour utiliser une boot ROM Oric 2 propre (pas patch `mem.rom[]`) | 1 j | — |
+| ~~PH-bootrom~~ | ✅ **clos 2026-05-24** : `src/oric2_bootrom.{c,h}` (`oric2_bootrom_load`) — image ROM 16K (reset $C000 + trampolines IRQ/NMI/COP en ROM + vecteurs natifs/émulation). `--kernel` boote via cette ROM au lieu de patcher `mem.rom[]` + stubs RAM. Test `test_oricos_bootrom_boots`. 546 tests. | — | — |
 
 ---
 
