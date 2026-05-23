@@ -93,7 +93,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | **SP-GPU-HDL-4** | HDL ULX3S : TEXT engine + font ROM. | SP-GPU-HDL-3 |
 | ⚙️ **SP-3.c** | v0.3 ✅ (clos 2026-05-09) : window manager basique + multi-fenêtre via BLIT + true drag (BLIT + CLEAR pos1) + title text "OS" via TEXT. PPM XVGA finale affiche 2 fenêtres distinctes (window 1 (20,10) avec "OS" titlebar bleu + window 2 (300,300) titlebar vert dragged depuis (50,80)). 541 tests OK. v0.4 reporté : window list / TCB par fenêtre, focus, close/minimize (DMA backing), event-driven drag. | SP-GPU-3 ✅ |
 | **SP-3.d** | Toolkit minimal : font HIRES, label, button | Pré-req SP-3.b |
-| **SP-3.e** | Event loop multifenêtré + focus + drag (SymbOS-like). Backing-stores en VRAM cold via DMA. | SP-3.c, OS-2.d, SP-VRAM-2 |
+| ⚙️ **SP-3.e** | **v0.1 ✅ (2026-05-24)** : ADR-24 souris Oric 2 (`mouse2_device` Phosphoric + driver kernel polled) + window manager (table 4 fenêtres bank 1 `$5900`, hit-test topmost, focus, move) + `kernel_wm_mouse_step` (clic→focus, drag delta). Self-tests déterministes. **v0.2 reporté** : event loop IRQ-driven, drag live + backing-store DMA VRAM cold + redraw multi-fenêtre. | SP-3.c, OS-2.d, SP-VRAM-2 |
 
 ### Priorité 4 — Audio
 

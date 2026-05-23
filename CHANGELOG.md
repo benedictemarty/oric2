@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.1 : window manager + driver souris
+
+### OricOS → SP-3.e v0.1
+- **Driver souris MOU2** (polled) : `kernel_mouse_init`/`kernel_mouse_read`
+  (MOU2 `$0360-$036F` → `MOUSE_X/Y/BTN`).
+- **Window manager** : table 4 fenêtres (bank 1 `$5900`), `kernel_wm_*`
+  (init/add/hit_test topmost/set_focus/move_focused) + `kernel_wm_mouse_step`
+  (clic→focus, drag delta). Coords 16-bit (espace XVGA).
+- Self-tests déterministes (window table + lecture souris injectée).
+
+### Phosphoric → 1.22.27-alpha
+- `test_oricos_boot` : routage mouse2 + injection + 10 assertions SP-3.e. 554 verts.
+
+### v0.2 reporté
+- Event loop IRQ-driven, drag live + backing-store DMA VRAM cold, redraw multi-fenêtre.
+
 ## [2026-05-24] — ADR-24 : contrôleur souris Oric 2 (prérequis SP-3.e)
 
 ### Architecture
