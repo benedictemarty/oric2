@@ -37,6 +37,7 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | 21 | GPU Blitter HW autonome | 2026-05-09 | cf. CLAUDE.md §2 |
 | 22 | [Clavier Oric 2 paravirtualisé](0022-clavier-oric2-paravirt.md) | 2026-05-23 | hybride : contrôleur KBD2 hôte + matrice virtuelle guest |
 | 23 | [Console flux de caractères](0023-console-flux-caracteres.md) | 2026-05-24 | backend interchangeable Oric1↔GPU, ABI sans géométrie/attribut |
+| 24 | [Souris Oric 2](0024-souris-oric2.md) | 2026-05-24 | contrôleur $0360-$036F, hybride absolu+delta, IRQ MOU2 |
 
 ### Ouvertes / parquées (CLAUDE.md §3)
 

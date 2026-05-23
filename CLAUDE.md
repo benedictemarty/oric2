@@ -315,6 +315,24 @@ réécriture locale derrière l'API. Alternatives écartées : (a) figer le text
 Oric 1 comme mode officiel Oric 2 (attribute clash, incompatible XVGA) ; (b)
 bascule GPU immédiate (retarde le boot/debug). Cf. `docs/adr/0023-console-flux-caracteres.md`.
 
+### ADR-24 — Contrôleur souris Oric 2 (ratifiée 2026-05-24)
+
+Périphérique de pointage **Oric 2 natif** (l'Oric 1 n'a pas de souris → pas de
+paravirtualisation guest), prérequis de SP-3.e (event loop GUI focus/drag).
+
+- **Registres `$0360-$036F`** (bank 0) : `$0360` STATUS (event + boutons G/D/M),
+  `$0361-$0364` X/Y **position absolue 10-bit** clampée XVGA, `$0365` BUTTONS,
+  `$0366` CTRL (IRQ enable / clear event), `$0367-$0368` DX/DY deltas signés
+  **read-clear**, `$0369-$036F` réservé v2.
+- **Modèle hybride** : v0.1 OricOS lit la position absolue (driver minimal) ;
+  les deltas restent dispo pour accélération/usage avancé v2 **sans nouvelle ADR**.
+- **IRQ** dédiée `IRQF_MOU2`, event-driven (ADR-16 classe 1, comme le clavier).
+- Phosphoric : `src/io/mouse2_device.{c,h}`, alimenté par les events SDL souris,
+  gated `--machine oric2`. Révise ADR-16 (ajout ligne souris).
+
+Alternatives écartées : absolu seul (couple device↔résolution, fermé) ; deltas
+seuls (+code kernel, overflow). Cf. `docs/adr/0024-souris-oric2.md`.
+
 ### ADR-20 — Mode HIRES Oric 2 desktop : 1024×768×4bpp XVGA (ratifiée 2026-05-09, **révisée v3 2026-05-09** : SVGA → XVGA après simplification ADR-19 v2)
 
 Avec GPU Blitter HW (ADR-21) qui décharge le CPU + VRAM SDRAM unifiée (ADR-19 v2) qui retire la contrainte BRAM, OricOS vise une résolution desktop **XVGA** :
@@ -451,6 +469,7 @@ OricOS adopte un **modèle hybride** pour ses drivers. Pas de struct ops formell
 | Driver | Source IRQ | Event queue | Wakeup userland |
 |---|---|---|---|
 | Clavier (OS-2.d) | IRQ contrôleur KBD2 (`$0350-$035F`, ADR-22) | ring buffer 16 keycodes en bank 1 `$5860` | `SYS_GET_KEY` (non-bloquant), `SYS_READ_CHAR` (bloquant) |
+| Souris (SP-3.e) | IRQ contrôleur MOU2 (`$0360-$036F`, ADR-24) | état X/Y absolu + boutons + deltas | event loop GUI (focus/drag) |
 | Audio AY (OS-4.a) | VIA T2 ou tick NMI | feed AY registers depuis buffer | non exposé v1 |
 | GPU async (ADR-21 v2) | GPU IRQ done | flag bit + callback | (futur) |
 | Timer ms | NMI tick scheduler | TCB blocked list | wake on counter |

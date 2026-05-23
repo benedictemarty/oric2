@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — ADR-24 : contrôleur souris Oric 2 (prérequis SP-3.e)
+
+### Architecture
+- **ADR-24 ratifiée** : contrôleur souris Oric 2 natif (`$0360-$036F`, IRQ MOU2),
+  **modèle hybride** absolu (clampé XVGA) + deltas read-clear. Pas de
+  paravirtualisation guest (Oric 1 sans souris). Révise ADR-16 (ligne souris).
+  `docs/adr/0024-souris-oric2.md`. Direction « souris d'abord » pour SP-3.e.
+
+### Phosphoric → 1.22.26-alpha
+- **`src/io/mouse2_device.{c,h}`** : position absolue X/Y 10-bit + deltas +
+  boutons G/D/M + IRQ `IRQF_MOU2`. Feed SDL (motion relatif + boutons), gated
+  `--machine oric2`. 8 tests. 554 tests verts.
+
+### Reste pour SP-3.e
+- Driver souris OricOS + event loop GUI (window table, focus, drag,
+  backing-store DMA VRAM cold).
+
 ## [2026-05-24] — Debug boot --kernel + optim charset MVN
 
 ### Debug session (boot --kernel)
