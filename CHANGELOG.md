@@ -7,6 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-23] — Corrections analyse senior R1/R2/R5/R6
+
+### Phosphoric → 1.22.17-alpha
+
+**Corrections post-analyse senior :**
+- **R1 — ADR-21 CLAUDE.md** : table des 5 commandes GPU corrigée (CLEAR/FILL_RECT/LINE
+  passent d'adressage "bank target" à SDRAM 24-bit direct, conformément à ADR-19 v2).
+  CLEAR : ARG2=size (octets), ARG3.LO=color. Note de révision v1.1 ajoutée.
+- **R2 — gpu_exec_text** : clamp `char_x >= GPU_XVGA_W` et `col` hors [0, GPU_XVGA_W[
+  pour prévenir corruption VRAM silencieuse. Nouveaux symboles `GPU_XVGA_W/H` dans le
+  header. Test `test_text_clamp_overflow` ajouté.
+- **R5 — PEI $D4** : corrigé pour utiliser D+nn (Direct Page) au lieu de la ZP absolue
+  en mode N. Conforme WDC W65C816S §A.28. Test `test_pei_uses_direct_page` ajouté.
+- **R6 — vram DMA len=0** : `log_warning` émis quand len=0 déclenche un burst de 65536.
+- **532 tests** (530 + 2 nouveaux), 0 échec.
+
+---
+
 ## [2026-05-09] — Phase 1 PH-2.c.2 sub-1/2/3 : extraction + découplage + migration tests 🧹
 
 ### Phosphoric → 1.22.16-alpha (3 sous-commits successifs)

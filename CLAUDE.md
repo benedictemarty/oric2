@@ -216,14 +216,19 @@ OricOS adopte une **architecture GPU command-based** où un co-processeur graphi
 
 | Opcode | Nom | ARG1 | ARG2 | ARG3 | ARG4 |
 |--------|-----|------|------|------|------|
-| `$01` | `CLEAR` | bank target ($80..$83) | color (0..15) | — | — |
-| `$02` | `FILL_RECT` | bank target | (x, y) packed | (w, h) packed | color |
-| `$03` | `BLIT` | src_addr 24-bit | dst_addr 24-bit | (w, h) packed | flags (mask, ROP) |
-| `$04` | `LINE` | bank target | (x1, y1) | (x2, y2) | color (Bresenham) |
-| `$05` | `TEXT` | font_addr 24-bit | string_addr 24-bit | (x, y) packed | (color_fg, len) |
+| `$01` | `CLEAR` | base SDRAM 24-bit | size (octets) 24-bit | LO = color (0..15) | — |
+| `$02` | `FILL_RECT` | base SDRAM 24-bit | LO=x, MID=y (8-bit v0.1) | LO=w, MID=h (8-bit v0.1) | LO = color (0..15) |
+| `$03` | `BLIT` | src_addr 24-bit | dst_addr 24-bit | LO=byte_w, MID=byte_h (8-bit v0.1) | flags (unused v0.1) |
+| `$04` | `LINE` | base SDRAM 24-bit | LO=x1, MID=y1 (8-bit v0.1) | LO=x2, MID=y2 (8-bit v0.1) | LO = color (0..15) |
+| `$05` | `TEXT` | base SDRAM 24-bit | font_addr 24-bit | string_addr 24-bit (null-term) | LO=x, MID=y, HI=color_fg (8-bit v0.1) |
 
-**Format packed** :
-- (x, y) : `LO` = x_lo, `MID` = x_hi (1 bit) | y_lo (7 bits), `HI` = y_hi (3 bits) — supporte x ≤ 1023, y ≤ 1023. v1 800×600 utilise x ≤ 799, y ≤ 599.
+> **Note de révision v1.1 (2026-05-23)** : suite à la ratification d'ADR-19 v2 (VRAM SDRAM unifiée), les
+> commandes CLEAR/FILL_RECT/LINE opèrent sur des adresses SDRAM 24-bit directes et non plus sur des
+> banks cibles ($80..$83). Le tableau ci-dessus reflète l'implémentation réelle de Phosphoric v0.1.
+> En v0.2 les coordonnées x/y/w/h passeront en 16-bit via le format packed XVGA.
+
+**Format packed v0.2 (prévu)** :
+- (x, y) : `LO` = x_lo, `MID` = x_hi (1 bit) | y_lo (7 bits), `HI` = y_hi (3 bits) — supporte x ≤ 1023, y ≤ 1023. XVGA 1024×768.
 - (w, h) : pareil, w_max = h_max = 1023.
 
 **Commandes v2 reportées** :
