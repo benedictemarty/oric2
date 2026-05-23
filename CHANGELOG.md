@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-23] — Milestone B3 : démonstrateur bascule mode E↔N + guest Oric 1
+
+### OricOS — kernel B3 demo
+- Bannière "OricOS B3 Demo / CPU : 65C816 MODE N / MEM : 256KiB (BK0-3)".
+- Bloc démo guest : `SEC;XCE` (mode E strict 6502), 32 NOP, `CLC;XCE;SEP #$30`
+  (retour mode N). Messages "GUEST: MODE E RUN..." / "GUEST: BACK N OK".
+- Jalon B3 validé visuellement sur screenshot headless (240×224 px ULA text mode).
+
+### Phosphoric → 1.22.18-alpha
+- Golden frame `tests/golden/oricos_boot.ppm` régénéré (kernel B3).
+- `test_oricos_boot.c` + `test_oricos_sd.c` : positions caractères mises à jour
+  (+200 bytes, 5 lignes banner B3). Référence banner "OricOS B3 Demo". 532 tests verts.
+
+---
+
 ## [2026-05-23] — Corrections analyse senior R1/R2/R5/R6
 
 ### Phosphoric → 1.22.17-alpha
