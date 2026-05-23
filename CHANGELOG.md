@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — Debug boot --kernel + optim charset MVN
+
+### Debug session (boot --kernel)
+- **Trace 65C816** porté (`trace_log_instruction816`, Phosphoric 1.22.25-alpha) —
+  le `--trace` était sur le cœur 6502 inactif.
+- Conclusion : **pas de bug** — le boot `--kernel` est correct, juste lent
+  (~153K cycles avant STP scheduler, dominé par la copie charset). Validé
+  visuellement (bannière OricOS + ligne demo "YABZ").
+
+### OricOS → OS-perf
+- **`kernel_install_charset`** optimisé en **MVN** (block move) : copie fonte
+  1024 octets ~18K → ~2K cycles. Boot STP ~153K → ~143K cycles. `sep #$30`
+  (pas `plp`) pour cohérence du tracking `.smart` ca65.
+
 ## [2026-05-24] — PH-bootrom : boot ROM Oric 2 propre
 
 ### Phosphoric → 1.22.24-alpha
