@@ -15,6 +15,20 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.d v0.1 : toolkit (label / frame / button)
+
+### Phosphoric → 1.22.39-alpha
+- **GPU TEXT16** (opcode $07, ADR-21) : texte coords 16-bit packées
+  (ARG4 = color<<20|y<<10|x) — texte au-delà de x/y=255 sur XVGA.
+
+### OricOS
+- **Toolkit** : `kernel_tk_label` (TEXT16 + upload string SDRAM), `kernel_tk_frame`
+  (cadre 2px), `kernel_tk_button` (face+cadre+label). Fonte ASCII uploadée en
+  SDRAM $010000 au boot. Démo : label + bouton "OK" à x=400.
+
+### Test
+- `test_oricos_tk_widgets`. 566 tests.
+
 ## [2026-05-24] — SP-3.e v0.8 : couleur titlebar selon focus
 
 ### OricOS
