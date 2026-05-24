@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.i : resize fenêtres par les bords (droit + bas)
+
+### OricOS
+- **SP-3.i — Resize fenêtres** : hit-test `_wm_resize_hit` (MARGIN=6 px),
+  `_wm_do_resize` (DX/DY → w/h, clamp min 60×40), intégré dans `kernel_wm_mouse_step`.
+  `WM_RESIZE_ARMED` + `WM_RESIZE_EDGE` (`$015ACE-$015ACF`), init dans `kernel_wm_init`.
+  3 nouveaux tests. 557 tests verts.
+
+### Phosphoric
+- Tests `test_wm_resize_init/right_edge/bottom_edge` dans `test_oricos_boot.c`.
+
+---
+
 ## [2026-05-24] — SP-3.h : maximize/minimize fenêtres + fix critique chrome
 
 ### OricOS
