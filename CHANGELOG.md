@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.f : chrome de fenêtre (titre + bouton fermer)
+
+### OricOS
+- **SP-3.f v0.1 — Titre titlebar** : `kernel_wm_add` uploade le titre en SDRAM
+  (`$012000+slot×$100`), `WM_TITLES[slot]=$01`, rendu TEXT16 blanc en titlebar.
+- **SP-3.f v0.2 — Bouton fermer** : "X" lightred, zone hit `[win_x+w-12..w-1,y..+13]`,
+  `kernel_wm_close` : efface slot, décrémente `WM_COUNT`. Fenêtres "OricOS"/"Editor".
+- **GFX_STR_HI** corrigé (`$00→$01` pour bank `$011080`).
+
+### Phosphoric
+- **2 nouveaux tests** : `test_wm_window_title` (SDRAM $012000 = "OricOS\0"),
+  `test_wm_close_button` (clic zone close → WM_COUNT=1 + flags0 cleared).
+- Timing tests menu élargis (160K/175K/200K) pour absorber TEXT16 close button.
+- **549 tests verts**. EMU_VERSION → `1.22.50-alpha`.
+
+---
+
 ## [2026-05-24] — OS-2.f.v2 clos : table dispatch syscall ADR-17
 
 ### Phosphoric
