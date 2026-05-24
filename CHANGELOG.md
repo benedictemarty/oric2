@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.5 : relative-mode souris + curseur dessiné
+
+### Phosphoric → 1.22.32-alpha
+- **Relative-mode SDL** en `--xvga` : pointeur capturé/confiné, curseur hôte
+  masqué, deltas relatifs purs. Bascule via **LCtrl+RShift**.
+
+### OricOS → SP-3.e v0.5
+- **`kernel_wm_draw_cursor`** : curseur 6×8 blanc à (MOUSE_X,Y) via FILL_RECT16.
+  `wm_mouse_step` redessine desktop + curseur sur tout événement → le curseur
+  suit la souris. Curseur initial au boot.
+
+### v0.6 reporté
+- Backing-store DMA + redraw incrémental (dirty rects) au lieu du full-clear
+  par événement ; couleur titlebar focus.
+
 ## [2026-05-24] — SP-3.e v0.4 : main loop persistant + drag fenêtre live
 
 ### OricOS → SP-3.e v0.4
