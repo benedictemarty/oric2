@@ -15,6 +15,20 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.e v0.7 : drag fenêtre incrémental
+
+### OricOS
+- **Drag incrémental** : `kernel_wm_redraw_drag` efface seulement l'ancien rect
+  de la fenêtre (dirty rect) au lieu du `kernel_gfx_clear` plein écran 393 Ko,
+  puis redessine les fenêtres. Drag fluide.
+
+### Phosphoric → 1.22.36-alpha
+- Test `test_oricos_wm_drag_no_ghost` : ancienne position effacée (bleu, pas de
+  fantôme) + fenêtre à la nouvelle position. 564 tests.
+
+### v0.8 reporté
+- Couleur titlebar selon focus + multi-dirty-rect (plusieurs zones sales).
+
 ## [2026-05-24] — SP-3.e v0.6 : backing-store curseur
 
 ### OricOS
