@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — OS-2.f.v2 clos : table dispatch syscall ADR-17
+
+### Phosphoric
+- **OS-2.f.v2** : 3 nouveaux tests d'intégration dans `test_oricos_boot.c` :
+  `test_syscall_dispatch_invalid` (cop_invalid → LOG_WARN + A=$FF),
+  `test_syscall_yield` (SYS_YIELD no-op, scheduler tourne),
+  `test_syscall_table_size` (64 entrées × 2B à `$01:5750`, struct vérifiée).
+- **547 tests verts**. EMU_VERSION → `1.22.49-alpha`.
+
+### OricOS
+- OS-2.f.v2 clos (implémentation déjà en production dans `kernel.s`).
+  Dispatcher `kernel_cop_handler` bank1 $5700, `syscall_table` $5750, 18
+  syscalls câblés + 45 × `sys_invalid`. CHANGELOG.md mis à jour.
+
+### Workspace
+- BACKLOG.md : OS-2.f.v2 → `~~OS-2.f.v2~~ ✅ clos 2026-05-24`.
+
+---
+
 ## [2026-05-24] — PH-2.c/d ADR-18 : suppression effective cœur 6502
 
 ### Phosphoric

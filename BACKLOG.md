@@ -26,7 +26,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | **PH-2.c** | Étape 1.C ADR-18 — suppression effective cpu6502.c, opcodes.c, addressing.c, cpu_core_vtable_6502, test_cpu.c, réécriture test_cpu_core.c. | ½ j | Phase 1 | PH-2.b ✅ go |
 | **PH-2.d** | Étape 1.D ADR-18 — création `docs/adr/0018-retrait-6502.md` MADR + traçage CHANGELOG. | ½ j | Phase 1 | PH-2.c |
 | **PH-cleanup-zombie** | Retrait `kernel_hires2_*` zombie (legacy ADR-19 v2, jamais appelé en boot courant). | ½ j | Phase 1 | — |
-| **OS-2.f.v2** | COP handler v0.2 — table dispatch syscall complète selon ADR-17 (table `$01:5750`, 18 syscalls + sys_invalid). | 2 j | Phase 1 | PHASE0 ✅ |
+| ~~OS-2.f.v2~~ | ✅ **clos 2026-05-24** : table dispatch 64 entrées × 2B à `$01:5750`, 18 syscalls câblés + 45 × `sys_invalid`. Dispatcher v0.2 (`kernel_cop_handler`). Tests : `test_syscall_dispatch_invalid`, `test_syscall_yield`, `test_syscall_table_size`. | — | Phase 1 | PHASE0 ✅ |
 
 ### Priorité 1 — Fondations OS bloquantes (avant tout sprint GUI)
 
