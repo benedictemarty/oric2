@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.6 : backing-store curseur
+
+### OricOS
+- **Backing-store curseur** : `kernel_wm_cursor_blit` (motion) sauve/restaure la
+  zone 8×8 sous le curseur via VRAM I/O — plus de full-redraw (393 Ko) par
+  mouvement. Full-redraw conservé sur clic-focus/drag. Curseur fluide.
+
+### Phosphoric → 1.22.35-alpha
+- **Fix latent** : masque reg VRAM I/O `$0330-$033F` (`& 0x0F` → `& 0x3F`) —
+  les ports VRAM ne fonctionnaient pas (exposé par le backing-store).
+- Test `test_oricos_cursor_backing_store` (pas de traînée). 563 tests.
+
+### v0.7 reporté
+- Backing-store fenêtre (drag sans full-redraw) + dirty rects.
+
 ## [2026-05-24] — SP-3.e v0.5 : capture souris robuste
 
 ### Phosphoric → 1.22.34-alpha
