@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.k : icônes desktop
+
+### OricOS
+- **SP-3.k — Icônes desktop** : `ICON_TABLE` (4×16B, `$015ADA`), `kernel_icon_add`,
+  `kernel_icon_draw_all` (FILL_RECT16 32×32 + TEXT16 label), `_icon_hit` (hit-test),
+  callback via `jsr (WM_DP_TMP,X)`. Intégré dans redraw (après clear, avant fenêtres)
+  et dans mouse_step (clic vide → _icon_hit → ICON_SELECTED). 2 icônes démo au boot.
+
+### Phosphoric
+- Tests `test_wm_icons_init`, `test_wm_icon_hit`, `test_wm_icon_click`. 563 verts.
+
+---
+
 ## [2026-05-24] — SP-3.j : dialog modal
 
 ### OricOS
