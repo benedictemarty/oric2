@@ -15,6 +15,16 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.d v0.3 : bouton cliquable (retour visuel)
+
+### OricOS
+- **`_wm_widget_hit`** : hit-test des boutons sous le curseur → `WIDGET_ACTIVE`.
+  Le bouton cliqué est dessiné **pressé** (face darkgray vs lightgray). Appelé
+  par `kernel_wm_mouse_step` après le focus.
+
+### Phosphoric → 1.22.41-alpha
+- Test `tk_button_press` (clic → WIDGET_ACTIVE + face pressée). 568 tests.
+
 ## [2026-05-24] — SP-3.d v0.2 : widgets managés (attachés aux fenêtres)
 
 ### OricOS
