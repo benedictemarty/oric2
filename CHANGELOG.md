@@ -7,6 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.g : taskbar liste fenêtres + focus au clic
+
+### OricOS
+- **SP-3.g — Taskbar fixe bas desktop** : `kernel_taskbar_draw` dessine
+  fond darkgray `(0,755,1024,13)` + séparateur blanc `y=755` + boutons par
+  fenêtre `WM_F_USED` (lightblue si focus, darkgray sinon). Texte = titre
+  SDRAM ou fallback `"WinN\0"` uploadé en SDRAM `$011100`.
+- **`kernel_taskbar_hit`** : hit `MOUSE_Y≥755` + BTN_LEFT → `slot=(X-4)/124`
+  → `kernel_wm_set_focus(slot)` + `kernel_wm_redraw` + curseur. Priorité
+  absolue dans `wm_step_not_drag`, rendu final après `kernel_menu_draw`.
+- Constantes ajoutées : `TB_BTN_STRIDE=124`, `TB_WIN_SCRATCH=$015AA0`,
+  `TB_WIN_SDRAM=$011100`.
+
+### Phosphoric
+- **v1.22.51-alpha** — 2 nouveaux tests : `test_taskbar_render` (pixels
+  VRAM fond $88 / bouton focus $99 / séparateur $FF) et `test_taskbar_click`
+  (clic `(60,760)` → `WM_FOCUS=0`). **551 tests verts**.
+
 ## [2026-05-24] — SP-3.f : chrome de fenêtre (titre + bouton fermer)
 
 ### OricOS
