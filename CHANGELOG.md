@@ -13,6 +13,7 @@ Entrées détaillées par sous-projet :
   (European Union Public Licence) © 2026 Bénédicte Marty. Fichier `LICENSE` (texte
   officiel EUPL-1.2) ajouté aux 3 dépôts ; Phosphoric quitte MIT. READMEs + badges
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
+- En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
 ## [2026-05-24] — SP-3.e v0.6 : backing-store curseur
 
