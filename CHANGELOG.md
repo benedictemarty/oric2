@@ -15,6 +15,16 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.d v0.5 : barre de menu déroulant
+
+### OricOS
+- **Barre de menu** (`kernel_menu_draw`) en haut de l'écran + menu "System"
+  déroulant (items "About"/"Clear"). `kernel_menu_handle_click` ouvre/ferme et
+  invoque le callback de l'item. Intercepte le clic avant le window manager.
+
+### Phosphoric → 1.22.43-alpha
+- Test `menu_dropdown` (titre→ouvre, item→callback+ferme). 569 tests.
+
 ## [2026-05-24] — SP-3.d v0.4 : callbacks de bouton (action au clic)
 
 ### OricOS
