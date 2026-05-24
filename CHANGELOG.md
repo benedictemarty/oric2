@@ -7,6 +7,31 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.h : maximize/minimize fenêtres + fix critique chrome
+
+### OricOS
+- **SP-3.h — Maximize/minimize dans le chrome** :
+  `kernel_wm_maximize` bascule normale↔maximisée (XVGA plein : x=0, y=14,
+  w=1024, h=741). Sauvegarde coords dans `WM_SAVED_RECTS` (`$015AA9`, 4×8B)
+  via `STA/LDA f:WM_SAVED_RECTS,X` (opcode long,X `$9F`/`$BF`).
+  `kernel_wm_minimize` : clear `WM_F_VISIBLE` + `WM_STATE_HIDDEN`.
+  Restore depuis taskbar au clic. Drag désactivé sur fenêtre maximisée.
+  `_wm_chrome_hit` : hit-test 3 zones chrome (×/□/_).
+- **Fix critique `_wm_chrome_hit`** : instructions `sbc #12` dans les labels
+  `_crh_test_max` et `_crh_test_min` assemblées en 8-bit par ca65 (tracking
+  mode perdu après `sep #$20` d'une branche adjacente). L'opcode `E9 0C`
+  tronqué corrompait le ZP $22-$24 (`WM_ARG_TITLE_LO/HI`/`WIN_SLOT`),
+  provoquant 4 régressions silencieuses (drag, focus, widgets). Fix : `rep #$20`
+  explicite en tête des deux labels.
+- Nouvelles constantes : `WM_STATES` ($015AA5), `WM_SAVED_RECTS` ($015AA9),
+  `WM_CRH_TMP` ($25-$2A), `WM_STATE_NORMAL/MAXED/HIDDEN`, `BTN_MAX/MIN_OFFSET`.
+
+### Phosphoric
+- **v1.22.52-alpha** — 3 nouveaux tests SP-3.h : `test_wm_states_init`,
+  `test_wm_maximize` (click □ → `WM_STATES[0]=$01`, `w=1024`),
+  `test_wm_minimize_restore` (click _ → HIDDEN, click taskbar → NORMAL).
+  554 tests verts (+ 4 régressions SP-3.e/f/g corrigées par le fix ca65).
+
 ## [2026-05-24] — SP-3.g : taskbar liste fenêtres + focus au clic
 
 ### OricOS
