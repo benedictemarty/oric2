@@ -15,6 +15,15 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.d v0.6 : barre de menu multi (table-driven)
+
+### OricOS
+- Barre de menu **table-driven** (`menu_defs`, N menus) : "System" + "View",
+  chacun 2 items à callbacks. `MENU_OPEN` = index du menu ouvert ($FF=fermé).
+
+### Phosphoric → 1.22.44-alpha
+- Test `menu_second` (2e menu "View"). 570 tests.
+
 ## [2026-05-24] — SP-3.d v0.5 : barre de menu déroulant
 
 ### OricOS
