@@ -7,6 +7,14 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.5 : capture souris robuste
+
+### Phosphoric → 1.22.34-alpha
+- **Fix capture non-déterministe** : les compositeurs (Wayland/X11) ignorent le
+  grab si la fenêtre n'a pas le focus pointeur au moment de l'appel. La capture
+  est réaffirmée sur `SDL_WINDOWEVENT_FOCUS_GAINED`/`ENTER`, pilotée par un état
+  voulu `mouse_capture_wanted`. Validé : curseur hôte capturé/masqué de façon stable.
+
 ## [2026-05-24] — SP-3.e v0.5 fix : capture souris + drag borné
 
 ### Phosphoric → 1.22.33-alpha
