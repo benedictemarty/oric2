@@ -227,9 +227,12 @@ OricOS adopte une **architecture GPU command-based** où un co-processeur graphi
 > banks cibles ($80..$83). Le tableau ci-dessus reflète l'implémentation réelle de Phosphoric v0.1.
 > En v0.2 les coordonnées x/y/w/h passeront en 16-bit via le format packed XVGA.
 
-**Format packed v0.2 (prévu)** :
-- (x, y) : `LO` = x_lo, `MID` = x_hi (1 bit) | y_lo (7 bits), `HI` = y_hi (3 bits) — supporte x ≤ 1023, y ≤ 1023. XVGA 1024×768.
-- (w, h) : pareil, w_max = h_max = 1023.
+**Format packed v0.2 (implémenté 2026-05-24, `FILL_RECT16` opcode `$06`)** :
+- Packing **12-bit par coordonnée** (couvre XVGA 1024×768, marge à 4095) :
+  `ARG2 = y<<12 | x`, `ARG3 = h<<12 | w` (chaque coord 0..4095).
+- `FILL_RECT` (opcode `$02`, 8-bit) conservé ; `FILL_RECT16` (`$06`) ajouté pour
+  les fenêtres plein écran. `kernel_gfx_fill_rect16` + `kernel_wm_redraw` côté OricOS.
+- BLIT/LINE/TEXT 16-bit : reportés (même schéma de packing 12-bit).
 
 **Commandes v2 reportées** :
 - `SPRITE_DEF` / `SPRITE_MOVE` : sprites HW (cursor souris, anim).

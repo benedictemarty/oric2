@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.3 : coords GPU 16-bit + redraw window manager
+
+### Phosphoric → 1.22.30-alpha
+- **GPU `FILL_RECT16`** (opcode $06, ADR-21 v0.2) : coords 16-bit packed 12-bit
+  (couvre XVGA). gpu_fill_rect_impl partagé. 1 test.
+
+### OricOS → SP-3.e v0.3
+- `kernel_gfx_fill_rect16` (packing 12-bit) + `kernel_wm_redraw` (clear + fenêtres
+  aux positions 16-bit, peinture back-to-front, base SDRAM $100000). Appelé au
+  boot + sur clic/drag. Desktop XVGA avec fenêtres plein écran **visible**
+  (--xvga / --xvga-screenshot).
+
+### v0.4 reporté
+- Backing-store DMA + redraw incrémental + drag interactif continu (main loop kernel).
+
 ## [2026-05-24] — Déblocage rendu XVGA : desktop OricOS visible
 
 ### Phosphoric → 1.22.29-alpha
