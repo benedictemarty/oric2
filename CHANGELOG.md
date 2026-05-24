@@ -15,6 +15,19 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.d v0.2 : widgets managés (attachés aux fenêtres)
+
+### OricOS
+- **Widgets managés** : table de widgets + `kernel_wm_add_widget` +
+  `_wm_draw_all_widgets` (hook après `_wm_draw_windows`). Les widgets sont
+  attachés à une fenêtre, dessinés à (window.xy + offset relatif) → **persistent
+  et suivent leur fenêtre au drag** (corrige la démo flottante v0.1 qui disparaissait).
+
+### Phosphoric → 1.22.40-alpha
+- Tests `tk_widgets` (widgets sur fenêtre) + `tk_widget_follows_drag`. Fix harness :
+  vram+gpu câblés dans mouse_irq_focus/wm_drag_persistent (évite corruption VIA T1
+  par les écritures GPU/VRAM du dessin des widgets). 567 tests.
+
 ## [2026-05-24] — SP-3.d v0.1 : toolkit (label / frame / button)
 
 ### Phosphoric → 1.22.39-alpha
