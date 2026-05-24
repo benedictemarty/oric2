@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.j : dialog modal
+
+### OricOS
+- **SP-3.j — Modal** : `WM_MODAL` (`$015AD5`), `kernel_wm_set/clear_modal`,
+  auto-clear dans `kernel_wm_close`, blocage clics hors modal. 3 tests. 560 verts.
+
+### Phosphoric
+- Tests `test_wm_modal_init/block/close_clears`.
+
+---
+
 ## [2026-05-24] — SP-3.i : resize fenêtres par les bords (droit + bas)
 
 ### OricOS
