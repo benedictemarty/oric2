@@ -15,6 +15,16 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.d v0.4 : callbacks de bouton (action au clic)
+
+### OricOS
+- **Callbacks de bouton** : chaque widget bouton porte une adresse de callback
+  (bank1). Au clic, `_wm_invoke_active_cb` l'appelle via `jsr (vec,X)` ($FC).
+  Démo `demo_ok_cb` incrémente un compteur. Les clics font désormais des actions.
+
+### Phosphoric → 1.22.42-alpha
+- `tk_button_press` vérifie aussi l'invocation du callback (CB_FLAG). 568 tests.
+
 ## [2026-05-24] — SP-3.d v0.3 : bouton cliquable (retour visuel)
 
 ### OricOS
