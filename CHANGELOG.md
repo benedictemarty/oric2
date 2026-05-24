@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — Déblocage rendu XVGA : desktop OricOS visible
+
+### Phosphoric → 1.22.29-alpha
+- **vram_device + gpu_device câblés dans l'émulateur vivant** ($0330/$0340) :
+  les commandes VRAM/GPU du kernel s'exécutent en `--kernel` (avant : tests
+  standalone seulement).
+- **`src/video/hires_oric2_xvga.{c,h}`** : rendu framebuffer XVGA 1024×768×4bpp
+  (SDRAM) → ARGB via palette VGA-IBM 16 couleurs (ADR-20). 5 tests.
+- **`--xvga-screenshot FILE`** (PPM headless) + **`--xvga`** (SDL live) :
+  le desktop OricOS (fenêtres dessinées par le GPU au boot) est **visible**.
+- 560 tests verts.
+
+### Débloque
+- SP-3.e v0.3 (drag live visible) : il reste les coords GPU packed 16-bit
+  (ADR-21 v0.2) pour des fenêtres plein écran + le redraw multi-fenêtre.
+
 ## [2026-05-24] — SP-3.e v0.2 : event loop souris IRQ-driven
 
 ### OricOS → SP-3.e v0.2
