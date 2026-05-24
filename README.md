@@ -2,7 +2,7 @@
 
 > Une **chimère 8/16 bits rétrocompatible Oric 1**, conçue de zéro pour FPGA ULX3S — avec son propre OS multitâche graphique et un guest Oric 1 virtualisé nativement.
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](Phosphoric/LICENSE)
+[![License](https://img.shields.io/badge/license-EUPL--1.2-blue.svg)](LICENSE)
 [![Phosphoric](https://img.shields.io/badge/Phosphoric-1.22.16--alpha-green)](https://github.com/benedictemarty/oric2-golden-model)
 [![OricOS](https://img.shields.io/badge/OricOS-v0.41--alpha-green)](https://github.com/benedictemarty/OricOS)
 [![Tests](https://img.shields.io/badge/tests-530%2F530-brightgreen)](Phosphoric/VERSION_TRACKING)
@@ -161,8 +161,14 @@ Glossaire complet : [`CLAUDE.md` §8](CLAUDE.md#8-glossaire).
 
 ## Licence
 
-- **Phosphoric** : MIT © 2026 chipinette ([LICENSE](Phosphoric/LICENSE)).
-- **OricOS** et **workspace `oric2`** : licence à finaliser. Probablement MIT ou Apache 2.0 — décision business courante.
+L'ensemble du projet (**workspace `oric2`**, **Phosphoric**, **OricOS**) est sous
+**EUPL-1.2** (European Union Public Licence) © 2026 Bénédicte Marty — voir
+[LICENSE](LICENSE).
+
+> Licensed under the EUPL
+
+Exception : les images ROM Oric 1 (`Phosphoric/roms/`) restent la propriété de
+Tangerine/Oric et ne sont **pas** couvertes par cette licence.
 
 ---
 

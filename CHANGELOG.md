@@ -7,6 +7,13 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — Licence : passage à EUPL-1.2
+
+- Tout le projet (workspace `oric2`, Phosphoric, OricOS) passe sous **EUPL-1.2**
+  (European Union Public Licence) © 2026 Bénédicte Marty. Fichier `LICENSE` (texte
+  officiel EUPL-1.2) ajouté aux 3 dépôts ; Phosphoric quitte MIT. READMEs + badges
+  mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
+
 ## [2026-05-24] — SP-3.e v0.6 : backing-store curseur
 
 ### OricOS
