@@ -15,6 +15,13 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — Capture souris XVGA fiable (Phosphoric 1.22.37-alpha)
+
+- Refonte du modèle de capture : démarrage non capturé, **clic = capture ON**
+  (pointeur garanti au-dessus → grab confiné fiable), **LCtrl+RShift = relâche**.
+  Device MOU2 nourri uniquement si capturé → plus de double curseur (hôte + OS).
+  Corrige : double curseur au démarrage, grab clavier non fiable hors fenêtre.
+
 ## [2026-05-24] — SP-3.e v0.7 : drag fenêtre incrémental
 
 ### OricOS
