@@ -15,6 +15,18 @@ Entrées détaillées par sous-projet :
   mis à jour. Exception : ROM Oric 1 (`roms/`) = propriété Tangerine/Oric, hors licence.
 - En-têtes **SPDX-License-Identifier: EUPL-1.2** ajoutés à tous les fichiers source (135).
 
+## [2026-05-24] — SP-3.e v0.8 : couleur titlebar selon focus
+
+### OricOS
+- **Titlebar colorée selon le focus** : fenêtre active = lightblue (9), inactive
+  = darkgray (8), dans `_wm_draw_windows` (via `WM_TITLE_COL`). Aucun nouveau
+  redraw : clic (full-redraw) et drag (redraw_drag) passent déjà par cette boucle.
+- Multi-dirty-rect jugé inutile : un changement de focus déclenche déjà un
+  full-redraw qui repeint correctement les 2 titlebars concernées.
+
+### Phosphoric → 1.22.38-alpha
+- Test `test_oricos_wm_titlebar_focus`. 565 tests.
+
 ## [2026-05-24] — Capture souris XVGA fiable (Phosphoric 1.22.37-alpha)
 
 - Refonte du modèle de capture : démarrage non capturé, **clic = capture ON**
