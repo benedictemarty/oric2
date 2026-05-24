@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.5 fix : capture souris + drag borné
+
+### Phosphoric → 1.22.33-alpha
+- **Fix capture souris** : `SDL_SetRelativeMouseMode` était annulé par le resize
+  de la fenêtre en 1024×768 (posé trop tôt sur la 240×224). (Ré)activé après le
+  passage XVGA + `SDL_ShowCursor(DISABLE)`. Curseur hôte désormais capturé/confiné.
+
+### OricOS
+- **Fix drag fenêtre** : `WM_DRAG_ARMED` — le drag n'est armé que si le clic a
+  atterri sur une fenêtre. Avant, clic sur le vide + glissé déplaçait quand même
+  la fenêtre focus.
+
 ## [2026-05-24] — SP-3.e v0.5 : relative-mode souris + curseur dessiné
 
 ### Phosphoric → 1.22.32-alpha
