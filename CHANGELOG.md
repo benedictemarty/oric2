@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — PH-2.c/d ADR-18 : suppression effective cœur 6502
+
+### Phosphoric
+- **ADR-18 4/6** : suppression effective du cœur 6502. Fichiers supprimés :
+  `cpu6502.c` (166 L), `opcodes.c` (572 L), `addressing.c` (113 L),
+  `cpu6502.h`, `cpu_internal.h`, `test_cpu.c` (1106 L). ~10 K LOC retirées.
+- Migrations de 7 fichiers de tests + 4 fichiers sources vers `cpu65c816_t` mode E.
+- `trace_log_instruction(cpu6502_t*)` retirée de `trace.h`/`trace.c`.
+- `docs/adr/0018-retrait-6502.md` créé (MADR ADR-18).
+- Go/no-go satisfait : **544 tests verts**, boot ROM Oric 1.0 OK, bench ≤ 5 %.
+- EMU_VERSION → `1.22.48-alpha`.
+
 ## [2026-05-24] — CI GitHub Actions (recalage NOW/P0, programme Phase 1)
 
 - **CI mise en place** sur Phosphoric (build + 570 tests à chaque push/PR, checkout
