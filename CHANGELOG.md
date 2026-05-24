@@ -7,6 +7,13 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — CI GitHub Actions (recalage NOW/P0, programme Phase 1)
+
+- **CI mise en place** sur Phosphoric (build + 570 tests à chaque push/PR, checkout
+  OricOS sibling + cc65) et OricOS (build kernel). Garde-fou anti-régression.
+- Note : finir ADR-18 (retrait 6502) reste à faire — plus gros que prévu
+  (savestate + désassembleur debugger couplés à `cpu6502_t`, pas de désassembleur 816).
+
 ## [2026-05-24] — Licence : passage à EUPL-1.2
 
 - Tout le projet (workspace `oric2`, Phosphoric, OricOS) passe sous **EUPL-1.2**
