@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.2 : event loop souris IRQ-driven
+
+### OricOS → SP-3.e v0.2
+- `kernel_irq_handler` traite l'event MOU2 (lit + `kernel_wm_mouse_step`), puis
+  **scheduler gaté sur T1** (`VIA_IFR` bit6) — plus de faux tick sur IRQ souris/clavier.
+- `kernel_mouse_init`/`read` activent l'IRQ MOU2 → souris **event-driven** (fin du polling).
+
+### Phosphoric → 1.22.28-alpha
+- `test_oricos_mouse_irq_focus` : clic injecté pendant la phase scheduler → IRQ
+  MOU2 → focus 1→0. Garde I/O harnais étendu `$036F` (KBD2+MOU2). 555 verts.
+
+### v0.3 reporté
+- Drag live + backing-store DMA VRAM cold + redraw multi-fenêtre (bloqué :
+  affichage XVGA SDL + coords GPU 16-bit).
+
 ## [2026-05-24] — SP-3.e v0.1 : window manager + driver souris
 
 ### OricOS → SP-3.e v0.1
