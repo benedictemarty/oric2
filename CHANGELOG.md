@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-24] — SP-3.e v0.4 : main loop persistant + drag fenêtre live
+
+### OricOS → SP-3.e v0.4
+- **Mode persistant** : scheduler ne STP plus si `NO_STP_FLAG` ($A5, $01EF00)
+  posé par `--kernel` → GUI interactive. Tests gardent le STP (flag non posé).
+- **`MOUSE_DX/DY`** : delta par événement (mouse_read lit+clear MOU2 DX/DY) →
+  drag propre. `wm_mouse_step` drague la fenêtre focus → suit la souris.
+
+### Phosphoric → 1.22.31-alpha
+- `--kernel` pose le flag persistant. Test `test_oricos_wm_drag_persistent`
+  (clic→focus, drag→fenêtre (100,100)→(140,130)). 562 verts.
+
+### SP-3.e bouclé (v0.1→v0.4)
+- Souris ADR-24 + window manager + event loop IRQ + coords 16-bit + redraw +
+  drag live. v0.5 (optim) : backing-store DMA + redraw incrémental.
+
 ## [2026-05-24] — SP-3.e v0.3 : coords GPU 16-bit + redraw window manager
 
 ### Phosphoric → 1.22.30-alpha
