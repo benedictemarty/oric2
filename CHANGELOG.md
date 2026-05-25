@@ -7,6 +7,13 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.b : idle task (ferme le trou « dernière tâche »)
+
+### OricOS
+- **idle task** : `find_next` borné + saut/fallback `IDLE_PID` → plus de hang si
+  toutes les tâches bloquent/sortent. `idle_entry` (WAI, plus basse prio). Validé :
+  IDLE_CTR==0 (jamais élue tant que des tâches réelles tournent), bitmap=$4F. 563 verts.
+
 ## [2026-05-25] — OS-2.g v2.b/g.5 : blocage réel + ADR-25 RATIFIÉE
 
 ### OricOS
