@@ -7,6 +7,13 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — oricos.h SSOT numéros de syscalls (revue senior P2)
+
+### OricOS
+- **`oricos.h`** : numéros de syscalls stringifiés depuis les `#define SYS_*`
+  (`_ORICOS_LDA_SYS`) au lieu de littéraux dupliqués. Conserve l'anti-LTO
+  (LDA #imm) et restaure la source unique de vérité. 563 tests verts.
+
 ## [2026-05-25] — Fix deadlock SYS_READ_CHAR (revue senior P1)
 
 ### OricOS
