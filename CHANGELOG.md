@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.6 : SYS_ALERT (alertes pré-câblées)
+
+### OricOS
+- **`sys_alert` ($1A)** : alerte OK / OK-Cancel / Yes-No (type en X). Crée la
+  fenêtre modale + boutons puis réutilise la boucle modale de DoDlgBox
+  (`jmp ddb_show`). Retour 1 (gauche) / 0 (droite).
+
+### Phosphoric
+- **`test_oricos_alert`** : alerte OK-Cancel, clic OK → retour 1 + fermeture
+  (WM_MODAL=$FF). 573 tests verts.
+
 ## [2026-05-26] — SP-3.n G.5 : SYS_DO_DLGBOX (dialogue modal)
 
 ### OricOS
