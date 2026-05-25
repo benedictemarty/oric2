@@ -184,6 +184,7 @@ unilatéralement.
 | Compositor B4 = modèle simulé pas pipeline | B4 PoC | HW-4 |
 | Paravirt B3 = stub | B3 PoC | OS-5 + HW |
 | ~~3 globales `TASK_*_S` au lieu de TCB~~ | Sprint 1.b PoC | ✅ **clos 2026-05-08 (OS-2.g.1)** : TCB table 16 + bitmap (ADR-14). |
+| **Polish concurrence OS-2.g v2.b** (ADR-25) — à reprendre, non bloquant | OS-2.g v2.b (2026-05-25) | (1) **Signaux multi-bits génériques** : remplacer `KBD_WAITER` (signal dégénéré, 1 seul attendeur clavier) par `SIG_PENDING[16]`/`SIG_WAIT[16]` + `task_wait(mask)`/`task_signal(pid,bits)` → plusieurs attentes simultanées + IPC. (2) **`Disable`/`Enable` formels** : remplacer les `sei/php/plp` ad hoc (ring_pop, etc.) par des primitives nestées propres. (3) **Migrer le chemin JSL d'`app_exec` → `app_spawn`** et **retirer les fallbacks `SCHED_ACTIVE`** (boot-context spin/WAI dans `sys_read_char`, STP dans `sys_exit`) une fois (1) en place. (4) **Free-list de pages de pile** : `task_destroy`/teardown fuit la page de pile (`STACK_NEXT_PAGE` bump-only). (5) **Idle « dernière tâche »** : `find_next` retombe sur l'idle, mais valider le cas « toutes les tâches bloquées/sorties » par un test dédié. (6) **`SYS_SLEEP_MS` ms→ticks** : v1 interprète l'arg en ticks ; ajouter la conversion ms 16-bit. |
 
 ---
 
