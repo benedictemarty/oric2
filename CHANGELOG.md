@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.a : SYS_EXIT teardown (g.4)
+
+### OricOS
+- **g.4 `sys_exit`** (wm.s) : teardown réel (STATE=DEAD + `kernel_bitmap_clear`
+  + reschedule) au lieu de STP. Garde-fou `SCHED_ACTIVE` : STP si scheduler
+  inactif (app boot-context comme hello_c → test intact). task_d éphémère valide :
+  TASK_D_CTR==1 + bitmap=$0F. 563 verts. Limites : fuite page pile, pas d'idle
+  task, exit_code ignoré (reportés). Reste : g.5/g.6 block/wake (= ADR-25).
+
 ## [2026-05-25] — OS-2.g v2.a : task_create (g.3) + SYS_YIELD réel (g.7)
 
 ### OricOS
