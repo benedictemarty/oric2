@@ -67,9 +67,9 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 |----|-------|--------|---------|
 | ~~TC-llvmmos~~ | ✅ **clos 2026-05-09** : investigation documentaire (cf. `docs/TC-llvmmos.md`). Constats : llvm-mos n'implémente PAS le mode N 16-bit registres (issue #321) ni le banking 24-bit (issue #320), tous deux ouverts depuis 2023-2024. ADR-05 révisée v2 : userland C mode N **8-bit native** (M=1, X=1), apps **mono-bank** ≤ 64 KiB linéaire. DEC-3 actée : llvm-mos conservé avec contraintes. Installation effective + PoC reportés au Sprint 4 (sous-tâches **TC-llvmmos-install**, **TC-llvmmos-target-oricos**, **TC-poc-hello-c**). | — | — |
 | ~~**TC-llvmmos-install**~~ | ✅ **clos 2026-05-25** : llvm-mos v23.0.1 installé dans `$HOME/llvm-mos`. Target `mosw65816` validé : génère code 8-bit natif (M=1,X=1), conforme ADR-05 v2. PoC `int main()` compilé + désassemblé. | — | — |
-| **TC-llvmmos-target-oricos** | Créer target `oricos` custom (clang.cfg + crt0.S + link.ld) | 2-3 j | TC-llvmmos-install |
+| ~~**TC-llvmmos-target-oricos**~~ | ✅ **clos 2026-05-25** : target `mos-oricos` créé dans `$HOME/llvm-mos` + SDK versionné dans `OricOS/tools/oricos-sdk/`. crt0.S (`.init.000` DBR=PBR + `.call_main` + `.after_main` SYS_EXIT+RTL), link.ld (code@$0200, ZP imag-regs $89-$A8), oricos.h (18 syscalls ADR-17). App `apps/hello_c/hello.c` compilée → bundle .oos 600B valide. 563 tests Phosphoric verts. | — | — |
 | **TC-libc** | libc minimal (printf via syscalls, malloc bank-local) | 5-10 j | TC-llvmmos-target-oricos, OS-2.f |
-| **TC-poc-hello-c** | Premier hello.c → bundle .oosobj → exec sur OricOS | 1-2 j | TC-libc |
+| **TC-poc-hello-c** | Premier hello.c → bundle .oosobj → exec sur OricOS (test exécution réelle via Phosphoric --machine oric2) | 1-2 j | TC-libc |
 
 ---
 
