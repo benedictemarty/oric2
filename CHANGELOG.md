@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.1 : file d'événements unifiée
+
+### OricOS
+- **`kernel/modules/event.s`** : file d'événements bank 1 (`EVENT_RING` $015880,
+  16×10 o). `kernel_event_push_key`/`_mouse`/`_pop`/`_init`. Alimentée par les IRQ
+  KBD2/MOU2 en **coexistence** avec KBD_RING/MOUSE_* (migration progressive →
+  aucun consommateur actuel modifié). Base de `SYS_MAIN_LOOP` (G.2).
+
+### Phosphoric
+- **`test_oricos_event_queue`** : touche 'A' → EV_KEY_DOWN(msg='A') ; clic
+  (250,150) → événement souris dans la file. 565 tests verts.
+
 ## [2026-05-26] — ADR-26 (draft) : modèle GUI déclaratif GenUI/SpecUI
 
 ### Docs (oric2)
