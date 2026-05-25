@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.4 : dessin fenêtré (backing store, coords locales)
+
+### OricOS
+- **`kernel_gfx_window_base`** : les `sys_gfx_*` posent `GFX_BASE` = backing store
+  de la fenêtre du caller (`($06+slot):0000`) → une app dessine en coords LOCALES
+  dans son backing store, **indépendamment de l'adresse XVGA** (modèle GrafPort).
+- Validé : `test_oricos_win_draw` — task_wdraw FILL_RECT local → `vram_peek($080000)==$44`.
+  563 verts. Suite : G.4bis compositor (BLIT backing stores → XVGA).
+
 ## [2026-05-25] — SP-3.m G.3 : clavier → focus (routage)
 
 ### OricOS
