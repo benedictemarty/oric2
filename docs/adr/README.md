@@ -44,6 +44,7 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | # | Titre | Statut | Réouverture |
 |---|---|---|---|
 | 15 | [Isolation mémoire post-v1](0015-isolation-memoire-post-v1.md) | parquée v2 (2026-05-09) | apps non-trusted OU HW-2 mûr OU 2026-12-31 |
+| 25 | [Modèle de concurrence kernel](0025-modele-concurrence-kernel-DRAFT.md) | **DRAFT** — dossier d'instruction, non ratifié (moratoire cond. 2 : impl 0 %) | ratifiable quand OS-2.g v2 ≥ 50 % codé OU jalon ≤ 4 sem |
 
 ## Migration progressive
 

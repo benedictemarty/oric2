@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — ADR-25 (DRAFT) : dossier modèle de concurrence kernel
+
+### Docs / ADR
+- **`docs/adr/0025-modele-concurrence-kernel-DRAFT.md`** : dossier d'instruction
+  (moratoire §10 cond. 1) pour le modèle de concurrence du kernel préemptif.
+  Recommandation : Exec-classique (`Forbid`/`Disable` + signaux `Wait`/`Signal`,
+  réf. AmigaOS Exec / SymbOS, sourcé). Alternatives chiffrées : mutexes (v3),
+  messages (v3+), statu quo (écarté), GS/OS coopératif (écarté). **NON ratifié** :
+  moratoire cond. 2 non remplie (impl OS-2.g v2 = 0 %).
+- `CLAUDE.md` §3 : entrée ADR-25 (ouverte/DRAFT). `docs/adr/README.md` : index MAJ.
+
 ## [2026-05-25] — Dette #4 : gardes d'overlap memory map bank 1
 
 ### OricOS

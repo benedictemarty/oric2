@@ -625,6 +625,28 @@ expliciter avant d'avancer.
 
 **Impact** : multitâche robuste, exécution apps non-trusted.
 
+### ADR-25 — Modèle de concurrence kernel (DRAFT — dossier d'instruction, 2026-05-25)
+
+**Statut** : **DRAFT, NON ratifié**. Dossier d'instruction écrit (remplit la
+condition 1 du moratoire §10) : `docs/adr/0025-modele-concurrence-kernel-DRAFT.md`.
+
+**Question** : quel modèle de concurrence pour le kernel préemptif (ADR-03), sur
+mono-cœur 65C816 sans primitive atomique ? Le dilemme « atomicité vs blocage »
+sous-tend plusieurs dettes (réentrance ZP scratch, deadlock `SYS_READ_CHAR`,
+`SYS_EXIT`=STP, écart ADR-14 scheduler 2-tâches).
+
+**Recommandation senior tracée** : option Exec-classique (AmigaOS Exec / SymbOS) —
+`Forbid`/`Permit` (suspend le switch, IRQ vivantes) + `Disable`/`Enable` (micro-RMW)
++ signaux 1 octet/TCB (`Wait`/`Signal`, où `Wait` lève le `Forbid` pendant le
+blocage) + partition ZP IRQ↔syscall. Alternatives instruites : mutexes/sémaphores
+(v3), message-passing intégral (v3+), statu quo (écarté), GS/OS coopératif (écarté,
+contredit ADR-03).
+
+**Ratification bloquée** par le moratoire condition 2 (implémentation 0 %).
+**Voie de ratification** : coder OS-2.g v2.a (scheduler N-tâches + yield) jusqu'à
+≥ 50 %, OU acter OS-2.g v2 comme jalon dur ≤ 4 semaines. Révisera ADR-03 (contrat
+d'atomicité) et précisera ADR-16 (wakeup = `task_signal`).
+
 ---
 
 ## 4. Roadmap et jalon courant
