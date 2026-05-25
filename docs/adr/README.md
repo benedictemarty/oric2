@@ -38,13 +38,13 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | 22 | [Clavier Oric 2 paravirtualisé](0022-clavier-oric2-paravirt.md) | 2026-05-23 | hybride : contrôleur KBD2 hôte + matrice virtuelle guest |
 | 23 | [Console flux de caractères](0023-console-flux-caracteres.md) | 2026-05-24 | backend interchangeable Oric1↔GPU, ABI sans géométrie/attribut |
 | 24 | [Souris Oric 2](0024-souris-oric2.md) | 2026-05-24 | contrôleur $0360-$036F, hybride absolu+delta, IRQ MOU2 |
+| 25 | [Modèle de concurrence kernel](0025-modele-concurrence-kernel.md) | 2026-05-25 | Exec-classique : Forbid/Permit + block/wake (signaux), atomicité syscall ; réf AmigaOS Exec / SymbOS |
 
 ### Ouvertes / parquées (CLAUDE.md §3)
 
 | # | Titre | Statut | Réouverture |
 |---|---|---|---|
 | 15 | [Isolation mémoire post-v1](0015-isolation-memoire-post-v1.md) | parquée v2 (2026-05-09) | apps non-trusted OU HW-2 mûr OU 2026-12-31 |
-| 25 | [Modèle de concurrence kernel](0025-modele-concurrence-kernel-DRAFT.md) | **DRAFT** — dossier d'instruction, non ratifié (moratoire cond. 2 : impl 0 %) | ratifiable quand OS-2.g v2 ≥ 50 % codé OU jalon ≤ 4 sem |
 
 ## Migration progressive
 

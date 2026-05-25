@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.b/g.5 : blocage réel + ADR-25 RATIFIÉE
+
+### OricOS
+- **g.5 `sys_read_char` bloquant** : la tâche passe BLOCKED et rend le CPU
+  (`kernel_block_switch`), réveillée par l'IRQ KBD2 (`kernel_kbd_wake` +
+  `KBD_WAITER`). Gate `SCHED_ACTIVE` : fallback spin/WAI en contexte boot
+  (hello_c). Validé : task_e bloque, autre tâche tourne, 'K' injectée via IRQ →
+  task_e lit 'K' + exit. 563 verts. **Fin du spin masqué (deadlock).**
+
+### ADR
+- **ADR-25 (modèle de concurrence kernel) RATIFIÉE** (Exec-classique). L'humain a
+  approuvé ; 3 conditions du moratoire remplies (dossier + impl g.5/g.6 testée +
+  cohérence). `docs/adr/0025-modele-concurrence-kernel.md` (DRAFT retiré),
+  CLAUDE.md §2/§3, README index mis à jour. Polish v2.b restant : signaux
+  multi-bits, Disable/Enable formels.
+
 ## [2026-05-25] — OS-2.g v2.b/g.6 : Forbid/Permit (ADR-25 Exec-classique 1/2)
 
 ### OricOS

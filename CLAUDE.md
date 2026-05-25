@@ -585,6 +585,38 @@ Alternatives écartées :
 
 **Impact** : surface de maintenance Phosphoric divisée par ~2 (~10 K LOC supprimées). HDL ULX3S devra implémenter un seul cœur (65C816) avec mode E hybride pragmatique (ADR-11). DEC-1 actée.
 
+### ADR-25 — Modèle de concurrence kernel : Exec-classique (ratifiée 2026-05-25)
+
+Le kernel préemptif (ADR-03) sur mono-cœur 65C816 sans primitive atomique adopte
+le modèle **AmigaOS Exec / SymbOS** (réf. d'ADR-03/06), pour résoudre le dilemme
+« atomicité vs blocage » :
+
+- **`Forbid`/`Permit`** : suspend le context-switch préemptif (le timer vérifie
+  `FORBID_COUNT` dans `do_switch`) ; **les IRQ continuent de tourner**. Le
+  dispatcher COP entoure chaque syscall (`forbid` à l'entrée, `permit` à la
+  sortie) → un syscall n'est pas préempté en plein milieu (atomicité de la ZP
+  scratch globale sans copie par tâche).
+- **`Disable`/`Enable`** : masquage IRQ borné à quelques instructions, réservé
+  aux RMW partagés avec un handler (ring clavier). Jamais sur un syscall entier.
+- **Blocage/réveil (signaux)** : une tâche se bloque (`STATE=BLOCKED`) et **rend
+  le CPU** ; un driver la réveille (`READY`). `SYS_READ_CHAR` bloque ainsi sur le
+  clavier, réveillé par l'IRQ KBD2. Pas de spin masqué (fin du deadlock).
+- **Switchs volontaires** (`yield`/`exit`/block) font `permit` avant de basculer
+  (ne sont pas des préemptions).
+
+Implémentation OS-2.g v2.b : `kernel_forbid`/`permit`, garde Forbid dans
+`do_switch`, `kernel_block_switch`, `kernel_kbd_wake`, `SYS_READ_CHAR` bloquant
+(gate `SCHED_ACTIVE` : fallback spin/WAI en contexte boot pour hello_c). Validé
+563 tests.
+
+Alternatives écartées (cf. `docs/adr/0025-modele-concurrence-kernel.md`) :
+mutexes/sémaphores et message-passing intégral (reportés v3 — se construisent
+au-dessus de block/wake ; critères de réouverture : apps non-trusted, IPC GUI,
+inversion de priorité) ; statu quo `cli` (réentrance non traitée) ; GS/OS
+coopératif (contredit ADR-03 préemptif). Révise ADR-03 (contrat d'atomicité),
+précise ADR-16 (wakeup = réveil de tâche). Polish v2.b restant : signaux
+multi-bits génériques, primitives `Disable`/`Enable` formelles.
+
 ---
 
 ## 3. Décisions ouvertes (ADR à instruire — NE PAS trancher unilatéralement)
@@ -625,27 +657,7 @@ expliciter avant d'avancer.
 
 **Impact** : multitâche robuste, exécution apps non-trusted.
 
-### ADR-25 — Modèle de concurrence kernel (DRAFT — dossier d'instruction, 2026-05-25)
-
-**Statut** : **DRAFT, NON ratifié**. Dossier d'instruction écrit (remplit la
-condition 1 du moratoire §10) : `docs/adr/0025-modele-concurrence-kernel-DRAFT.md`.
-
-**Question** : quel modèle de concurrence pour le kernel préemptif (ADR-03), sur
-mono-cœur 65C816 sans primitive atomique ? Le dilemme « atomicité vs blocage »
-sous-tend plusieurs dettes (réentrance ZP scratch, deadlock `SYS_READ_CHAR`,
-`SYS_EXIT`=STP, écart ADR-14 scheduler 2-tâches).
-
-**Recommandation senior tracée** : option Exec-classique (AmigaOS Exec / SymbOS) —
-`Forbid`/`Permit` (suspend le switch, IRQ vivantes) + `Disable`/`Enable` (micro-RMW)
-+ signaux 1 octet/TCB (`Wait`/`Signal`, où `Wait` lève le `Forbid` pendant le
-blocage) + partition ZP IRQ↔syscall. Alternatives instruites : mutexes/sémaphores
-(v3), message-passing intégral (v3+), statu quo (écarté), GS/OS coopératif (écarté,
-contredit ADR-03).
-
-**Ratification bloquée** par le moratoire condition 2 (implémentation 0 %).
-**Voie de ratification** : coder OS-2.g v2.a (scheduler N-tâches + yield) jusqu'à
-≥ 50 %, OU acter OS-2.g v2 comme jalon dur ≤ 4 semaines. Révisera ADR-03 (contrat
-d'atomicité) et précisera ADR-16 (wakeup = `task_signal`).
+### ~~ADR-25~~ → ratifiée 2026-05-25, déplacée vers §2 (modèle Exec-classique : Forbid/Permit + block/wake)
 
 ---
 

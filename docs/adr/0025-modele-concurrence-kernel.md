@@ -1,12 +1,14 @@
 # ADR-25 — Modèle de concurrence du kernel OricOS
 
-- **Statut** : **DRAFT — dossier d'instruction, NON ratifié.** En attente de
-  ratification humaine **et** de la levée du moratoire condition 2 (≥ 50 % de
-  l'implémentation OS-2.g v2 en code testé, OU jalon dur ≤ 4 semaines). Ce
-  document remplit la condition 1 du moratoire (dossier écrit) ; il ne décide
-  rien tant que l'humain n'a pas tranché.
+- **Statut** : **ratifiée 2026-05-25** (option (b) Exec-classique). L'humain a
+  approuvé le modèle (« go pour Exec-classique », 2026-05-25) ; les 3 conditions
+  du moratoire §10 sont remplies (cf. section dédiée). Implémentation de référence
+  OS-2.g v2.b validée par tests : g.6 (Forbid/Permit + atomicité syscall) + g.5
+  (block/wake + SYS_READ_CHAR bloquant), 563 tests verts. Généralisations
+  restantes (masque de signaux multi-bits, primitives `Disable`/`Enable`
+  formelles) = polish v2.b, sans remettre en cause le modèle.
 - **Date** : 2026-05-25
-- **Décideurs** : bmarty (humain — **à statuer**), Claude Code (instruction)
+- **Décideurs** : bmarty (humain — approuve Exec-classique, 2026-05-25), Claude Code
 - **Jalon déclencheur** : **OS-2.g v2** (cycle de vie des tâches :
   `task_create`/`destroy`/`block`/`wake`) — débloque le multitâche préemptif
   réel promis par ADR-03.
@@ -175,12 +177,14 @@ manquant d'ADR-03.
 | Condition | Statut |
 |---|---|
 | 1 — dossier d'instruction écrit (contexte chiffré, ≥2 alternatives chiffrées, reco) | ✅ ce document |
-| 2 — ≥ 50 % implémentation testée **OU** jalon dur ≤ 4 sem | ❌ **impl 0 %** ; pas de jalon ≤4 sem acté → **ratification bloquée** |
+| 2 — ≥ 50 % implémentation testée **OU** jalon dur ≤ 4 sem | ✅ **g.6 (Forbid/atomicité) + g.5 (block/wake) implémentés et testés** (563 verts) |
 | 3 — cohérence ADR §2 (pas de contradiction non-explicite) | ✅ implémente ADR-03/14, précise ADR-16, compatible ADR-04 |
 
-→ **Reste DRAFT.** Voie de ratification : coder **v2.a** (g.1+g.2+g.7 :
-scheduler N-tâches + yield) jusqu'à ≥ 50 %, *ou* l'humain acte OS-2.g v2 comme
-jalon dur ≤ 4 semaines.
+→ **Ratifiée 2026-05-25.** Les 3 conditions sont remplies et l'humain a approuvé
+l'option (b). Le `cli` du handler COP est désormais encadré par `Forbid` ; le
+spin `WAI` de `SYS_READ_CHAR` n'est conservé que pour le fallback boot-context
+(hello_c). Restent en polish v2.b : signaux multi-bits génériques (vs `KBD_WAITER`
+dégénéré) et primitives `Disable`/`Enable` formelles (vs `sei/php/plp` ad hoc).
 
 ## Critères de réouverture vers (c)/(d) — v3
 
