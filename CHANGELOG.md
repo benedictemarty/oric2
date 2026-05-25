@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.5 : exit → close (fin de v1.a GUI×multitâche)
+
+### OricOS
+- **`kernel_wm_close_owner`** appelé par `sys_exit` : la fenêtre d'une tâche se
+  ferme automatiquement à sa sortie. task_win crée+sort → fenêtre fermée. Validé :
+  handle==2 (créée), puis WM_COUNT==2 + WM_OWNER[2]==0 (fermée). 563 verts.
+  **v1.a SP-3.m complet** (fenêtre liée à la tâche : ouvre/ferme). Suite v1.b :
+  clavier→focus (G.3), dessin fenêtré (G.4), compositor (G.4bis).
+
 ## [2026-05-25] — SP-3.m G.2 : SYS_WIN_CREATE (une app ouvre sa fenêtre)
 
 ### OricOS
