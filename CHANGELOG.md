@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — TC-poc-hello-c : durcissement post-revue senior
+
+### OricOS
+- **Repro build (P0)** : `apps/hello_c/Makefile` `-isystem`→`-I` (le SDK versionné
+  devient autoritaire vs le `oricos.h` plateforme hors repo qui le shadowait).
+- **Repro build (P0)** : `Makefile` — `KERNEL_DEPS = wildcard modules/*.s` ajouté
+  aux prérequis de `kernel.o` (éditer un module rebuild le kernel ; fini le
+  kernel obsolète testé en silence).
+- **Fix racine DBR** : driver console (`console.s`) écrit l'écran bank 0 en
+  adressage long (`STA [DP_PCPTR]` + `f:` dans scroll) au lieu de DBR-relatif.
+  Corrige `SYS_PRINT_CHAR` ET `SYS_PRINT_STRING` (cassé pour DBR≠0). `phb/plb`
+  redondant retiré de `sys_print_char` (wm.s).
+
+### Phosphoric
+- Aucune modif source. 563 tests verts (validation des fixes OricOS ci-dessus).
+
 ## [2026-05-25] — TC-poc-hello-c : première app C llvm-mos sous OricOS
 
 ### OricOS
