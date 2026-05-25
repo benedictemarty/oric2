@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.2 : SYS_GET_NEXT_EVENT + SYS_EVENT_AVAIL
+
+### OricOS
+- **`sys_event_avail` ($15)** (non-bloquant) + **`sys_get_next_event` ($16)**
+  (bloquant via block/wake ADR-25, `EVENT_WAITER`, réveil IRQ `kernel_event_wake`).
+  Le record est copié dans le bloc ZP $D0-$D9. Base du MainLoop (G.3+).
+
+### Phosphoric
+- **`test_oricos_event_syscall`** : task_evt bloque sur SYS_GET_NEXT_EVENT,
+  réveillée par l'IRQ → reçoit EV_KEY_DOWN / message 'B'. 566 tests verts.
+
 ## [2026-05-26] — SP-3.n G.1 : file d'événements unifiée
 
 ### OricOS
