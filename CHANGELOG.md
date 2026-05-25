@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.4 : contrôles → MSG_CONTROL
+
+### OricOS
+- **`_ml_classify`** : un clic touchant un contrôle (bouton) de la fenêtre
+  (`_wm_widget_hit`) → `MSG_CONTROL` + id du contrôle. L'app réagit via le
+  MainLoop (callback kernel conservé en coexistence v1).
+
+### Phosphoric
+- **`test_oricos_mainloop_control`** : clic sur le bouton "OK" de la fenêtre 0
+  (app-driven) → MSG_CONTROL + id widget. 571 tests verts. (Tag `GU_BUTTON`
+  déclaratif reporté à G.7.)
+
 ## [2026-05-26] — SP-3.n G.3c : chrome → messages (G.3 complet)
 
 ### OricOS
