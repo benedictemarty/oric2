@@ -7,6 +7,14 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.1 : lien fenêtre↔tâche (WM_OWNER)
+
+### OricOS
+- **WM_OWNER** ($015BCD) : pid propriétaire par slot fenêtre ; `kernel_wm_add`
+  enregistre `WM_OWNER[id]=TASK_CUR`. Fondation GUI×multitâche (modèle
+  backing-store/GrafPort, SP-3.m). Validé : WM_OWNER[0]==1 (fenêtre démo liée à
+  task_a). 563 verts.
+
 ## [2026-05-25] — OS-2.g v2.b : SYS_SLEEP_MS (sleep bloquant piloté par le timer)
 
 ### OricOS
