@@ -7,6 +7,14 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — Dette #4 : gardes d'overlap memory map bank 1
+
+### OricOS
+- **Pivot après investigation** : migrer les 126 constantes absolues vers `.res`
+  casserait l'ABI d'introspection des tests (205 réfs littérales / 7 fichiers).
+  À la place : 11 gardes `.assert` (`kernel.s`) → overlap = erreur de build, sans
+  bouger une seule adresse. Validé négatif (`WM_MAX=20` → build échoue). 563 verts.
+
 ## [2026-05-25] — Réduction dette/bugs (analyse fine OricOS)
 
 ### OricOS
