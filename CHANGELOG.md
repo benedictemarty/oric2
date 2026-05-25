@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.b/g.6 : Forbid/Permit (ADR-25 Exec-classique 1/2)
+
+### OricOS
+- **g.6 `kernel_forbid`/`permit`** : compteur FORBID_COUNT ; le COP dispatcher
+  forbid à l'entrée / permit à la sortie → syscall non-préemptible (corrige la
+  réentrance ZP #2), IRQ actives (pas de deadlock). do_switch skip si FORBID≠0 ;
+  yield/exit font permit avant de basculer. Bug A-clobbé détecté+corrigé par les
+  tests. 563 verts. Fondation Exec-classique ; g.5 (blocage read_char) = inc. 2.
+
 ## [2026-05-25] — OS-2.g v2.a : SYS_EXIT teardown (g.4)
 
 ### OricOS
