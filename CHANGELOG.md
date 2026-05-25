@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — ADR-26 (draft) : modèle GUI déclaratif GenUI/SpecUI
+
+### Docs (oric2)
+- **`docs/adr/0026-modele-gui-declaratif-DRAFT.md`** : draft d'ADR (NON ratifiée)
+  posant le modèle GUI déclaratif GeoWorks-like (UI en tables, MainLoop→messages,
+  GenUI/SpecUI, `DoDlgBox` command table). Alternatives écartées (TaskMaster IIgs,
+  callbacks kernel, moteur objet Goc), conséquences, conformité moratoire §10
+  (ratification bloquée tant que < 50 % impl arc SP-3.n). Indexée README ADR
+  (ouvertes/parquées). Révise ADR-06 à la ratification.
+
 ## [2026-05-26] — BACKLOG : arc SP-3.n cadré (GUI déclarative GeoWorks)
 
 ### Docs (oric2)

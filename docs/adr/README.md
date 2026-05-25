@@ -45,6 +45,7 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | # | Titre | Statut | Réouverture |
 |---|---|---|---|
 | 15 | [Isolation mémoire post-v1](0015-isolation-memoire-post-v1.md) | parquée v2 (2026-05-09) | apps non-trusted OU HW-2 mûr OU 2026-12-31 |
+| 26 | [Modèle GUI déclaratif GenUI/SpecUI (DRAFT)](0026-modele-gui-declaratif-DRAFT.md) | **draft / à instruire** (2026-05-26) | ≥ 50 % impl arc SP-3.n (étapes G.1→G.4) |
 
 ## Migration progressive
 
