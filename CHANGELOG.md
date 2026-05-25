@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — Réduction dette/bugs (analyse fine OricOS)
+
+### OricOS
+- **Fix P1 race ring clavier** (`kbd.s`) : section critique `php;sei…plp` dans
+  `kernel_kbd_ring_pop`. Régression du `cli` (deadlock fix) : l'IRQ producteur
+  pouvait préempter le pop → RMW perdu sur COUNT + clobber DP_KBD_TMP. Masquage
+  bref rend le pop atomique (producteur = IRQ uniquement).
+- **Dette P3 largeur M/X** (`wm.s`) : `.a8`/`.i8` en tête des handlers syscall
+  (`.smart` ne traverse pas `jsr (table,X)`). Prévient le bug ca65 tracking mode.
+- 563 tests verts. Reste (gros rayon) : memory map → `.res`, scheduler ADR-14 (OS-2.g v2).
+
 ## [2026-05-25] — oricos.h SSOT numéros de syscalls (revue senior P2)
 
 ### OricOS
