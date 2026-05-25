@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.6 : app C démo fenêtrée (arc SP-3.m clos)
+
+### OricOS
+- **`apps/win_hello/win.c`** : première app userland C **fenêtrée** (llvm-mos).
+  Crée sa fenêtre (focus), dessine en local, flush, lit le clavier, sort.
+- **SDK** : helpers `oricos_win_create`/`oricos_gfx_fill_rect`/`oricos_win_flush`.
+- **`SYS_WIN_FLUSH` ($14)** → `kernel_wm_compose` ; `sys_win_create` donne le focus.
+
+### Phosphoric
+- **`test_oricos_win_app`** : valide la chaîne GUI×multitâche complète depuis C —
+  fenêtre+focus (G.2), dessin local `$080000==$FF` (G.4), composite `$00A032==$FF`
+  (G.4bis), clavier au focus → "win_hello: sortie" (G.3), exit → fenêtre fermée
+  `WM_COUNT 3→2` (G.5). **Arc SP-3.m clos. 564 tests verts.**
+
 ## [2026-05-25] — SP-3.m G.4bis : compositor (backing stores → framebuffer XVGA)
 
 ### OricOS
