@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — Doc : note d'architecture des références d'art
+
+### Docs (oric2)
+- **`docs/REFERENCES_ART.md`** : note d'architecture « qui inspire quel étage » —
+  SymbOS (noyau préemptif à messages), Apple IIgs (mécaniques 65C816 & GrafPort),
+  GeoWorks/GEOS (UI déclarative GenUI/SpecUI à messages). Comparaison par axe,
+  ce qu'OricOS prend/ne prend pas à chacune, convergence « message », table de
+  traçabilité étage→ADR. Informatif (ne ratifie rien).
+
 ## [2026-05-25] — SP-3.m G.6 : app C démo fenêtrée (arc SP-3.m clos)
 
 ### OricOS
