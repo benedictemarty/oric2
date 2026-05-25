@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.a : scheduler N-tâches round-robin (ADR-14)
+
+### OricOS
+- **`modules/sched.s`** (nouveau) : `kernel_tcb_ptr` (pid→&tcb 24-bit, index
+  (pid-1)*20) + `kernel_sched_find_next` (round-robin READY, wrap, skip).
+- **`do_switch`** (handlers.s) : remplace le swap figé 2-tâches par un
+  round-robin table-driven (helpers appelés avant le `tcs`). Comportement 1↔2
+  préservé avec 2 tâches → 563 tests verts. Implémente ADR-14 (ne présuppose pas
+  ADR-25). Reste v2.b : task_create/destroy + block/wake (Forbid/Disable).
+
 ## [2026-05-25] — ADR-25 (DRAFT) : dossier modèle de concurrence kernel
 
 ### Docs / ADR
