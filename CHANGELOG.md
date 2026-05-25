@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.a : task_create (g.3) + SYS_YIELD réel (g.7)
+
+### OricOS
+- **g.3 `kernel_task_create`** (sched.s) : scan bitmap → slot libre, alloc page
+  de pile bank 0, init TCB + forge frame d'IRQ initiale. boot crée task_c (pid 3).
+  Validé : TASK_C_CTR>0 + bitmap=$0F (frame forgée correcte, RR élit pid 3).
+- **g.7 `sys_yield`** (wm.s) : yield coopératif réel (chirurgie de pile →
+  frame do_switch → jmp). task_c yield à chaque tour ; système sain → validé.
+- 563 tests verts. Reste : g.4 (SYS_EXIT teardown), g.5/g.6 (block/wake = ADR-25).
+
 ## [2026-05-25] — OS-2.g v2.a : scheduler N-tâches round-robin (ADR-14)
 
 ### OricOS
