@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.4bis : compositor (backing stores → framebuffer XVGA)
+
+### OricOS
+- **`kernel_wm_compose`** : BLITe les backing stores des fenêtres `($06+slot):0000`
+  vers le framebuffer XVGA à `dst=y*512+x/2` (stride 512). Le dessin local (G.4)
+  apparaît à l'écran → indépendance app ↔ adresse XVGA bouclée (modèle GrafPort).
+
+### Phosphoric
+- **`test_oricos_win_draw`** étendu G.4bis : vérifie backing store `$080000==$FF`
+  ET framebuffer `$00A032==$FF`. Couleur fenêtre 15 ($FF) ≠ fond desktop ($44) →
+  preuve de compositing non-ambiguë. 563 verts.
+
 ## [2026-05-25] — SP-3.m G.4 : dessin fenêtré (backing store, coords locales)
 
 ### OricOS
