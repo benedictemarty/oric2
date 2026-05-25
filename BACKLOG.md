@@ -66,7 +66,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | ID | Titre | Estim. | Pré-req |
 |----|-------|--------|---------|
 | ~~TC-llvmmos~~ | ✅ **clos 2026-05-09** : investigation documentaire (cf. `docs/TC-llvmmos.md`). Constats : llvm-mos n'implémente PAS le mode N 16-bit registres (issue #321) ni le banking 24-bit (issue #320), tous deux ouverts depuis 2023-2024. ADR-05 révisée v2 : userland C mode N **8-bit native** (M=1, X=1), apps **mono-bank** ≤ 64 KiB linéaire. DEC-3 actée : llvm-mos conservé avec contraintes. Installation effective + PoC reportés au Sprint 4 (sous-tâches **TC-llvmmos-install**, **TC-llvmmos-target-oricos**, **TC-poc-hello-c**). | — | — |
-| **TC-llvmmos-install** | Installer llvm-mos pre-built, vérifier targets dispo | 1 j | — |
+| ~~**TC-llvmmos-install**~~ | ✅ **clos 2026-05-25** : llvm-mos v23.0.1 installé dans `$HOME/llvm-mos`. Target `mosw65816` validé : génère code 8-bit natif (M=1,X=1), conforme ADR-05 v2. PoC `int main()` compilé + désassemblé. | — | — |
 | **TC-llvmmos-target-oricos** | Créer target `oricos` custom (clang.cfg + crt0.S + link.ld) | 2-3 j | TC-llvmmos-install |
 | **TC-libc** | libc minimal (printf via syscalls, malloc bank-local) | 5-10 j | TC-llvmmos-target-oricos, OS-2.f |
 | **TC-poc-hello-c** | Premier hello.c → bundle .oosobj → exec sur OricOS | 1-2 j | TC-libc |
