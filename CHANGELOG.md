@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — TC-poc-hello-c : première app C llvm-mos sous OricOS
+
+### OricOS
+- **`oricos.h` fix LTO** : syscall literals `"lda #N\n"` au lieu de contrainte `"i"`
+  (évite hoisting LTO en LDA ZP qui écrasait ZP kernel).
+- **`sys_print_char` fix DBR** : sauvegarde/restaure DBR pour que `kernel_print_char`
+  écrive bien en bank0:$BB80 (les apps userland ont DBR≠0).
+- **`kernel_app_exec` v0.2** : boucle de copie 16-bit (Y 16-bit) ; supporte bundles >255B.
+- Boot TC-poc : `TC_HELLOC_FLAG`, pré-injection kbd 'A', `bundle_hello_c` embarqué.
+
+### Phosphoric
+- Test `test_oricos_helloc` : 2/2 PASS. 563 tests verts.
+
 ## [2026-05-25] — SP-3.k : icônes desktop
 
 ### OricOS
