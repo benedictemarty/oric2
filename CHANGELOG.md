@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.7 : app C GUI déclarative + MainLoop (arc CLOS)
+
+### OricOS
+- **`apps/gui_demo/gui.c`** : app C qui déclare son UI (GenUI fenêtre+bouton) +
+  boucle MainLoop + réagit aux messages (MSG_CONTROL → "gui: bouton",
+  MSG_CLOSE → sort). `sys_ui_define` refondu : `GU_BUTTON` attache des contrôles
+  déclarés. SDK : `oricos_ui_define`/`oricos_main_loop`/`oricos_alert`/`do_dlgbox`.
+
+### Phosphoric
+- **`test_oricos_gui_demo`** : l'app C déclare fenêtre+bouton, clic bouton →
+  MSG_CONTROL ("gui: bouton"), clic fermeture → MSG_CLOSE ("gui: sortie").
+  **Arc SP-3.n (G.1→G.7) clos. 574 tests verts.**
+
 ## [2026-05-26] — SP-3.n G.6 : SYS_ALERT (alertes pré-câblées)
 
 ### OricOS
