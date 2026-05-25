@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.5 : SYS_DO_DLGBOX (dialogue modal)
+
+### OricOS
+- **`sys_do_dlgbox` ($19)** : command table `DB_*` (style GEOS) → fenêtre modale
+  + boutons OK/Cancel + boucle modale ; retour 1/0. **UI-modal** (WM_MODAL) : la
+  saisie va au dialogue, la tâche bloque mais rend le CPU (préemption préservée).
+- **`kernel_event_wait`** : helper bloquant réutilisable (block/wake).
+
+### Phosphoric
+- **`test_oricos_dlgbox`** : clic OK → retour 1 + dialogue fermé (WM_MODAL=$FF).
+  572 tests verts.
+
 ## [2026-05-26] — SP-3.n G.4 : contrôles → MSG_CONTROL
 
 ### OricOS
