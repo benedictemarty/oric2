@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.3c : chrome → messages (G.3 complet)
+
+### OricOS
+- **`_ml_classify`** : barre de menu (`y < MENU_BAR_H`) → `MSG_MENU` ; case
+  fermeture → `MSG_CLOSE` + id ; sinon `MSG_CONTENT`.
+- **`WM_APP_DRIVEN`** (posé par `sys_main_loop`) : en mode app-driven, le shell ne
+  ferme plus au clic close-box — l'app reçoit `MSG_CLOSE` et décide (GeoWorks).
+  Auto-close conservé hors app (test_wm_close_button intact).
+
+### Phosphoric
+- **`test_oricos_mainloop_close`** (close-box → MSG_CLOSE + fenêtre ouverte) +
+  **`test_oricos_mainloop_menu`** (barre de menu → MSG_MENU). Arc G.3 complet.
+  570 tests verts.
+
 ## [2026-05-26] — SP-3.n G.3b : SYS_UI_DEFINE (UI déclarative GenUI)
 
 ### OricOS
