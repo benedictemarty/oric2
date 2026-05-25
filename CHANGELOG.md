@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.3a : SYS_MAIN_LOOP (messages sémantiques)
+
+### OricOS
+- **`sys_main_loop` ($17)** : modèle GeoWorks — bloque jusqu'à un message
+  significatif, traduit les événements bruts (`_ml_classify`) : touche→`MSG_KEY`,
+  clic fenêtre→`MSG_CONTENT`+id (hit-test), moved/up→`MSG_NULL` (sautés).
+  `kernel_wm_mouse_step` inchangé (focus/drag restent WM-automatiques).
+
+### Phosphoric
+- **`test_oricos_mainloop_message`** : move (sauté) puis clic fenêtre →
+  MSG_CONTENT + id valide. 567 tests verts.
+
 ## [2026-05-26] — SP-3.n G.2 : SYS_GET_NEXT_EVENT + SYS_EVENT_AVAIL
 
 ### OricOS
