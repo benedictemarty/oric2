@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.3 : clavier → focus (routage)
+
+### OricOS
+- **`kernel_kbd_waiter_eligible`** : le clavier va au propriétaire de la fenêtre
+  focus (`WM_FOCUS`→`WM_OWNER`) ; tâches sans fenêtre exemptes (préserve task_e) ;
+  tâche GUI non-focus retient la touche. `kernel_wm_set_focus` réévalue. Validé
+  non-régression (563 verts, task_e exempt OK) ; branche focus → intégration G.6.
+  Limite : KBD_WAITER unique (→ polish #1 signaux génériques).
+
 ## [2026-05-25] — SP-3.m G.5 : exit → close (fin de v1.a GUI×multitâche)
 
 ### OricOS
