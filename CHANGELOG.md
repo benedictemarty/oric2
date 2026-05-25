@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.b : apps userland comme tâches schedulées
+
+### OricOS
+- **`kernel_app_spawn`** (fat.s) : charge un bundle et le lance comme **tâche
+  préemptive** (task_create, entry crt0 BANK:$0200) au lieu du JSL boot-context.
+  `kernel_app_load` factorisé (front commun avec app_exec legacy). `TC_HELLOC_TASK_FLAG`.
+  Bug corrigé : spawn placé après l'init de l'allocateur de banks.
+
+### Phosphoric
+- **`test_oricos_helloc_as_task`** : hello_c spawné comme tâche, imprime
+  « Hello OricOS from C! » dans $BB80 → **une app C llvm-mos tourne comme tâche
+  préemptive schedulée**. 3/3 helloc + 563 verts.
+
 ## [2026-05-25] — OS-2.g v2.b : idle task (ferme le trou « dernière tâche »)
 
 ### OricOS
