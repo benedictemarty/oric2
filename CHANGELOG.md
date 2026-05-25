@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — BACKLOG : arc SP-3.n cadré (GUI déclarative GeoWorks)
+
+### Docs (oric2)
+- **`BACKLOG.md`** : arc **SP-3.n — Event Manager / Control / Dialog (modèle
+  GeoWorks)** gravé. UI déclarative (tables `DB_*`/GenUI), MainLoop → messages
+  (retrait callbacks cross-bank), `SYS_DO_DLGBOX`/`SYS_ALERT` table-driven,
+  principe GenUI/SpecUI. Découpage G.1→G.7, ~5-6 syscalls (slots `$15-$3F`),
+  ADR « modèle GUI déclaratif » à instruire (révise ADR-06). Référence d'art :
+  `docs/REFERENCES_ART.md`.
+
 ## [2026-05-26] — Doc : note d'architecture des références d'art
 
 ### Docs (oric2)
