@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — OS-2.g v2.b : SYS_SLEEP_MS (sleep bloquant piloté par le timer)
+
+### OricOS
+- **`sys_sleep_ms`** : de stub à blocage réel (SLEEP_TICKS[CUR] + block_switch).
+  **`kernel_sleep_tick`** (IRQ T1) décrémente et réveille à 0. 2ᵉ source de réveil
+  (timer) après le clavier → modèle block/wake (ADR-25) général. task_f dormeuse.
+
+### Phosphoric
+- via_t1 : TASK_F_CTR>0 (endormie puis réveillée par le timer), bitmap=$CF. 563 verts.
+
 ## [2026-05-25] — OS-2.g v2.b : apps userland comme tâches schedulées
 
 ### OricOS
