@@ -8,3 +8,9 @@ OricOS/
 # Caches éditeurs
 *.swp
 .DS_Store
+
+# Artefacts de build parasites (compilations debug ad-hoc à la racine)
+a.out
+*.out
+*.elf
+*.o
