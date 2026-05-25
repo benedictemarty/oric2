@@ -1,12 +1,12 @@
-# ADR-26 — Modèle GUI déclaratif GenUI/SpecUI (GeoWorks-like) — DRAFT
+# ADR-26 — Modèle GUI déclaratif GenUI/SpecUI (GeoWorks-like)
 
-- **Statut** : **DRAFT — à instruire** (NON ratifiée). Ouverte 2026-05-26.
-  Ratification interdite tant que les 3 conditions du moratoire §10 ne sont pas
-  réunies — en particulier **≥ 50 % d'implémentation de référence testée**
-  (arc SP-3.n, étapes G.1→G.4 au minimum). Ce fichier pré-instruit la décision.
-- **Date (draft)** : 2026-05-26
-- **Décideurs (pressentis)** : bmarty (humain — a exprimé la préférence GeoWorks,
-  2026-05-25/26), Claude Code.
+- **Statut** : **ratifiée 2026-05-26**. L'humain a approuvé (« ratifier adr-26 »,
+  2026-05-26). Les 3 conditions du moratoire §10 sont remplies (cf. section
+  dédiée) : dossier écrit, **100 % de l'implémentation de référence (arc SP-3.n
+  G.1→G.7) livrée et testée** (574 tests verts), cohérence ADR vérifiée.
+- **Date** : 2026-05-26 (ouverte en draft le 2026-05-26, ratifiée le même jour
+  après implémentation complète de l'arc SP-3.n).
+- **Décideurs** : bmarty (humain — approuve, 2026-05-26), Claude Code.
 - **Jalon déclencheur** : arc **SP-3.n** (Event Manager / Control / Dialog) —
   exposer une couche GUI applicative aux apps C userland.
 - **ADR liées** : **révise/étend ADR-06** (GUI SymbOS-like → précise le *modèle
@@ -96,19 +96,38 @@ exposée à l'app). Cohérent avec SP-3.m (G.4/G.4bis).
 `G.4` contrôles génériques · `G.5` `SYS_DO_DLGBOX` · `G.6` `SYS_ALERT` ·
 `G.7` démo C. (Détail : `BACKLOG.md`, arc SP-3.n.)
 
-## Conformité moratoire §10 (à compléter avant ratification)
+## Conformité moratoire §10 (vérifiée à la ratification)
 
-1. **Dossier d'instruction écrit** : partiel (ce draft + `REFERENCES_ART.md` +
-   cadrage BACKLOG). À chiffrer : coût RAM file d'événements, surface de
-   migration, format command table. **TODO**.
-2. **≥ 50 % d'implémentation testée** : **non atteint** (arc non démarré). Bloque
-   la ratification.
-3. **Cohérence ADR** : compatible ADR-16/17/25 ; révise ADR-06 (à expliciter).
+Conformément au moratoire CLAUDE.md §10, la ratification confirme les 3 conditions :
 
-**Critère go (draft → ratifiée)** : étapes G.1→G.4 implémentées et testées
-(file d'événements + MainLoop + déclaratif + contrôles), sans régression de la
-suite GUI existante.
+1. **Dossier d'instruction écrit** : ✅ — ce document + `docs/REFERENCES_ART.md`
+   (prior art SymbOS/IIgs/GeoWorks, comparaison chiffrée) + cadrage `BACKLOG.md`
+   (arc SP-3.n, alternatives chiffrées vs IIgs/callbacks/Goc).
+2. **≥ 50 % d'implémentation testée** : ✅ — **100 %** : l'arc SP-3.n entier
+   (G.1 file d'événements → G.7 app C démo) est implémenté et validé par tests
+   Phosphoric (`test_oricos_event_*`, `_mainloop_*`, `_ui_define`, `_dlgbox`,
+   `_alert`, `_gui_demo`), 574 tests verts, sans régression.
+3. **Cohérence ADR** : ✅ — compatible ADR-16 (driver event-driven), ADR-17 (ABI :
+   syscalls $15-$1A ajoutés dans les slots réservés), ADR-25 (block/wake pour le
+   MainLoop/DoDlgBox). **Révise ADR-06** : la « GUI SymbOS-like » est précisée —
+   noyau/WM SymbOS-like + **modèle d'API applicative déclaratif GeoWorks-like**.
+
+## Décision de modalité modale (DoDlgBox/Alert)
+
+Acté avec l'humain (2026-05-26) : les dialogues/alertes sont **UI-modal**
+(WM_MODAL capture la saisie de toute l'UI) ; la tâche appelante **bloque mais
+rend le CPU** (`kernel_event_wait`, block/wake — les autres tâches tournent).
+Le **task-modal** (autres fenêtres restent interactives) est parqué v2
+(nécessiterait un WM_MODAL par-tâche ; déclencheur : multi-app GUI concurrent).
+
+## Polish reporté (post-ratification, non bloquant)
+
+Libellés de boutons distincts (OK/Cancel/Yes/No vs "OK" partagé) ; texte de
+message dans DoDlgBox/Alert (label) ; tag `GU_BUTTON` avec label ; retrait du
+callback kernel `_wm_invoke_active_cb` au profit de `MSG_CONTROL` (coexistence
+v1) ; signaux multi-bits génériques (polish #1, lève le mono-waiter EVENT_WAITER).
 
 ---
 
-*Draft v0.1 — 2026-05-26. NON ratifiée. À instruire au fil de l'arc SP-3.n.*
+*v1.0 — ratifiée 2026-05-26. Implémentation de référence : arc SP-3.n (G.1→G.7),
+Phosphoric v1.22.68-alpha, 574 tests verts.*

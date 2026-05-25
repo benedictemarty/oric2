@@ -68,6 +68,12 @@ GUI multifenêtrée préemptive sur 8/16-bit, drag & drop, menus contextuels, ta
 
 Alternatives écartées : Intuition-like (mémoire excessive), GEM-like (moins moderne), custom (réinvention coûteuse).
 
+> **Révision (ADR-26, 2026-05-26)** : ADR-06 reste valide pour le **noyau/WM**
+> (SymbOS-like : préemptif, multifenêtré). Le **modèle d'API applicative** est
+> précisé par **ADR-26** (déclaratif GenUI/SpecUI + MainLoop à messages,
+> GeoWorks-like) : les apps déclarent leur UI et reçoivent des messages, au lieu
+> de callbacks impératifs. Voir ADR-26.
+
 ### ADR-07 — Système de fichiers : FAT32 SD + hostfs émulateur (ratifiée 2026-05-07)
 - **Hardware ULX3S** : FAT32 sur carte SD via SPI (slot natif ULX3S). Lib FAT32 65C816 à écrire ou porter.
 - **Émulateur Phosphoric** : option `--hostfs DIR` (déjà existante) en alternative à une image SD FAT32. Le VFS abstraction layer de Phosphoric route entre les deux.
@@ -616,6 +622,40 @@ inversion de priorité) ; statu quo `cli` (réentrance non traitée) ; GS/OS
 coopératif (contredit ADR-03 préemptif). Révise ADR-03 (contrat d'atomicité),
 précise ADR-16 (wakeup = réveil de tâche). Polish v2.b restant : signaux
 multi-bits génériques, primitives `Disable`/`Enable` formelles.
+
+### ADR-26 — Modèle GUI déclaratif GenUI/SpecUI (GeoWorks-like) (ratifiée 2026-05-26)
+
+Le **modèle d'API GUI applicative** d'OricOS est **déclaratif et événementiel
+façon GeoWorks/GEOS** (réf. d'art `docs/REFERENCES_ART.md`), précisant ADR-06 :
+
+- **UI déclarative** : l'app décrit son UI comme des *tables de données* (GenUI :
+  `GU_WINDOW`/`GU_TITLE`/`GU_BUTTON`/`GU_END` ; dialogues : command table `DB_*`
+  façon GEOS `DoDlgBox`). Le kernel les rend et exécute. Continu avec l'existant
+  table-driven (`menu_defs`, `ICON_TABLE`).
+- **MainLoop → messages** : `SYS_MAIN_LOOP` ($17) bloque jusqu'à un message
+  sémantique et le rend à l'app (`MSG_KEY`/`MSG_CONTENT`/`MSG_CLOSE`/`MSG_MENU`/
+  `MSG_CONTROL`), traitant drag/menu/close **un événement par appel** (état gardé
+  entre appels → préemption préservée). **Plus de callbacks kernel cross-bank**.
+- **GenUI/SpecUI** : l'UI générique déclarée est séparée du rendu « spécifique »
+  (look) ; v1 = un seul SpecUI au niveau QDF (backing stores/coords locales,
+  SP-3.m), look changeable sans recompiler les apps.
+- **Modale UI-modal** (DoDlgBox/Alert) : `WM_MODAL` capture la saisie de toute
+  l'UI ; la tâche appelante bloque mais **rend le CPU** (`kernel_event_wait`,
+  block/wake ADR-25). Task-modal parqué v2.
+
+ABI (ADR-17) : syscalls **$15-$1A** ajoutés dans les slots réservés
+(`SYS_EVENT_AVAIL`/`GET_NEXT_EVENT`/`MAIN_LOOP`/`UI_DEFINE`/`DO_DLGBOX`/`ALERT`).
+S'appuie sur la file d'événements (ADR-16 event-driven) alimentée par les IRQ
+KBD2/MOU2. Implémentation de référence : **arc SP-3.n (G.1→G.7)**, app C
+`apps/gui_demo`, 574 tests verts.
+
+Alternatives écartées (cf. `docs/adr/0026-modele-gui-declaratif.md`) :
+**TaskMaster impératif d'Apple IIgs** (`NewControl` × N — plus de surface, moins
+naturel en C, pas de séparation look/logique) ; **callbacks kernel** (fragile
+cross-bank, mauvais fit C) ; **moteur objet complet PC/GEOS « Goc »** (géométrie
+auto-managée, fontes vectorielles — surdimensionné v1, on prend l'esprit
+déclaratif pas le moteur). Polish reporté : libellés boutons distincts, texte
+message dialogue, retrait callback kernel résiduel, signaux multi-bits (#1).
 
 ---
 

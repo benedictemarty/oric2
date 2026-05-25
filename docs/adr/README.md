@@ -39,13 +39,13 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | 23 | [Console flux de caractères](0023-console-flux-caracteres.md) | 2026-05-24 | backend interchangeable Oric1↔GPU, ABI sans géométrie/attribut |
 | 24 | [Souris Oric 2](0024-souris-oric2.md) | 2026-05-24 | contrôleur $0360-$036F, hybride absolu+delta, IRQ MOU2 |
 | 25 | [Modèle de concurrence kernel](0025-modele-concurrence-kernel.md) | 2026-05-25 | Exec-classique : Forbid/Permit + block/wake (signaux), atomicité syscall ; réf AmigaOS Exec / SymbOS |
+| 26 | [Modèle GUI déclaratif GenUI/SpecUI](0026-modele-gui-declaratif.md) | 2026-05-26 | UI déclarative (tables GenUI/DB_*), MainLoop→messages, DoDlgBox/Alert ; révise ADR-06 ; réf GeoWorks/GEOS |
 
 ### Ouvertes / parquées (CLAUDE.md §3)
 
 | # | Titre | Statut | Réouverture |
 |---|---|---|---|
 | 15 | [Isolation mémoire post-v1](0015-isolation-memoire-post-v1.md) | parquée v2 (2026-05-09) | apps non-trusted OU HW-2 mûr OU 2026-12-31 |
-| 26 | [Modèle GUI déclaratif GenUI/SpecUI (DRAFT)](0026-modele-gui-declaratif-DRAFT.md) | **draft / à instruire** (2026-05-26) | ≥ 50 % impl arc SP-3.n (étapes G.1→G.4) |
 
 ## Migration progressive
 

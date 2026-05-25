@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — ADR-26 RATIFIÉE : modèle GUI déclaratif GenUI/SpecUI
+
+### Docs (oric2)
+- **ADR-26 ratifiée** (draft → ratifiée) : modèle GUI déclaratif GeoWorks-like
+  (UI en tables GenUI/`DB_*`, MainLoop→messages, DoDlgBox/Alert UI-modal,
+  GenUI/SpecUI). 3 conditions moratoire §10 remplies (dossier, 100 % impl arc
+  SP-3.n testée 574 verts, cohérence). Fichier renommé `0026-modele-gui-declaratif.md`,
+  index README mis à jour, CLAUDE.md §2 (ADR-26) + révision note ADR-06.
+
 ## [2026-05-26] — SP-3.n G.7 : app C GUI déclarative + MainLoop (arc CLOS)
 
 ### OricOS
