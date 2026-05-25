@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.3b : SYS_UI_DEFINE (UI déclarative GenUI)
+
+### OricOS
+- **`sys_ui_define` ($18)** : l'app passe une **table GenUI** (`GU_WINDOW`/
+  `GU_TITLE`/`GU_END`) ; le kernel la parse (`lda [$D0],y`) et crée la fenêtre
+  (`kernel_wm_add` + focus). Modèle déclaratif GeoWorks (UI = donnée).
+- **Fix race `_ml_classify`** : `WM_ARG_*` partagé avec l'IRQ souris → `php/sei…plp`
+  autour du hit-test (ADR-25 Disable/Enable).
+
+### Phosphoric
+- **`test_oricos_ui_define`** : table GenUI → fenêtre (handle valide, x==300).
+- **`test_oricos_sprint2a` durci** : les compteurs 8-bit TASK_A/B/C wrappent (mod
+  256) et peuvent valoir 0 au STP exact → on prouve désormais qu'ils ont été
+  non-nuls *pendant* le run (robuste au timing, vs lecture unique fragile).
+  568 tests verts.
+
 ## [2026-05-26] — SP-3.n G.3a : SYS_MAIN_LOOP (messages sémantiques)
 
 ### OricOS
