@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — Fix deadlock SYS_READ_CHAR (revue senior P1)
+
+### OricOS
+- **`handlers.s`** : `cli` dans `kernel_cop_handler`. Le COP entre I=1 ; un syscall
+  bloquant (`SYS_READ_CHAR`) figeait tout le noyau car l'IRQ KBD2 ne pouvait plus
+  remplir le ring → deadlock garanti en usage réel. Conforme ADR-03.
+- **`wm.s`** : `WAI` dans `sys_read_char` (dort jusqu'à l'IRQ au lieu de busy-spin).
+- **`boot.s`** : suppression du hack de pré-injection clavier (pansement du deadlock).
+
+### Phosphoric
+- **`test_oricos_helloc` renforcé** : ne pré-injecte plus ; livre 'A' via le device
+  KBD2 quand l'app bloque (`cpu.waiting`), exerçant la chaîne KBD2→IRQ→ring→read_char.
+  563 tests verts.
+
 ## [2026-05-25] — TC-poc-hello-c : durcissement post-revue senior
 
 ### OricOS
