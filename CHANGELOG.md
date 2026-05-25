@@ -7,6 +7,13 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-25] — SP-3.m G.2 : SYS_WIN_CREATE (une app ouvre sa fenêtre)
+
+### OricOS
+- **`SYS_WIN_CREATE`** (syscall $13) : une tâche crée sa fenêtre (args ZP $D0-$D7),
+  owner = tâche appelante. Backing store SDRAM implicite par slot (($06+slot):0000).
+  Validé : task_win obtient handle 2, WM_OWNER[2]==8, WM_COUNT==3. 563 verts.
+
 ## [2026-05-25] — SP-3.m G.1 : lien fenêtre↔tâche (WM_OWNER)
 
 ### OricOS
