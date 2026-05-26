@@ -70,6 +70,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | ~~**TC-llvmmos-target-oricos**~~ | ✅ **clos 2026-05-25** : target `mos-oricos` créé dans `$HOME/llvm-mos` + SDK versionné dans `OricOS/tools/oricos-sdk/`. crt0.S (`.init.000` DBR=PBR + `.call_main` + `.after_main` SYS_EXIT+RTL), link.ld (code@$0200, ZP imag-regs $89-$A8), oricos.h (18 syscalls ADR-17). App `apps/hello_c/hello.c` compilée → bundle .oos 600B valide. 563 tests Phosphoric verts. | — | — |
 | ~~**TC-libc**~~ | ✅ **clos 2026-05-25** : `liboricos.a` (printf/sprintf/strlen/memset/memcpy/strcpy/strcat/strcmp/itoa/malloc/free/calloc). malloc = bump bank-local $__heap_start→$FFFF. `apps/test_libc/test_libc.oos` 9068B valide. |
 | ~~**TC-poc-hello-c**~~ | ✅ **clos 2026-05-25** : hello_c (llvm-mos) s'exécute sous OricOS dans Phosphoric. Fix oricos.h (LTO LDA #N), fix sys_print_char (DBR userland), fix kernel_app_exec (copie 16-bit). Test `test_oricos_helloc` : 2/2 PASS. 563 tests verts. | — | — |
+| ~~**clock**~~ | ✅ **clos 2026-05-26** : première vraie app C pilotée par le temps (`apps/clock/`). Fenêtre + barre de progression rythmée par `SYS_GET_TICKS` ($1D, nouveau primitif = compteur ticks 8-bit) + `SYS_YIELD`, dessin `SYS_GFX_FILL_RECT`/`FLUSH`. SDK `oricos_get_ticks` (clobbers a/x/y — le COP ne préserve pas X/Y). `test_oricos_clock`. Refactor préalable : bundles d'apps → segment `BUNDLES` ($7000+). 584 verts. | — | TC-poc-hello-c ✅ |
 
 ---
 

@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — Sprint 4 : première vraie app C (clock)
+
+### OricOS
+- **App C `clock`** : pilotée par le temps (fenêtre + barre rythmée par
+  `SYS_GET_TICKS` + `SYS_YIELD`, dessin GFX). Nouveau syscall `SYS_GET_TICKS`
+  ($1D, compteur ticks 8-bit). SDK `oricos_get_ticks` (clobbers a/x/y).
+
+### Phosphoric
+- **`test_oricos_clock`** : la boucle temps boucle ("clock: done") → get_ticks
+  avance. `test_syscall_table_size` maj ($1D câblé). 584 verts.
+
 ## [2026-05-26] — SP-3.o S.6 : démo C contrôles (capstone — arc SP-3.o CLOS)
 
 ### OricOS
