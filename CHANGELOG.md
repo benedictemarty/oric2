@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.4a : radios mutuellement exclusifs (GenItemGroup)
+
+### OricOS
+- **`WG_TYPE_RADIO`** (selected+14/group+15) + `kernel_ctl_radio_select`
+  (exclusion par group id) ; dispatch clic MainLoop + desktop IRQ ; rendu case
+  colorée. `task_radio` (2 radios, group 1).
+
+### Phosphoric
+- **`test_oricos_radio`** : clic radio 1 → exclusion (v1=1, v0=0). 579 verts.
+
 ## [2026-05-26] — SP-3.o S.3c : GenView déclaratif + démo C
 
 ### OricOS
