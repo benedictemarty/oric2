@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.4c : liste sélectionnable (GenList)
+
+### OricOS
+- **`WG_TYPE_LIST`** : liste d'items (blob slots 8 o, selected+14/count+15),
+  rendu `kernel_tk_list` (surlignage sélection), `kernel_ctl_list_select`
+  (row au clic). `task_list` (3 items).
+- **Fix layout** : CODE dépassait `$5000` et écrasait SENTINEL/VERSION ;
+  relocalisés en `$016300`/`$016310`. Plafond CODE = TICK_COUNTER `$015400`.
+
+### Phosphoric
+- **`test_oricos_list`** : clic 3e item → selected=2. 581 verts. Tests sentinelle
+  boot + champ texte mis à jour (nouvelles adresses).
+
 ## [2026-05-26] — SP-3.o S.4b : champ texte éditable (GenText/LineEdit)
 
 ### OricOS
