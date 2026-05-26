@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n G.7 (suite) : option --gui-demo (démo GUI visible)
+
+### OricOS
+- **`sys_ui_define`** repeint le desktop après création → l'UI déclarée apparaît
+  immédiatement. **`apps/gui_demo`** : fenêtre repositionnée (420,420) pour être
+  distincte des fenêtres boot.
+
+### Phosphoric
+- **Option `--gui-demo`** : lance l'app gui_demo (`./oric1-emu --kernel ... --xvga
+  --gui-demo`). La fenêtre déclarée (bouton OK, taskbar "Win2") apparaît à l'écran.
+  574 tests verts.
+
 ## [2026-05-26] — ADR-26 RATIFIÉE : modèle GUI déclaratif GenUI/SpecUI
 
 ### Docs (oric2)
