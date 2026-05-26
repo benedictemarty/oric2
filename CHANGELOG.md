@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.3 (a+b) : GenView (viewport scrollable managé)
+
+### OricOS
+- **`WG_TYPE_VIEW`** : viewport + scrollbar intégré (rendu `kernel_tk_view`) ;
+  drag → `scroll_y` (réutilise `SCROLL_DRAG_ID`/S.2). L app lit scroll_y et
+  redessine son contenu (modèle GeoWorks). Reste S.3c (GU_VIEW + démo C).
+
+### Phosphoric
+- **`test_oricos_genview`** : clic+drag → scroll_y suit. 577 tests verts.
+
 ## [2026-05-26] — SP-3.o S.2 : ascenseurs (scrollbars) + thumb-drag
 
 ### OricOS
