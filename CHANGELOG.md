@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.7 v2b : fix régression corps de fenêtre (bloc course 16-bit ca65)
+
+### OricOS
+- **Corps de fenêtre effacé au clic d'un contrôle** (régression v2) : le calcul
+  de la course de la gouttière dans `_wm_scroll_update` en mode 16-bit (rep/sep +
+  immédiats) générait du code corrompu (mauvais tracking de mode ca65) effaçant le
+  corps des fenêtres. Réécrit en **8-bit pur**. Vérifié par dump du framebuffer XVGA.
+
+### Phosphoric
+- 588 tests verts. EMU_VERSION 1.22.83-alpha.
+
 ## [2026-05-26] — SP-3.o S.7 v2 : fix ascenseur mi-course + curseur (critique senior)
 
 ### OricOS
