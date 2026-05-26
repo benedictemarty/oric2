@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.4b : champ texte éditable (GenText/LineEdit)
+
+### OricOS
+- **`WG_TYPE_TEXT`** : champ texte éditable. Buffer bank 1 (`TEXT_BUFS`+id*16),
+  focus clavier (`TEXT_FOCUS_ID`), édition `_wm_text_edit` (insertion/backspace)
+  pilotée par `mlc_key`, rendu `kernel_tk_text_field` (face+cadre+texte+curseur).
+  `task_text` (champ maxlen 14).
+
+### Phosphoric
+- **`test_oricos_text_field`** : clic (focus) + 'A','B',backspace → "A" (len 1).
+  580 verts.
+
 ## [2026-05-26] — SP-3.o S.4a : radios mutuellement exclusifs (GenItemGroup)
 
 ### OricOS
