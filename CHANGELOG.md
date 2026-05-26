@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — GPU toolbox kernel OricOS déboguée : bug critique kernel_wm_compose (Phosphoric 1.22.85)
+
+### OricOS (wm.s)
+- **Bug critique `kernel_wm_compose` — BLIT dst `$000000` au lieu de `$100000`** :
+  la compositing loop calculait l'adresse de destination comme `y*512 + x/2` depuis
+  `$000000`. Le framebuffer XVGA (ADR-20) est à `$100000`. Résultat : `SYS_WIN_FLUSH`
+  ne produisait aucun affichage visible. Fix : `adc #$10` sur `GFX_ARG2_HI`. Tous
+  les commentaires internes corrigés.
+
+### Phosphoric (test_oricos_helloc.c)
+- Tests `test_oricos_win_draw` et `test_oricos_win_app` mis à jour :
+  assertions `$00A032` → `$10A032` (= `$100000 + 80*512 + 50`). 591 tests verts.
+
 ## [2026-05-26] — GPU toolbox debuggée : 3 bugs + 3 tests (Phosphoric 1.22.84)
 
 ### Phosphoric
