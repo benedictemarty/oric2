@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — GPU toolbox debuggée : 3 bugs + 3 tests (Phosphoric 1.22.84)
+
+### Phosphoric
+- **Bug 1 — `gpu_set_pixel` : no bounds check (SÉVÈRE)** : le helper n'effectuait aucun
+  contrôle x/y avant d'écrire en VRAM. Une coordonnée hors-écran (ex. y≥768) pouvait
+  corrompre silencieusement la SDRAM simulée au-delà du framebuffer. Corrigé par ajout
+  de guards en début de fonction.
+- **Bug 2 — `gpu_text_render` : clamp Y prématuré (SÉVÈRE)** : la condition
+  `y_start + 7 >= GPU_XVGA_H` stoppait le rendu de TOUS les caractères dès que la
+  dernière ligne du glyphe débordait, même si les 6 ou 7 premières lignes étaient
+  valides. Corrigé : le `break` ne se déclenche que si `y_start >= GPU_XVGA_H` ;
+  les lignes partielles sont clampées par `gpu_set_pixel`.
+- **Bug 3 — STATUS register : BUSY/DONE non exclusifs (MEDIUM)** : quand
+  `busy=true && err=false`, les bits DONE (0x01) et BUSY (0x80) étaient levés
+  simultanément. La sémantique correcte est mutuellement exclusive. Corrigé par
+  remplacement du `if/else` en chaîne `if/else if/else`.
+- 3 nouveaux tests : `test_status_busy_excludes_done`, `test_text_clamp_y_partial`,
+  `test_text_y_out_of_bounds_no_corruption`. 591 tests verts (18/18 gpu_device).
+
 ## [2026-05-26] — SP-3.o S.7 v2b : fix régression corps de fenêtre (bloc course 16-bit ca65)
 
 ### OricOS
