@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.5 : tags GenUI déclaratifs des contrôles
+
+### OricOS
+- **`GU_CHECK`/`GU_SCROLL_V`/`GU_SCROLL_H`/`GU_RADIO`/`GU_TEXT`** dans
+  `sys_ui_define` : contrôles valeur/saisie déclarables en table GenUI (rect +
+  extra). Helpers `_sud_rect`/`_sud_attach`. `task_genui` (4 contrôles déclarés).
+  `GU_LIST` différé (pointeur blob = bank app). SDK mis à jour.
+
+### Phosphoric
+- **`test_oricos_genui`** : vérifie type + valeur initiale des 4 contrôles
+  déclarés via SYS_UI_DEFINE. 582 verts.
+
 ## [2026-05-26] — SP-3.o S.4c : liste sélectionnable (GenList)
 
 ### OricOS
