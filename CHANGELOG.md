@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — GPU toolbox kernel OricOS : 3 bugs wm.s (Z-order, poll loop, curseur) (Phosphoric 1.22.86)
+
+### OricOS (wm.s)
+- **Bug `kernel_wm_compose` — Z-order ignoré** : compositor itérait slots 0..N au lieu
+  de WM_ZORDER → fenêtres superposées composées dans le mauvais ordre. Fix : itération
+  WM_ZORDER[0..N-1].
+- **Bug `kernel_wm_compose` — fenêtres minimisées composées** : condition `WM_F_USED`
+  seul → fenêtres cachées BLITtées. Fix : `(WM_F_USED | WM_F_VISIBLE)`.
+- **Bug `kernel_gfx_fill_rect16` — poll loop manquant** : seul helper sans attente
+  GPU_TRIGGER. Fix : ajout poll loop standard (latent v0.1, critique v0.2).
+- **Bug `sys_win_flush` — CURSOR_VALID non invalidé** : fond curseur périmé après BLIT.
+  Fix : `sta CURSOR_VALID #0` post-compose. 591 tests verts.
+
 ## [2026-05-26] — GPU toolbox kernel OricOS déboguée : bug critique kernel_wm_compose (Phosphoric 1.22.85)
 
 ### OricOS (wm.s)
