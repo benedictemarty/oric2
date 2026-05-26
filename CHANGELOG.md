@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.6 : démo C contrôles (capstone — arc SP-3.o CLOS)
+
+### OricOS
+- **App C `ctl_demo`** : déclare fenêtre + checkbox + ascenseur + champ texte
+  (table GenUI), lit la valeur du contrôle touché (`SYS_CTL_GET_VALUE`) sur
+  `MSG_CONTROL`. Clôt l'arc SP-3.o (contrôles GeoWorks depuis userland C).
+- **Segment `BUNDLES`** ($7000+) : images d'apps sorties du CODE → marge regagnée
+  sous le plafond $5400.
+
+### Phosphoric
+- **`test_oricos_ctl_demo`** : clic ascenseur → "ctl: v=", close → exit. 583 verts.
+
 ## [2026-05-26] — SP-3.o S.5 : tags GenUI déclaratifs des contrôles
 
 ### OricOS
