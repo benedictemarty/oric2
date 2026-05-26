@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.2 : ascenseurs (scrollbars) + thumb-drag
+
+### OricOS
+- **`WG_TYPE_SCROLL_V/_H`** + thumb-drag dans le MainLoop (`SCROLL_DRAG_ID`,
+  value=clamp(souris-gouttière,0,max)) + rendu gouttière+thumb. Fix conflit drag
+  fenêtre↔contrôle (`wm_step_arm_drag` teste le widget d abord).
+
+### Phosphoric
+- **`test_oricos_scrollbar`** : clic+drag → la value suit la souris. gui_demo
+  durci (MSG_CLOSE via WM_COUNT). 576 tests verts.
+
 ## [2026-05-26] — SP-3.o S.1 : API valeur de contrôle + checkbox
 
 ### OricOS
