@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.7 v2 : fix ascenseur mi-course + curseur (critique senior)
+
+### OricOS
+- **Ascenseur bloqué à mi-course** : `_wm_scroll_update` clampe `value` à la
+  course réelle de la gouttière (`dimension − SCROLL_THUMB_SZ`) au lieu du max
+  logique → le pouce atteint le bas.
+- **Curseur disparu après redraw ciblé** (régression S.7) : `_wm_redraw_ctl`
+  (sei + `kernel_wm_redraw_widget` + `kernel_wm_draw_cursor`) redessine le curseur
+  après chaque repaint widget (3 sites : drag ascenseur, store champ texte, MSG_CONTROL).
+
+### Phosphoric
+- `test_oricos_scrollbar` : drag jusqu'en bas, assert `val==44`. 588 tests verts.
+  EMU_VERSION 1.22.82-alpha.
+
 ## [2026-05-26] — SP-3.o S.7 : redraw ciblé (fix scintillement scroll/texte)
 
 ### OricOS
