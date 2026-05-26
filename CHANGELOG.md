@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.7 : redraw ciblé (fix scintillement scroll/texte)
+
+### OricOS
+- **`kernel_wm_redraw_widget`** : repeint un seul contrôle au lieu du desktop
+  entier. Corrige le scintillement plein écran au drag d'ascenseur et à
+  l'édition de champ texte (refactor `_wm_draw_widget_body`).
+
+### Phosphoric
+- 584 tests verts (comportement inchangé, rendu fluide). EMU_VERSION 1.22.81-alpha.
+
 ## [2026-05-26] — Sprint 4 : première vraie app C (clock)
 
 ### OricOS
