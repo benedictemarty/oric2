@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.1 : API valeur de contrôle + checkbox
+
+### OricOS
+- **`SYS_CTL_GET_VALUE` ($1B) / `SYS_CTL_SET_VALUE` ($1C)** : API valeur des
+  contrôles. **`WG_TYPE_CHECK`** (checkbox/GenBoolean, value en +14,
+  `kernel_ctl_toggle`, garde callback par type → anti-crash). Base ascenseurs (S.2+).
+
+### Phosphoric
+- **`test_oricos_ctl_value`** : round-trip SET_VALUE(1)/GET_VALUE → 1. 575 verts.
+
 ## [2026-05-26] — BACKLOG : arc SP-3.o cadré (contrôles valeur + ascenseurs + GenView)
 
 ### Docs (oric2)
