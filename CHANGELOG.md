@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.n polish : titres + libellés de boutons
+
+### OricOS
+- **GenUI chaînes INLINE** (GU_TITLE/GU_BUTTON, stagées bank 1 via _sud_copy_inline)
+  → titre + libellé bouton fonctionnent pour les apps C. **Libellés distincts**
+  dialogue/alerte (OK/Cancel/Yes/No). gui_demo : titre "Demo C" + bouton "Clic".
+
+### Phosphoric
+- **test_oricos_win_app durci** : preuve G.3 via WM_COUNT 3→2 (robuste au scroll
+  console) au lieu du texte "sortie". 574 tests verts.
+
 ## [2026-05-26] — SP-3.n G.7 (suite) : option --gui-demo (démo GUI visible)
 
 ### OricOS
