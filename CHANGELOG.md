@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — BACKLOG : arc SP-3.o cadré (contrôles valeur + ascenseurs + GenView)
+
+### Docs (oric2)
+- **`BACKLOG.md`** : arc **SP-3.o** cadré — compléter la famille de contrôles
+  « valeur/saisie » manquante vs GeoWorks (le windowing est déjà à parité, les
+  widgets sont pauvres). Découpage S.1 API valeur (`SYS_CTL_GET/SET_VALUE`) +
+  checkbox, S.2 ascenseurs (scrollbar V/H + thumb-drag), S.3 GenView (viewport
+  scrollable managé), S.4 radios/champ texte/liste, S.5 tags GenUI, S.6 démo C.
+  Réf : GeoWorks GenScrollbar/GenView/GenBoolean/GenText/GenList. Extension
+  mineure d'ADR-26.
+
 ## [2026-05-26] — SP-3.n polish : titres + libellés de boutons
 
 ### OricOS
