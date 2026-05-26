@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-26] — SP-3.o S.3c : GenView déclaratif + démo C
+
+### OricOS
+- **Tag `GU_VIEW`** dans `sys_ui_define` : GenView déclarable dans une table
+  GenUI (rect + max scroll). App C `view_demo` : déclare fenêtre + `GU_VIEW`,
+  lit `scroll_y` via `SYS_CTL_GET_VALUE` sur `MSG_CONTROL` (modèle GeoWorks).
+  SDK : `oricos_ctl_get_value` + `oricos_msg_id`.
+
+### Phosphoric
+- **`test_oricos_view_demo`** : GU_VIEW déclaratif + lecture scroll_y en C.
+  578 tests verts. `EMU_VERSION` réaligné (1.22.74-alpha).
+
 ## [2026-05-26] — SP-3.o S.3 (a+b) : GenView (viewport scrollable managé)
 
 ### OricOS
