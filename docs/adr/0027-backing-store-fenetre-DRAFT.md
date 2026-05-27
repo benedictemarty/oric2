@@ -1,12 +1,47 @@
 # ADR-27 (DRAFT) — Modèle de backing store fenêtre
 
-- **Statut** : **ouverte — à instruire** (DRAFT, non ratifié). Conforme au
-  moratoire ADR (CLAUDE.md §10, liste blanche « drafting »). Ce document
-  **ne tranche rien** : il instruit la décision.
+- **Statut** : **en cours d'instruction — option (b) retenue par l'humain**
+  (2026-05-27). DRAFT non ratifié (moratoire §10 : ratification à finaliser
+  quand la migration kernel atteindra le seuil 50 % + cohérence ADR-21).
+  Référence GPU (registre BPL configurable) **implémentée** (Phosphoric 1.22.88).
 - **Date d'ouverture** : 2026-05-27
-- **Décideurs** : bmarty, Claude Code
+- **Décideurs** : bmarty (choix option b), Claude Code
 - **Origine** : audit GPU toolbox senior (2026-05-27), Finding B. Découvert
   à l'occasion du fix BLIT v0.2 (byte_w/byte_h 16-bit, Phosphoric 1.22.87).
+
+## 0. Décision et état d'avancement (2026-05-27)
+
+L'humain a retenu l'**option (b)** : stride GPU (BPL) configurable + backing
+store compact. Avancement :
+
+- ✅ **Référence GPU implémentée** (Phosphoric 1.22.88) : registre `bpl`
+  persistant (défaut 512) + opcode `GPU_OP_SET_BPL` ($08) ; BLIT utilise
+  `bpl` pour la SOURCE et 512 (XVGA) pour la destination ; FILL_RECT*/LINE/
+  TEXT* honorent `bpl`. Helper kernel `kernel_gfx_set_bpl`. 2 tests unitaires
+  (`test_set_bpl_changes_fill_stride`, `test_blit_compact_source_stride`).
+  **Rétro-compatible** : défaut 512 → comportement identique (594 tests verts).
+- ⏳ **Reste (migration kernel, < 50 %)** : allocation backing store compacte
+  et/ou multi-banques contiguë ; pose de `bpl = byte_w` par fenêtre dans
+  `kernel_wm_compose` ; dessin app à la stride compacte ; clip aux dimensions
+  réelles de la surface (pas XVGA) ; reset `bpl=512` avant tout dessin direct
+  framebuffer (`kernel_wm_redraw`).
+
+### Contrainte dure tranchée : pas de port I/O libre
+
+Les 16 ports GPU `$0340-$034F` sont **tous** assignés (ARG1-4, STATUS, TRIGGER,
+INT_CTRL) et `$0350` est le contrôleur KBD2 (ADR-22). Un registre BPL **dédié
+par port** imposerait d'étendre l'allocation I/O GPU → révision ADR-21 + ADR-22
++ MEMORY_MAP. **Écarté.** Le BPL est donc exposé via un **opcode `SET_BPL`**
+(mécanisme CMD_OP + ARG1 + TRIGGER existant) qui fixe un état `bpl` persistant.
+Zéro nouveau port, zéro impact memory map.
+
+### Hazard identifié : état global `bpl`
+
+`bpl` est un état GPU **global** partagé par toutes les surfaces. Le kernel doit
+le discipliner : `SET_BPL byte_w` avant de composer une fenêtre, `SET_BPL 0`
+(→512) avant tout dessin direct dans le framebuffer XVGA. Un oubli corrompt la
+stride. Documenté dans `kernel_gfx_set_bpl`. (Une alternative v0.3 = src_bpl/
+dst_bpl par-commande encodés dans les octets hauts libres d'ARG3/ARG4.)
 
 ---
 

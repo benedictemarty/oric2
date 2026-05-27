@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-27] — ADR-27 opt.b : registre BPL GPU configurable (Phosphoric 1.22.88)
+
+### Décision
+- L'humain retient l'**option (b)** d'ADR-27 : stride GPU (BPL) configurable +
+  backing store compact. Dossier `docs/adr/0027-*-DRAFT.md` mis à jour (option b
+  retenue, référence GPU implémentée ≥ amorce, migration kernel = reste).
+
+### Phosphoric
+- Nouvel opcode `GPU_OP_SET_BPL` ($08) + `gpu->bpl` persistant (défaut 512).
+  BLIT double-stride (src=bpl compact, dst=512 XVGA) ; FILL/LINE/TEXT honorent bpl.
+  2 tests GPU (594 verts). Contrainte : aucun port I/O libre → opcode, pas de registre dédié.
+
+### OricOS
+- Helper `kernel_gfx_set_bpl` + `GPU_OP_SET_BPL` + ZP `GFX_BPL` ($90/$91).
+- Fix régression `.smart` ca65 (helper sans `sep #$20` cassait l'assemblage du
+  compositeur). Reste : câbler `bpl` dans `kernel_wm_compose` (migration kernel).
+
 ## [2026-05-27] — Audit GPU toolbox senior : ADR-27 ouverte (backing store fenêtre)
 
 ### Docs / Architecture

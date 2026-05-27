@@ -95,17 +95,20 @@ expliciter avant d'avancer.
 
 ### ~~ADR-25~~ → ratifiée 2026-05-25, déplacée vers §2 (modèle Exec-classique : Forbid/Permit + block/wake)
 
-### ADR-27 — Modèle de backing store fenêtre (ouverte — à instruire, 2026-05-27)
+### ADR-27 — Modèle de backing store fenêtre (en cours, option b retenue, 2026-05-27)
 
 **Question** : comment dimensionner le backing store d'une fenêtre pour supporter
 des hauteurs > 128 px ? Le modèle actuel (1 banque 64 KiB/slot, stride GPU figée
-512) plafonne à 128 lignes ; au-delà, `kernel_wm_compose` sur-lit les banques
-voisines (Finding B, audit GPU 2026-05-27). Options instruites (non tranchées) :
-(a) backing store multi-banques contigu, (b) stride GPU configurable + backing
-compact (aligné ADR-21 v0.2), (c) plafond 128 px [non-viable], (d) dessin direct
-+ clipping [hors-scope v1]. **NE PAS trancher unilatéralement.** Dossier complet :
-`docs/adr/0027-backing-store-fenetre-DRAFT.md`. Mitigation v1 : limiter les apps
-à des fenêtres ≤ 128 px en chemin compose.
+512) plafonne à 128 lignes (Finding B, audit GPU 2026-05-27). **Option (b)
+retenue par l'humain** : stride GPU (BPL) configurable + backing store compact.
+**Référence GPU implémentée** (Phosphoric 1.22.88) : opcode `GPU_OP_SET_BPL`
+($08) + `gpu->bpl` persistant (défaut 512), BLIT double-stride, helper
+`kernel_gfx_set_bpl`. Contrainte tranchée : aucun port I/O GPU libre ($0340-$034F
+pleins) → BPL via opcode, pas de registre dédié (pas de révision ADR-21/22/
+memory-map). **Reste (migration kernel, < 50 %)** : backing store compact/contigu,
+`bpl=byte_w` dans `kernel_wm_compose`, reset `bpl=0` avant `kernel_wm_redraw`,
+clip surface. **Ratification ADR à finaliser au seuil 50 %** (moratoire §10).
+Dossier : `docs/adr/0027-backing-store-fenetre-DRAFT.md`.
 
 ---
 
