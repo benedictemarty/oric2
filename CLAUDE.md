@@ -95,6 +95,18 @@ expliciter avant d'avancer.
 
 ### ~~ADR-25~~ → ratifiée 2026-05-25, déplacée vers §2 (modèle Exec-classique : Forbid/Permit + block/wake)
 
+### ADR-27 — Modèle de backing store fenêtre (ouverte — à instruire, 2026-05-27)
+
+**Question** : comment dimensionner le backing store d'une fenêtre pour supporter
+des hauteurs > 128 px ? Le modèle actuel (1 banque 64 KiB/slot, stride GPU figée
+512) plafonne à 128 lignes ; au-delà, `kernel_wm_compose` sur-lit les banques
+voisines (Finding B, audit GPU 2026-05-27). Options instruites (non tranchées) :
+(a) backing store multi-banques contigu, (b) stride GPU configurable + backing
+compact (aligné ADR-21 v0.2), (c) plafond 128 px [non-viable], (d) dessin direct
++ clipping [hors-scope v1]. **NE PAS trancher unilatéralement.** Dossier complet :
+`docs/adr/0027-backing-store-fenetre-DRAFT.md`. Mitigation v1 : limiter les apps
+à des fenêtres ≤ 128 px en chemin compose.
+
 ---
 
 ## 4. Roadmap et jalon courant

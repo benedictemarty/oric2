@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-27] — Audit GPU toolbox senior : ADR-27 ouverte (backing store fenêtre)
+
+### Docs / Architecture
+- **Audit exhaustif de la toolbox GPU** (gfx.s + gpu_device.c + chemins compose/syscall).
+  Aucun nouveau bug fonctionnel actif. Constats transverses : poll loops ignorent ERR
+  (mineur), précondition M=1 non défendue (latent), `vram_poke` borné 24-bit (memory-safe).
+- **Finding B → ADR-27 ouverte (DRAFT)** : le backing store (1 banque 64 KiB/slot, stride
+  GPU figée 512) plafonne à 128 lignes ; `kernel_wm_compose` sur-lit les banques voisines
+  pour une fenêtre > 128 px (limite latente, exposée par le fix BLIT v0.2). Dossier
+  d'instruction `docs/adr/0027-backing-store-fenetre-DRAFT.md` (options a/b/c/d chiffrées,
+  recommandation (b) stride configurable, **non tranchée** — moratoire §10). Ajout en
+  CLAUDE.md §3 + BACKLOG P3. **Aucun changement de code** (mitigation v1 : apps ≤ 128 px).
+
 ## [2026-05-27] — GPU BLIT v0.2 : byte_w/byte_h 16-bit (Phosphoric 1.22.87)
 
 ### Phosphoric
