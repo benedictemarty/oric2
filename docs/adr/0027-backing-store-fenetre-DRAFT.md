@@ -20,12 +20,44 @@ store compact. Avancement :
   TEXT* honorent `bpl`. Helper kernel `kernel_gfx_set_bpl`. 2 tests unitaires
   (`test_set_bpl_changes_fill_stride`, `test_blit_compact_source_stride`).
   **Rétro-compatible** : défaut 512 → comportement identique (594 tests verts).
-- ⏳ **Reste (migration kernel, < 50 %)** : allocation backing store compacte
-  et/ou multi-banques contiguë ; pose de `bpl = byte_w` par fenêtre dans
-  `kernel_wm_compose` ; dessin app à la stride compacte (`kernel_gfx_window_base`
-  pose `bpl = W>>1`) ; clip aux dimensions réelles de la surface (pas XVGA) ;
-  gestion de l'état global `bpl` vis-à-vis des chemins framebuffer IRQ.
-  **BLOQUÉ sur une décision de concurrence — cf. §0bis.**
+- ✅ **Concurrence option 2 implémentée** (OS-gpu-race, 2026-05-27) : les 7
+  helpers GPU sont bracketés `php;sei … plp` → chaque commande GPU est atomique
+  vis-à-vis des IRQ (plus de clobber ARG/CMD par un mouse IRQ). Corrige aussi la
+  race ARG préexistante. Transparent (594 verts). C'est le **pré-requis** au flip
+  compact.
+- ⏳ **Reste (flip compact + option 1, NON fait — risque/bénéfice à arbitrer)** :
+  cf. §0ter pour le plan précis des points de gestion `bpl`. Bénéfice immédiat
+  **limité** (les apps actuelles tiennent déjà en 1 banque ; les fenêtres
+  hautes *pleine largeur* nécessitent en plus l'allocation multi-banques —
+  indépendante de la stride). Recommandation : **bundler le flip compact avec
+  l'allocation multi-banques** en un sprint délibéré, plutôt que de modifier le
+  compositeur (cœur testé) pour un gain partiel.
+
+## 0ter. Plan précis du flip compact (Étape 2, à exécuter en un bloc testé)
+
+Points de gestion `bpl` identifiés (invariant cible : `bpl=512` hors section ;
+`byte_w` uniquement pendant un dessin backing-store) :
+
+1. `kernel_gfx_window_base` : calcule `byte_w = WM_TABLE[slot].W>>1` (via
+   `kernel_wm_offset`), `GFX_BPL=byte_w`, `jsr kernel_gfx_set_bpl`.
+2. Wrappers `sys_gfx_*` (clear/fill/blit/line/text) : après le dessin,
+   `GFX_BPL=0 ; set_bpl` (restaure 512 — confine `byte_w` au syscall).
+3. `kernel_wm_compose` : par fenêtre, `GFX_BPL=byte_w ; set_bpl` avant le BLIT ;
+   `GFX_BPL=0 ; set_bpl` en fin de boucle (`wcmp_done`).
+4. `kernel_wm_redraw` / `kernel_wm_redraw_drag` (peintres framebuffer directs) :
+   `GFX_BPL=0 ; set_bpl` à l'entrée (512).
+5. `kernel_wm_mouse_step` (IRQ) : **save/restore** `GFX_BPL` autour du traitement
+   (push `GFX_BPL`, set 512, …redraws…, pull, set_bpl) → IRQ transparent au
+   `bpl` du syscall interrompu.
+6. Allocation : backing store compact tient en 1 banque si `byte_w·h ≤ 64 KiB` ;
+   sinon **multi-banques contiguës** (à ajouter à `sys_win_create` / l'allocateur).
+7. Clip : `gpu_fill_rect_impl`/`gpu_set_pixel` clippent à XVGA (1024×768) ; pour
+   une surface compacte étroite, clipper à `(w,h)` réels (raffinement).
+
+Validation : propriété de **transparence** (stride dessin == stride lecture
+compose ⇒ framebuffer identique) ⇒ la suite (`win_draw`/`win_app`/`clock`/
+`gui_demo`/`ctl_demo` + mouse/drag) doit rester verte. Tout écart = bug à
+corriger ou revert.
 
 ## 0bis. Analyse de concurrence (bloquante pour la migration kernel)
 
