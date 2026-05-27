@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-27] — GPU BLIT v0.2 : byte_w/byte_h 16-bit (Phosphoric 1.22.87)
+
+### Phosphoric
+- `gpu_device.c` `gpu_exec_blit` : ARG3[15:0]=byte_w, ARG4[15:0]=byte_h (fix overflow).
+- `test_gpu_device.c` : 2 tests mis à jour + `test_blit_wide_16bit` ajouté (592 tests).
+
+### OricOS
+- **Bug A** `kernel_wm_compose` : stores 16-bit (rep #$20) pour byte_w/byte_h → fix
+  troncature 8-bit sur fenêtres ≥ 256 px.
+- `kernel_gfx_blit` : écriture GPU ARG4 (byte_h) ajoutée.
+- `boot.s` : 3 appels BLIT migrés vers encodage v0.2.
+- ZP `GFX_ARG4_LO=$6E` / `GFX_ARG4_MID=$6F` alloués.
+
 ## [2026-05-26] — GPU toolbox kernel OricOS : 3 bugs wm.s (Z-order, poll loop, curseur) (Phosphoric 1.22.86)
 
 ### OricOS (wm.s)
