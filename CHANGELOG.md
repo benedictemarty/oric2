@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-27] — Fix GUI gelée après drag d'ascenseur au max (Phosphoric 1.22.89)
+
+### OricOS
+- **Bug `kernel_event_push_mouse`** : un drag de scrollbar long inondait le ring
+  d'événements (16) de `MOUSE_MOVED` → le button-UP était droppé → `SCROLL_DRAG_ID`
+  restait armé → le WM restait bloqué en mode drag, tout clic suivant avalé comme
+  scroll → l'app ne répondait plus. Fix : **coalescing des `MOUSE_MOVED`** (maj en
+  place au lieu d'empiler). Diagnostic par reproduction déterministe (drag→max :
+  value atteint bien 84, mais WM_COUNT bloqué à 3 ; après fix → 2).
+- **Collision ZP $6E** (régression 1.22.87) : `GFX_ARG4_LO` ⟷ `EVT_TMP` → `GFX_ARG4`
+  déplacé en `$92/$93`.
+
+### Phosphoric
+- Test `test_oricos_scroll_drag_max_responsive` (595 tests verts).
+
 ## [2026-05-27] — ADR-27 : analyse de concurrence (migration kernel bloquée)
 
 ### Instruction / Architecture
