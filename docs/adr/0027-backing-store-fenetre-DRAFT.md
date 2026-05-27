@@ -22,9 +22,57 @@ store compact. Avancement :
   **Rétro-compatible** : défaut 512 → comportement identique (594 tests verts).
 - ⏳ **Reste (migration kernel, < 50 %)** : allocation backing store compacte
   et/ou multi-banques contiguë ; pose de `bpl = byte_w` par fenêtre dans
-  `kernel_wm_compose` ; dessin app à la stride compacte ; clip aux dimensions
-  réelles de la surface (pas XVGA) ; reset `bpl=512` avant tout dessin direct
-  framebuffer (`kernel_wm_redraw`).
+  `kernel_wm_compose` ; dessin app à la stride compacte (`kernel_gfx_window_base`
+  pose `bpl = W>>1`) ; clip aux dimensions réelles de la surface (pas XVGA) ;
+  gestion de l'état global `bpl` vis-à-vis des chemins framebuffer IRQ.
+  **BLOQUÉ sur une décision de concurrence — cf. §0bis.**
+
+## 0bis. Analyse de concurrence (bloquante pour la migration kernel)
+
+Investigation 2026-05-27 (handlers.s, wm.s). Le registre `bpl` est un **état GPU
+global persistant**. Or :
+
+- Les syscalls tournent avec **IRQs activées** (`cli` dans le COP handler,
+  handlers.s §34) ; `kernel_forbid` ne masque que la préemption *tâche*, pas
+  l'IRQ matériel.
+- Le handler IRQ appelle **`kernel_wm_mouse_step` inconditionnellement** sur
+  event souris (handlers.s §125-129), AVANT la garde `FORBID_COUNT` (§199 — qui
+  ne protège que le context-switch). `mouse_step` peut déclencher
+  `kernel_wm_redraw` → dessin framebuffer GPU (`kernel_gfx_fill_rect16`).
+
+**Conséquence pour la migration** : si un mouse IRQ survient pendant un syscall
+gfx qui a posé `bpl = byte_w`, le redraw IRQ dessinerait le framebuffer à la
+mauvaise stride (`byte_w` au lieu de 512) → corruption framebuffer ; et/ou la
+reprise du syscall verrait `bpl` modifié.
+
+**Finding préexistant (hors ADR-27, à tracer séparément)** : ce même chemin
+clobbe DÉJÀ les registres `ARG1-4` du GPU si un mouse IRQ tombe entre le
+setup des ARG et le `TRIGGER` d'un helper gfx en cours. Race latente tolérée
+aujourd'hui (rare ; non couverte par les tests). La migration `bpl` ne crée pas
+une classe nouvelle, mais ajoute un état **persistant** (pire que les ARG
+transitoires que l'IRQ réécrit de toute façon).
+
+**Options de résolution (à trancher avant la migration)** :
+1. **Reset à l'entrée IRQ** : `mouse_step` pose `bpl = 512` à son entrée +
+   syscalls/compose restaurent `bpl = 512` avant de rendre la main → état stable
+   toujours 512 hors section. Résiduel : fenêtre étroite syscall (set→trigger)
+   reste exposée (même tolérance que la race ARG existante).
+2. **Section critique `sei/cli`** autour de (set `bpl` … trigger) dans les
+   helpers gfx et compose → bulletproof, mais touche le modèle d'interruption
+   (latence ; interaction Forbid/scheduler à valider).
+3. **Stride par-commande** (pas d'état global) : encoder `src_bpl` dans les
+   octets hauts libres d'ARG3/ARG4 pour le BLIT (compose) — hazard-free pour
+   le compositor. Mais FILL_RECT/LINE ont de la place, **TEXT/TEXT16 non**
+   (ARG4 plein) → dessin texte dans backing store compact non couvert.
+4. **Shadow ZP + save/restore** dans le handler IRQ (sauve/rétablit `bpl` autour
+   du dessin IRQ) — nécessite un registre de lecture `bpl` GPU (absent) → shadow
+   kernel obligatoire.
+
+**Recommandation senior** : option 1 (reset IRQ + restauration syscall),
+cohérente avec la tolérance de risque déjà acceptée pour les ARG, à coupler
+avec un **fix séparé de la race ARG préexistante** (idéalement option 2 ciblée :
+`sei/cli` court autour de chaque séquence setup+trigger des helpers gfx). À
+instruire/valider avant de toucher au compositeur.
 
 ### Contrainte dure tranchée : pas de port I/O libre
 

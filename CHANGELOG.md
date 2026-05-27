@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-27] — ADR-27 : analyse de concurrence (migration kernel bloquée)
+
+### Instruction / Architecture
+- **Analyse de concurrence ADR-27** (dossier §0bis) : la migration vers des backing
+  stores compacts est **bloquée sur une décision de concurrence**. Le registre `bpl`
+  est un état GPU global persistant ; le handler IRQ dessine le framebuffer
+  (`kernel_wm_mouse_step`→`kernel_wm_redraw`) pendant que les syscalls tournent IRQs
+  activées. 4 options de résolution instruites (reset-IRQ / sei-cli / stride
+  par-commande / shadow ZP), reco = reset-IRQ + fix race ARG.
+- **Finding préexistant tracé** (`OS-gpu-race`, BACKLOG P1bis) : race GPU ARG ↔ mouse
+  IRQ latente (clobber d'une commande gfx en cours). Tolérée, à corriger ; pré-req au
+  flip compact. **Aucun changement de code** (décision de concurrence requise d'abord).
+
 ## [2026-05-27] — ADR-27 opt.b : registre BPL GPU configurable (Phosphoric 1.22.88)
 
 ### Décision

@@ -105,10 +105,15 @@ retenue par l'humain** : stride GPU (BPL) configurable + backing store compact.
 ($08) + `gpu->bpl` persistant (défaut 512), BLIT double-stride, helper
 `kernel_gfx_set_bpl`. Contrainte tranchée : aucun port I/O GPU libre ($0340-$034F
 pleins) → BPL via opcode, pas de registre dédié (pas de révision ADR-21/22/
-memory-map). **Reste (migration kernel, < 50 %)** : backing store compact/contigu,
-`bpl=byte_w` dans `kernel_wm_compose`, reset `bpl=0` avant `kernel_wm_redraw`,
-clip surface. **Ratification ADR à finaliser au seuil 50 %** (moratoire §10).
-Dossier : `docs/adr/0027-backing-store-fenetre-DRAFT.md`.
+memory-map). **Reste (migration kernel, < 50 %) — BLOQUÉ sur décision de concurrence** :
+le registre `bpl` est un état GPU global persistant, et le handler IRQ fait du
+dessin framebuffer (`kernel_wm_mouse_step` → `kernel_wm_redraw`) pendant que les
+syscalls tournent IRQs activées (`cli`). Rendre les backing stores compacts
+exige d'abord trancher la gestion de `bpl` vs IRQ (cf. dossier §0bis : reset-IRQ,
+sei/cli, stride par-commande, ou shadow). A aussi révélé une **race GPU ARG
+préexistante** (mouse IRQ pendant setup+trigger d'un helper gfx). **Ratification
+ADR à finaliser au seuil 50 %** (moratoire §10). Dossier :
+`docs/adr/0027-backing-store-fenetre-DRAFT.md`.
 
 ---
 

@@ -46,6 +46,7 @@ Cf. `~/.claude/projects/-home-bmarty-oric2/memory/programme_remise_au_top.md` (m
 | ~~PH-debug816~~ | ✅ **clos 2026-05-08** : `cpu816_get_state_string` mode E/N, debugger `regs`+`set` étendus, 2 tests unitaires. | — | — |
 | ~~PH-CI-visual~~ | ✅ **clos 2026-05-08** : test_oricos_visual + golden PPM + comparaison pixel-perfect. Empêche régressions render comme H4 (fonte). | — | — |
 | ~~PH-bootrom~~ | ✅ **clos 2026-05-24** : `src/oric2_bootrom.{c,h}` (`oric2_bootrom_load`) — image ROM 16K (reset $C000 + trampolines IRQ/NMI/COP en ROM + vecteurs natifs/émulation). `--kernel` boote via cette ROM au lieu de patcher `mem.rom[]` + stubs RAM. Test `test_oricos_bootrom_boots`. 546 tests. | — | — |
+| 🐞 **OS-gpu-race** | **Race GPU ARG ↔ mouse IRQ (latente, dette)** | Révélée par l'instruction ADR-27 (2026-05-27). Les syscalls gfx tournent IRQs activées (`cli`, handlers.s §34) ; le handler IRQ fait du dessin GPU framebuffer (`kernel_wm_mouse_step`→`kernel_wm_redraw`) **inconditionnellement** sur event souris (avant la garde `FORBID_COUNT`). Un mouse IRQ entre le setup des ARG et le `TRIGGER` d'un helper gfx clobbe la commande en cours → corruption. Tolérée aujourd'hui (rare, non couverte par tests). Fix candidat : `sei/cli` court autour de setup+trigger dans les helpers gfx, OU différer `mouse_step` quand `FORBID≠0`. Pré-req au flip backing store compact (ADR-27). | petit | — |
 
 ---
 
