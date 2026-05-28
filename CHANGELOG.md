@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-28] — ADR-27 §0bis : instrumentation on-target IRQ MOU2/frame
+
+### Mesure / Outillage (Phosphoric 1.22.90-alpha)
+- **Compteur d'IRQ MOU2 par frame** livré (env `PHOSPHORIC_MOU2_IRQTRACE=1`,
+  `--machine oric2`) : compte les fronts montants de `IRQF_MOU2`, résumé par frame.
+  Build SDL OK, `make tests` verts, 0 front parasite au repos (11314 frames headless).
+- **Finding (lecture de code)** : le poll SDL draine les events souris **1×/frame,
+  après** les cycles CPU → ligne MOU2 assertable **≤ 1×/frame** par construction
+  (compteur `multi` ≡ 0). **Réfute** l'hypothèse « famine fréquentielle » du caveat
+  §0bis : ≤ 1 IRQ/frame (~2000-4000 cyc) sur 19968 cyc/frame n'affame pas la main
+  loop. Cause de la value figée à chercher côté scheduler/`FORBID` ou coût du redraw
+  **par event** en main loop. Reste à mesurer : events `MOUSE_MOVED` drainés/frame +
+  cycles tâche-app vs handler (2e volet du caveat). Outil de mesure, **aucune
+  correction** (D1-D4 non tranchées, moratoire CLAUDE.md §10).
+
 ## [2026-05-28] — ADR-27 §0bis : famine main loop pendant drag d'ascenseur rapide
 
 ### Instruction / Architecture

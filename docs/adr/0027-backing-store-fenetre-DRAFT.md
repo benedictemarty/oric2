@@ -196,6 +196,40 @@ scheduler/`FORBID` prive la tâche app. **Mesure on-target requise** : instrumen
 le build SDL (compteur d'IRQ souris/frame + cycles passés en handler vs en tâche
 app pendant un drag) pour fixer le vrai seuil avant tout code.
 
+##### Instrumentation livrée (Phosphoric 1.22.90-alpha, 2026-05-28)
+
+Le compteur d'IRQ MOU2/frame est **implémenté et vérifié** (build SDL,
+`make tests` verts, 0 front parasite au repos sur 11314 frames headless). Activation :
+
+```bash
+PHOSPHORIC_MOU2_IRQTRACE=1 ./oric1-emu --machine oric2 --kernel ../OricOS/build/kernel.bin
+# puis, fenêtre focus + capture souris (clic), faire un drag d'ascenseur rapide.
+# Log par frame active : "MOU2 IRQ: frame N -> M edge(s) [max=.. total=.. multi=..]"
+```
+
+Compte les **fronts montants** de `IRQF_MOU2` (clear→assert = un IRQ présentable
+au guest), pas les appels `irq_set` (idempotents tant que la ligne reste haute).
+Champs `mou2_irq_*` dans `emulator_t` ; détection de front dans
+`mou2_cpu_irq_set`/`_clr` ; résumé en fin de boucle frame (`src/main.c`). Coût
+hors-trace nul (branche gardée, défaut off). C'est de l'**outillage de mesure**,
+pas une correction : aucune des options D1-D4 n'est touchée (moratoire CLAUDE.md §10).
+
+**Finding de lecture de code (à confirmer par run interactif on-target)** : dans le
+build SDL, `SDL_PollEvent` draine **tous** les events souris d'une frame en **une
+seule passe, APRÈS** les 19968 cycles CPU (boucle interne `main.c` §923-1001, poll
+§~1196). Le device MOU2 n'est donc mis à jour qu'**une fois par frame** ; sa ligne
+IRQ ne peut connaître qu'**≤ 1 front montant par frame** → le compteur `multi`
+(frames à > 1 front) est **structurellement 0**. **Conséquence** : l'hypothèse
+« le build réel voit > 1 IRQ souris/frame » est **réfutée par le chemin de code**.
+Avec ≤ 1 IRQ/frame (~2000-4000 cyc de handler) sur 19968 cyc/frame, la *fréquence*
+des IRQ n'affame pas la main loop. La value figée vient donc de l'**autre** branche
+du caveat : effet scheduler/`FORBID`, **ou** coût du redraw/aller-retour app **par
+event** dans la main loop elle-même (qui, lui, peut accumuler du retard si plusieurs
+`MOUSE_MOVED` coalescés produisent un event lourd par frame mais que l'app ne draine
+qu'un event par itération). **Prochaine mesure** : compteur d'events `MOUSE_MOVED`
+consommés/frame côté main loop + cycles tâche-app vs handler (le 2e volet du caveat),
+à instrumenter avant de chiffrer D1-D4.
+
 **Sous-options chiffrables de « découpler / alléger l'IRQ »** :
 
 | Sous-option | Principe | Bénéfice attendu | Coût / risque |
