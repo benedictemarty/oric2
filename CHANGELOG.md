@@ -7,6 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-28] — ADR-27 §0bis : famine main loop pendant drag d'ascenseur rapide
+
+### Instruction / Architecture
+- **Nouveau hazard de concurrence documenté** (dossier ADR-27 §0bis) : un drag
+  d'ascenseur rapide **fige le thumb** (value bloquée à une valeur intermédiaire)
+  pendant que le curseur continue de bouger. Cause racine : **asymétrie de
+  traitement** — curseur + drag fenêtre mis à jour dans l'IRQ (`kernel_wm_mouse_step`),
+  mais la value du scrollbar via la tâche app (`SYS_MAIN_LOOP` → `_wm_scroll_update`,
+  redraw GPU + aller-retour syscall par `MOUSE_MOVED`). En drag rapide, les IRQ
+  souris affament la main loop → la value ne suit plus ; elle **rattrape dès l'arrêt
+  du mouvement** (donc retard, pas gel logique). Distinct du bug ring/UP corrigé le
+  2026-05-27 (que le coalescing ne couvre pas).
+- **Reproduction déterministe** (`oricrobot`, TC_SCR_FLAG) : flux `moverel` à cadence
+  serrée fige la value ; `run` à souris immobile la fait rattraper d'un coup.
+- **Direction retenue par l'humain** : « découpler / alléger l'IRQ ». **À instruire
+  avant tout code** (touche le partage IRQ↔syscall du §0bis, moratoire ADR). Aucun
+  code ni ADR ratifiée à ce stade.
+
 ## [2026-05-27] — Fix GUI gelée après drag d'ascenseur au max (Phosphoric 1.22.89)
 
 ### OricOS

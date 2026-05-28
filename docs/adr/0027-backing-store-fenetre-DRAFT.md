@@ -123,6 +123,102 @@ le discipliner : `SET_BPL byte_w` avant de composer une fenêtre, `SET_BPL 0`
 stride. Documenté dans `kernel_gfx_set_bpl`. (Une alternative v0.3 = src_bpl/
 dst_bpl par-commande encodés dans les octets hauts libres d'ARG3/ARG4.)
 
+### Hazard identifié : famine de la main loop pendant un drag souris rapide
+
+Investigation 2026-05-28 (handlers.s, wm.s, alloc.s ; reproduction déterministe
+`oricrobot`). **Distinct des races `bpl`/ARG** (qui sont des *data races*) : il
+s'agit ici d'un **déséquilibre de budget CPU** entre l'IRQ et la tâche app.
+
+**Symptôme observé (live, interactif)** : en baissant l'ascenseur au max par un
+drag rapide, le thumb se fige (value bloquée à une valeur intermédiaire, ex. 39
+sur 44) **alors que le curseur continue de bouger**. La value **rattrape dès que
+le mouvement s'arrête**. Donc pas un gel logique : un retard qui ne se résorbe
+jamais tant que la souris bouge vite.
+
+**Cause racine — asymétrie de traitement** :
+- Le **curseur** (`kernel_wm_cursor_blit`) et le **drag de fenêtre** (déplacement
+  des coords) sont mis à jour **dans l'IRQ souris** (`kernel_wm_mouse_step`,
+  handlers.s §129), à chaque event MOU2.
+- La **value de l'ascenseur** est mise à jour par la **tâche app**, hors IRQ :
+  chaque `MOUSE_MOVED` est dépilé par `SYS_MAIN_LOOP`, classifié
+  (`_ml_classify` → `mlc_moved` → `_wm_scroll_update`, wm.s §3211/§2296), ce qui
+  inclut un **redraw GPU ciblé** (`_wm_redraw_ctl`) puis un retour `MSG_CONTROL`
+  à l'app (aller-retour syscall par event).
+- En drag rapide, les IRQ souris s'enchaînent et consomment la quasi-totalité du
+  CPU (lecture MOU2 + `mouse_step` + cursor blit + push event + wake). La tâche
+  app n'obtient plus de tranche suffisante pour terminer une itération de main
+  loop → la value (et le thumb) gèlent ; le curseur, piloté par l'IRQ, continue.
+
+**Reproduction déterministe** (`oricrobot`, TC_SCR_FLAG, kernel `1.22.x`) : un
+flux de `moverel 0 ±2` à cadence serrée (~2500 cycles/event) fige la value (ex.
+6/44) ; un `run 200000` à souris immobile la fait rattraper d'un coup (6→44).
+Le coalescing `MOUSE_MOVED` (`0144b0b`) **ne couvre pas** ce cas : il limite la
+profondeur du ring (donc pas de perte de UP / pas de gel par ring saturé — bug
+distinct déjà corrigé), mais ne réduit pas le coût CPU par itération.
+
+**Direction retenue par l'humain (2026-05-28) : « découpler / alléger l'IRQ »**
+— rendre du budget CPU à la main loop (p.ex. throttle/découplage du cursor blit
+par event, ou allègement du chemin `mouse_step`). À **instruire avant tout
+code** : cette direction touche frontalement le partage de travail IRQ↔syscall
+de ce §0bis et **n'est pas tranchée** (moratoire ADR, CLAUDE.md §10). Alternatives
+écartées par l'humain à ce stade : (i) déplacer le calcul de value dans l'IRQ
+(symétrie avec le drag fenêtre, clamp arithmétique sans GPU) ; (ii) alléger la
+main loop (supprimer l'aller-retour app par MOVED / coalescer les redraws). À
+chiffrer dans l'instruction de cette option.
+
+#### Instruction de l'option « découpler / alléger l'IRQ » (en cours, non tranchée)
+
+**Budget mesuré (oricrobot, indicatif — voir caveat)** :
+- *Coût d'une itération de scroll en main loop* : ~**1500 cycles** CPU. Mesure :
+  depuis un état settle (value à jour, rien en attente), un `moverel` unique n'est
+  traité (value mise à jour) qu'à partir de `run ≥ 1500` ; à `run ≤ 1000` la value
+  ne bouge pas. Couvre : pop event + `_ml_classify` + `_wm_scroll_update` (clamp +
+  store) + `_wm_redraw_ctl` (FILL_RECT gouttière + thumb + redraw curseur, sous
+  `sei`) + retour `MSG_CONTROL` + ré-entrée `SYS_MAIN_LOOP` de l'app.
+- *Coût du blit curseur par event* (`kernel_wm_cursor_blit`, par inspection) :
+  **3 copies 8×8 px** par event (restore ancien fond + save nouveau fond + dessin
+  glyph), chacune via port I/O VRAM ligne par ligne (`_cursor_copy_to_save` /
+  `_cursor_copy_from_save` / `_cursor_draw_glyph`). C'est le **poste dominant** du
+  travail IRQ par event souris, devant `mouse_step` (tests focus/drag) et le
+  push/wake event.
+
+**Caveat de mesure (à lever avant ratification)** : `oricrobot` exécute des
+tranches `run N` déterministes et **ne reproduit pas la cadence temps-réel** du
+build SDL `--machine oric2`. En timing SDL nominal, le device MOU2 coalesce
+plusieurs `move_rel` d'une frame en **un seul event** (flag `event` unique →
+**1 IRQ souris/frame**, ~19968 cycles de budget) — ce qui, face à ~1500+~2000
+cycles de travail/event, **ne devrait pas** affamer la main loop. Or le trace
+live (`MDIAG`) montre `MOUSE_Y` qui suit (IRQ actif chaque event) mais `val` figée
+sur des centaines d'events → la main loop est **réellement** privée de tranche en
+conditions réelles. **Écart à instruire** : soit le build réel voit > 1 IRQ
+souris/frame (à vérifier : nb d'appels handler/frame sous drag), soit un effet
+scheduler/`FORBID` prive la tâche app. **Mesure on-target requise** : instrumenter
+le build SDL (compteur d'IRQ souris/frame + cycles passés en handler vs en tâche
+app pendant un drag) pour fixer le vrai seuil avant tout code.
+
+**Sous-options chiffrables de « découpler / alléger l'IRQ »** :
+
+| Sous-option | Principe | Bénéfice attendu | Coût / risque |
+|---|---|---|---|
+| **D1 — Throttle du cursor blit** | Ne redessiner le curseur qu'au plus 1×/tick (ou 1×/N events), pas à chaque event MOU2 ; accumuler la dernière position et blitter au tick T1 | Rend ~2000 cyc/event à la main loop ; le curseur reste fluide à la fréquence tick | Curseur potentiellement 1 tick en retard ; état « position curseur en attente » à gérer ; interaction avec le backing-store (CURSOR_SAVE) à valider |
+| **D2 — Découpler le blit du chemin event** | `mouse_step` ne fait que maj coords + drag (léger) ; le blit curseur est délégué au tick T1 (ou à une tâche dédiée basse priorité) | Sépare proprement « tracking » (IRQ léger) et « rendu » (différé) | Refactor du point d'appel ; latence curseur ; éventuelle nouvelle tâche |
+| **D3 — Blit curseur incrémental** | Ne re-save/restore que si la position a bougé d'≥1 px effectif ; sauter restore+save quand delta nul | Élimine le blit sur events « immobiles » (deltas saturés au bord/au max) | Gain nul si la souris bouge vraiment ; faible mais sûr |
+| **D4 — Réduire le coût des copies 8×8** | Remplacer les copies px-par-px par un BLIT GPU (opcode existant) pour save/restore/glyph | Divise le coût des 3 copies | Réintroduit du travail GPU dans l'IRQ → **réveille la race ARG/`bpl`** du §0bis ; à coupler avec sa résolution |
+
+**Note de cohérence (moratoire, CLAUDE.md §10)** : D1/D2/D3 **réduisent** le travail
+GPU/IRQ et vont donc dans le sens de la résolution du §0bis (moins d'exposition
+de la race ARG/`bpl`). D4 va à l'inverse (plus de GPU dans l'IRQ) → à n'envisager
+qu'après résolution de la race. Aucune de ces sous-options ne révise une ADR
+ratifiée ; elles affinent le partage IRQ↔syscall, sujet **ouvert** de ce §0bis.
+
+**Recommandation senior tracée (non décisionnelle)** : commencer par **D3**
+(sûr, sans latence, élimine les events au bord/max — précisément le cas du
+« drag au max » signalé), **mesurer on-target**, puis si insuffisant ajouter
+**D1** (throttle au tick). Garder **D4** lié au plan de résolution de la race
+ARG/`bpl`. Écarter pour l'instant le déplacement du calcul de value dans l'IRQ
+(alternative (i) supra) : il ré-introduirait le partage des scratch `WG_*`
+IRQ↔main-loop (race documentée, cf. hardening `6c2d1f3`).
+
 ---
 
 ## 1. Contexte
