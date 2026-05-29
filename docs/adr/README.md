@@ -49,6 +49,7 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 |---|---|---|---|
 | 15 | [Isolation mémoire post-v1](0015-isolation-memoire-post-v1.md) | parquée v2 (2026-05-09) | apps non-trusted OU HW-2 mûr OU 2026-12-31 |
 | 27 | [Backing store fenêtre](0027-backing-store-fenetre-DRAFT.md) | DRAFT, option (b) retenue (2026-05-27) | ratification au seuil 50 % migration kernel ; *point 5 simplifié par ADR-28* |
+| 30 | [Roadmap toolbox (alignement GeoWorks)](0030-roadmap-toolbox-DRAFT.md) | DRAFT, dossier d'instruction (2026-05-30) | roadmap incrémentale 5 étapes (LIST/MENU/RANGE/SPIN/FIELD) ; ratification par étape |
 
 ## Migration progressive
 

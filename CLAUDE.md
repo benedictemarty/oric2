@@ -121,6 +121,25 @@ ADR à finaliser au seuil 50 %** (moratoire §10). Dossier :
 
 ### ~~ADR-29~~ → ratifiée 2026-05-30, déplacée vers §2 (hint déclaratif aligné GeoWorks, default DELAYED, override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; implémentation Étape 1 livrée + validation interactive utilisateur positive ; révèle et corrige bug pré-existant `_wm_redraw_ctl` ; dossier : `docs/adr/0029-drag-notification-hint.md`)
 
+### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, 2026-05-30)
+
+**Question** : quelle couverture cible OricOS sur la hiérarchie de classes
+`Gen*` de PC/GEOS (40 classes) ? Audit factuel WebFetch 2026-05-30 du
+[dossier Include/Objects](https://github.com/bluewaysw/pcgeos/tree/master/Include/Objects)
+révèle 64 `.def` au total (40 Gen + 7 Vis + ~18 subsystems). Couverture
+OricOS actuelle = **22 % des classes Gen, 57 % des widgets d'interaction
+directe** (audit ADR-29). 5 widgets prioritaires manquants : `GU_LIST`
+(impl interne existante, juste exposer), `GU_MENU`+`GU_MENU_ITEM` (refactor
+`menu_defs` déclaratif), `GU_RANGE` (slider borné, hérite de `gValueC`
+donc ADR-29 applicable), `GU_SPIN` (incrémenteur), `GU_FIELD` (champ
+formaté). 3 options chiffrées : (A) statu quo ; (B) big-bang ;
+(C) quick-wins-only ; (D) roadmap incrémentale par priorité.
+**Recommandation senior tracée : (D)**, 5 étapes indépendantes ratifiables
+chacune après validation interactive utilisateur (leçon ADR-29). Couverture
+cible post-Étape 5 = ~85 % des widgets d'interaction. Au-delà (Vis*,
+subsystems, Document/Application framework) hors scope ADR-30, à instruire
+séparément si pertinence. Dossier : `docs/adr/0030-roadmap-toolbox-DRAFT.md`.
+
 ---
 
 ## 4. Roadmap et jalon courant

@@ -7,6 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30] — ADR-30 (DRAFT) ouverte : roadmap toolbox (alignement GeoWorks)
+
+### Added (Docs / Architecture)
+- **ADR-30 (DRAFT) ouverte** : dossier d'instruction sur la roadmap toolbox
+  d'OricOS vis-à-vis de la hiérarchie `Gen*` de PC/GEOS. Audit factuel
+  WebFetch 2026-05-30 du
+  [dossier Include/Objects](https://github.com/bluewaysw/pcgeos/tree/master/Include/Objects) :
+  64 `.def` total (40 Gen + 7 Vis + ~18 subsystems). Couverture OricOS
+  actuelle = **22 % des classes Gen, 57 % des widgets d'interaction
+  directe**. 5 widgets prioritaires identifiés (`GU_LIST`, `GU_MENU`,
+  `GU_RANGE`, `GU_SPIN`, `GU_FIELD`), ordonnés par valeur/coût.
+  Recommandation senior tracée : option (D) roadmap incrémentale 5 étapes
+  indépendantes, chacune ratifiable après validation interactive (leçon
+  ADR-29). Cible post-Étape 5 : ~85 % des widgets d'interaction. Au-delà
+  hors scope. Conforme moratoire CLAUDE.md §10 (dossier d'instruction
+  écrit, référence externe vérifiée par WebFetch). Dossier :
+  `docs/adr/0030-roadmap-toolbox-DRAFT.md`. CLAUDE.md §3 + index ADR mis à jour.
+
 ## [2026-05-30] — ADR-29 Étape 2 livrée : granularité par widget (GeoWorks complet)
 
 ### Added (OricOS kernel + SDK)
