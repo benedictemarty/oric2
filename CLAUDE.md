@@ -50,6 +50,8 @@ Ces décisions sont **non-négociables** sans nouvelle discussion explicite avec
 | ADR-24 | Souris | Position absolue 10-bit + deltas, IRQ `$0360-$036F` |
 | ADR-25 | Concurrence | Exec-classique : Forbid/Permit + block/wake, pas de spin |
 | ADR-26 | GUI API | GenUI/SpecUI déclaratif, SYS_MAIN_LOOP, messages sémantiques |
+| ADR-28 | Threading WM | Option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ (`TC_WM_FLAG=$A5`) ; réf Intuition/GEOS |
+| ADR-29 | Drag notification hint | Hint déclaratif aligné GeoWorks : default DELAYED (app notifiée 1× à la release), override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; réf PC/GEOS `gValueC.def` |
 
 **Détail, alternatives écartées, implications** → [`docs/adr/ADR_SUMMARY.md`](docs/adr/ADR_SUMMARY.md) et fichiers individuels `docs/adr/00XX-*.md`.
 
@@ -114,6 +116,10 @@ sei/cli, stride par-commande, ou shadow). A aussi révélé une **race GPU ARG
 préexistante** (mouse IRQ pendant setup+trigger d'un helper gfx). **Ratification
 ADR à finaliser au seuil 50 %** (moratoire §10). Dossier :
 `docs/adr/0027-backing-store-fenetre-DRAFT.md`.
+
+### ~~ADR-28~~ → ratifiée 2026-05-29, déplacée vers §2 (option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ ; gated `TC_WM_FLAG=$A5` ; implémentation Étapes 0/1/2/3 + §6.6 + §6.7 livrée, suite `make tests` verte ; simplifie ADR-27 §0ter point 5 ; dossier : `docs/adr/0028-threading-window-manager.md`). **Rétractations** (2026-05-30 suite test interactif utilisateur) : §1.2ter « famine réfutée » + §6.7 « quota anti-drop button-UP » étaient mal-ciblés (le bug fin-de-course n'est ni un drop ni un coût IRQ — c'est un bottleneck app, cf. ADR-29). Étape 3 (skip mouse_step IRQ) déjà revertée pour bug interactif. Le design option C tient ; les rétractations sont tracées dans le fichier ADR-28.
+
+### ~~ADR-29~~ → ratifiée 2026-05-30, déplacée vers §2 (hint déclaratif aligné GeoWorks, default DELAYED, override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; implémentation Étape 1 livrée + validation interactive utilisateur positive ; révèle et corrige bug pré-existant `_wm_redraw_ctl` ; dossier : `docs/adr/0029-drag-notification-hint.md`)
 
 ---
 

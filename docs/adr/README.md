@@ -40,12 +40,15 @@ Format **MADR** (Markdown Any Decision Records). Un fichier par ADR.
 | 24 | [Souris Oric 2](0024-souris-oric2.md) | 2026-05-24 | contrôleur $0360-$036F, hybride absolu+delta, IRQ MOU2 |
 | 25 | [Modèle de concurrence kernel](0025-modele-concurrence-kernel.md) | 2026-05-25 | Exec-classique : Forbid/Permit + block/wake (signaux), atomicité syscall ; réf AmigaOS Exec / SymbOS |
 | 26 | [Modèle GUI déclaratif GenUI/SpecUI](0026-modele-gui-declaratif.md) | 2026-05-26 | UI déclarative (tables GenUI/DB_*), MainLoop→messages, DoDlgBox/Alert ; révise ADR-06 ; réf GeoWorks/GEOS |
+| 28 | [Threading du Window Manager](0028-threading-window-manager.md) | 2026-05-29 | Option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ ; gated `TC_WM_FLAG=$A5` ; réf Intuition/GEOS |
+| 29 | [Drag notification hint (GeoWorks-aligned)](0029-drag-notification-hint.md) | 2026-05-30 | Hint déclaratif : default DELAYED (1 `MSG_CONTROL` à la release), override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; réf PC/GEOS `gValueC.def` |
 
 ### Ouvertes / parquées (CLAUDE.md §3)
 
 | # | Titre | Statut | Réouverture |
 |---|---|---|---|
 | 15 | [Isolation mémoire post-v1](0015-isolation-memoire-post-v1.md) | parquée v2 (2026-05-09) | apps non-trusted OU HW-2 mûr OU 2026-12-31 |
+| 27 | [Backing store fenêtre](0027-backing-store-fenetre-DRAFT.md) | DRAFT, option (b) retenue (2026-05-27) | ratification au seuil 50 % migration kernel ; *point 5 simplifié par ADR-28* |
 
 ## Migration progressive
 
