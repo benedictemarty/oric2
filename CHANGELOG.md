@@ -7,6 +7,31 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30] — ADR-30 Étape 1 ratifiée (GU_LIST) + ADR-31 (DRAFT) ouverte
+
+### Ratified — ADR-30 Étape 1 : GU_LIST (alignement GeoWorks GenList)
+- **Étape 1 d'ADR-30 ratifiée** suite à validation interactive utilisateur
+  positive (`--ctl-demo` : la liste s'affiche, items cliquables, app reçoit
+  `MSG_CONTROL` avec le bon index). Conforme moratoire CLAUDE.md §10
+  (audit factuel pré-implémentation de
+  [gListC.def](https://github.com/bluewaysw/pcgeos/blob/master/Include/Objects/gListC.def)
+  vs [gDListC.def](https://github.com/bluewaysw/pcgeos/blob/master/Include/Objects/gDListC.def),
+  alignement sur `GenList` static, items inline = text monikers GeoWorks).
+  Étapes 2-5 (MENU, RANGE, SPIN, FIELD) restent à instruire individuellement.
+  ADR-30 §7.1 marqué FAIT.
+
+### Added — ADR-31 (DRAFT) ouverte : clip widget hors rect parent
+- **ADR-31 (DRAFT) ouverte** : dossier d'instruction sur le bug visuel
+  observé en cours de validation d'ADR-30 Étape 1 (widgets restent peints
+  hors window rect après resize-down). Bug pré-existant à ADR-30 mais
+  révélé par `GU_LIST` (~48 px de hauteur). 3 options chiffrées :
+  (A) skip widget hors rect, (B) clip partiel, (C) clip-list architectural
+  (lié ADR-27 backing store + ADR-28 §6.5 damage tracking). **Recommandation
+  senior tracée : (A)** pour court terme (~15 LOC patch local), (C) tracée
+  comme refinement long terme. ADR-31 deviendra obsolète quand ADR-27 sera
+  ratifiée (backing store = clip implicite). Dossier :
+  `docs/adr/0031-clip-widget-rect-parent-DRAFT.md`.
+
 ## [2026-05-30] — ADR-30 (DRAFT) ouverte : roadmap toolbox (alignement GeoWorks)
 
 ### Added (Docs / Architecture)

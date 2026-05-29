@@ -121,7 +121,24 @@ ADR à finaliser au seuil 50 %** (moratoire §10). Dossier :
 
 ### ~~ADR-29~~ → ratifiée 2026-05-30, déplacée vers §2 (hint déclaratif aligné GeoWorks, default DELAYED, override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; implémentation Étape 1 livrée + validation interactive utilisateur positive ; révèle et corrige bug pré-existant `_wm_redraw_ctl` ; dossier : `docs/adr/0029-drag-notification-hint.md`)
 
-### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, 2026-05-30)
+### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étape 1 ratifiée 2026-05-30**)
+
+### ADR-31 — Clip des widgets hors rect window parent (dossier d'instruction, 2026-05-30)
+
+**Question** : que faire quand un widget rect dépasse son window rect après
+resize-down ? Bug observé interactivement le 2026-05-30 pendant validation
+d'ADR-30 Étape 1 (`GU_LIST`) : widgets restent peints en dehors du nouveau
+rect window. Pré-existant à ADR-30, touche tous les widgets, simplement
+plus visible avec `GU_LIST` (~48 px). Cause racine : OricOS n'a ni
+clip-list, ni backing store par fenêtre, ni damage tracking. 3 options
+chiffrées : (A) skip widget hors rect (~15 LOC) ; (B) clip partiel (~50
+LOC) ; (C) clip-list / damage tracking architectural (~500-1000 LOC).
+**Recommandation senior tracée : (A)** pour court terme (résout 100 % du
+symptôme observé avec patch local trivial), (C) tracée comme refinement
+long terme synchronisé avec ADR-27 (backing store) et ADR-28 §6.5 (damage
+tracking). ADR-31 deviendra **obsolète** quand ADR-27 sera ratifiée
+(backing store contraint le rendu = clip implicite). Dossier :
+`docs/adr/0031-clip-widget-rect-parent-DRAFT.md`.
 
 **Question** : quelle couverture cible OricOS sur la hiérarchie de classes
 `Gen*` de PC/GEOS (40 classes) ? Audit factuel WebFetch 2026-05-30 du

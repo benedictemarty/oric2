@@ -312,20 +312,46 @@ automatiquement du hint `DELAYED/IMMEDIATE` (déjà implémenté pour
 - Gate : audit publié dans le ChangeLog, standard d'étape suivi pour toutes
   les suivantes.
 
-### 7.1. Étape 1 — `GU_LIST` (expose liste interne)
+### 7.1. Étape 1 — `GU_LIST` (expose liste interne) — **RATIFIÉE 2026-05-30**
 
-**Quick win.** Le `WG_TYPE_LIST` est déjà implémenté
-(`kernel_ctl_list_select`, gestion d'items, hit-test). Il manque :
-- Tag `GU_LIST = 11` exposé dans `oricos.h`.
-- Cas dans `sud_loop` pour parser le tag : relx16, rely16, relw16, relh16
-  + table d'items inline (chaînes null-term + null final).
-- Optionnellement, ajouter le tableau `LIST_ITEMS` (bank 1) pour stocker les
-  items copiés (cf. `UI_STR_BUF` pour les titres).
-- Test : `test_oricos_genui_list` (déclare un GU_LIST avec 3 items, vérifie
-  hit-test et sélection).
+**Quick win livré et validé.** L'audit factuel pré-implémentation a comparé
+`Include/Objects/gListC.def` (21 lignes, `GenList` static) et
+`Include/Objects/gDListC.def` (387 lignes, `GenDynamicList` avec callbacks).
+**Choix d'alignement** : `GenList` static, items inline (text monikers
+`NULL_TERM_TEXT_FPTR`). `GenDynamicList` (mutation runtime via callbacks) à
+instruire séparément si besoin.
 
-Coût estimé : ~50 LOC asm + ~20 LOC test C. Valeur : haute (élimine
-nécessité de créer une liste en code natif).
+**Livraison** :
+- ✅ **`kernel.s`** : `GU_LIST = $0B` + `UI_LIST_BUF = $016330` (128 octets
+  buffer items en bank 1) + `.assert UI_LIST_BUF + 128 <= $016400`
+  (anti-overlap RAW_RING).
+- ✅ **`wm.s sud_loop`** : cas `GU_LIST` ajouté entre `sud_n2g` et `sud_n2h`
+  (chaîne d'`if-cascading` du parser GenUI).
+- ✅ **`wm.s sud_list`** : nouveau handler — `_sud_rect` (lit relx16, rely16,
+  relw16, relh16) + lit `count8` + boucle copie inline strings null-term
+  depuis `[$D0],Y` (bank app) → `f:UI_LIST_BUF` (bank 1) avec protection
+  débordement à 128 octets, `count` scratch dans `DP_TMP`. Configure
+  `WG_TYPE = WG_TYPE_LIST`, `DP_PCPTR → UI_LIST_BUF`, `WG_CB = 0`
+  (selected init), `WG_CB+1 = count`, `GFX_COLOR = $07` (lightgray cohérent
+  task_list_entry), puis `_sud_attach` (`kernel_wm_add_widget`).
+- ✅ **SDK `oricos.h`** : `#define GU_LIST 11` exposé aux apps userland C
+  avec doc d'usage (format inline, équivalence text monikers GeoWorks,
+  référence à `gListC.def`, mention que `GenDynamicList` n'est pas v1).
+- ✅ **Démo `apps/ctl_demo/ctl.c`** : window agrandie à h=170, GU_LIST ajouté
+  à rel `(12,72,120,48)` avec 3 items `Item A`/`B`/`C`. Recompilée
+  (1621 octets bundle), kernel rebuilt, suite verte.
+- ✅ **Validation interactive utilisateur positive** (2026-05-30) :
+  `./oric1-emu --xvga --ctl-demo` affiche la liste, items cliquables, app
+  reçoit `MSG_CONTROL` avec le bon index.
+- ✅ **`make tests` complet vert** (suite intégrale + tests scroll-cost +
+  genui).
+
+**Limite assumée (tracée vers ADR-31)** : un widget dont `rel.y + h >
+window.h` (par exemple après resize-down de la fenêtre) reste peint en
+dehors du rect window. Pas spécifique à `GU_LIST` — bug architectural
+pré-existant (OricOS n'a pas de clip-list ni backing par fenêtre).
+Plus visible avec `GU_LIST` qui prend ~48 px. **ADR-31** ouvert le
+2026-05-30 pour instruire le pattern de clip widget hors rect parent.
 
 ### 7.2. Étape 2 — `GU_MENU` + `GU_MENU_ITEM` (déclaratif)
 
