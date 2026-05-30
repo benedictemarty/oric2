@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30x] — ADR-27 §0quinquies : fast-drag artifact tracé (limitation connue)
+
+### Documented — Limitation connue : fast-drag artifact en --compact
+- Validation interactive 2026-05-30w (drag rapide SDL) a révélé des
+  bandes horizontales transitoires (y=420..470) pendant le drag.
+  Non reproduit par oricrobot (drag discret = propre).
+- Hypothèse : timing IRQ — SDL coalesce rafale d'events MOU2 par
+  frame, garde B1 wrapper s'enchaîne et un cas de timing non-couvert
+  fait leak `bpl`. Théoriquement push/pop équilibrés (invariant
+  tient), mais l'observation visuelle suggère un edge case.
+- Impact production : nul. `--compact` est un flag dev, aucune app
+  ne pose `WM_COMPACT_FLAGS[slot]=$A5`. Mode dormant par défaut.
+- Tracé dans `docs/adr/0027-backing-store-fenetre.md §0quinquies`.
+  Pour ré-attaquer : compteur IRQ MOU2/frame (existant) +
+  commande oricrobot `mouseburst` + reproduction déterministe +
+  isolation chemin leak (compose ↔ IRQ ↔ redraw_drag).
+
 ## [2026-05-30w] — Finding chrome-direct-FB résolu (WM_NO_BACKING_FLAGS)
 
 ### Fixed — Fenêtres système plus rendues en noir en mode --compact

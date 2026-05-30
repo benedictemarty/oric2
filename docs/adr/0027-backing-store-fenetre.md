@@ -171,7 +171,57 @@ DRAFT (option (b) toujours retenue ; ratification après §0quater
 complète avec C-2 implémentée et tests verts + validation interactive
 positive).
 
+## 0quinquies. Finding chrome-direct-FB + fast-drag artifact (2026-05-30w)
 
+### Finding A — résolu : chrome direct framebuffer écrasé par compose-loop
+
+Validation interactive `--compact` (2026-05-30w) a révélé que les fenêtres
+système (OricOS, Editor) étaient rendues en NOIR. Cause : leur chrome
+(`_wm_draw_one`) est dessiné DIRECTEMENT dans le framebuffer XVGA, pas
+dans leur backing store. Le compose-loop de task_compact copiait leur
+backing store vide → noir.
+
+**Fix** : `WM_NO_BACKING_FLAGS[slot] = $A5` (8B `$01690B` bank 1).
+`kernel_wm_compose:wcmp_visible` skip si flag actif. Slots 0/1 taggés
+au boot. Apps régulières non-taggées (task_compact, clock, ctl_demo)
+→ compose les copie normalement. **Validation oricrobot** : pixel
+chrome OricOS (105,115) = lightgray, chrome Editor (305,315) = bleu,
+task_compact rect (61,61) = lightgray. Aucun noir nulle part.
+24/24 suites Phosphoric vertes.
+
+### Finding B — limitation connue : fast-drag artifact en --compact
+
+Validation interactive 2026-05-30w (drag rapide SDL de la fenêtre OricOS)
+a montré des **bandes horizontales massives** (stries jaune/bleu/blanc
+à y=420..470) qui apparaissent transitoirement pendant le drag. **Non
+reproduit par oricrobot** (drag discret `moveabs/down/moverel/up` →
+rendu propre, validé pixel-par-pixel).
+
+**Hypothèse** : timing IRQ — SDL coalesce une rafale d'events MOU2 dans
+une même frame de 19968 cyc, le handler IRQ wrapper (garde B1) s'enchaîne
+rapidement. Pendant ce burst, compose-loop tourne en parallèle et pose
+`bpl = byte_w` pour slot 2 task_compact. Si un IRQ MOU2 tombe entre le
+`set_bpl(byte_w)` du compose pour slot 2 et le BLIT compose lui-même
+(fenêtre non protégée par sei), le wrapper IRQ B1 sauve shadow=byte_w,
+force bpl=0, exécute body (qui peut faire des FILL_RECT16 via la garde
+C-2 qui force bpl=0 → OK), puis RESTORE shadow=byte_w. **Mais entre
+la sortie IRQ et le BLIT subséquent, un autre IRQ peut tomber**, etc.
+
+L'invariant tient théoriquement (push/pop équilibrés, garde B1 transparente),
+mais l'observation visuelle suggère qu'un cas de timing non-couvert existe.
+
+**Décision (2026-05-30w)** : tracer comme **limitation connue** plutôt que
+d'investiguer maintenant (1h+ d'instrumentation IRQ-timing pour isoler).
+Pour ré-attaquer :
+1. Instrumenter compteur IRQ MOU2/frame (Phosphoric 1.22.90-alpha existe).
+2. Ajouter à oricrobot une commande `mouseburst` qui injecte N events
+   souris dans une même frame avant `run`.
+3. Reproduire le bug déterministe.
+4. Isoler le chemin qui leak (probablement compose ↔ IRQ ↔ redraw_drag).
+
+**Impact en production** : nul. `--compact` est un flag dev, aucune app
+de production ne pose `WM_COMPACT_FLAGS[slot]=$A5`. Le mode reste dormant
+par défaut.
 
 ## 0ter. Plan précis du flip compact (Étape 2, à exécuter en un bloc testé)
 
