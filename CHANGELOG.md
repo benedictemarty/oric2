@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30y] — Fonte 8×8 IBM CGA (look rétro pixel GeoWorks-inspired)
+
+### Changed — `data/charset.bin` remplacé
+- Ancien : fonte Oric Atmos générique (extraite ROM basic11b $FB78).
+- Nouveau : IBM CGA 8×8 standard (extraite Debian
+  `consolefonts/Arabic-VGA8.psf`, latin 0-127 = IBM CGA héritage,
+  domaine public).
+- Look pixel-pur rétro, cohérent avec direction GeoWorks/GEOS.
+- 24/24 suites Phosphoric vertes (aucun changement code).
+- Validation oricrobot : titlebar/menu/bouton/taskbar tous lisibles.
+- Script utilitaire `tools/gen-font-geos.py` (Python+PIL) conservé
+  pour itération future si on veut une autre fonte source TTF.
+
 ## [2026-05-30x] — ADR-27 §0quinquies : fast-drag artifact tracé (limitation connue)
 
 ### Documented — Limitation connue : fast-drag artifact en --compact
