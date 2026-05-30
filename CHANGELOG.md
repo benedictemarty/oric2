@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30m] — Hot-zones cliquables (pattern GEOS DoIcons)
+
+### Added — `SYS_HOTZONE_SET/CLEAR` + bit 7 du `$DA` MSG_CONTROL
+- Rectangles cliquables sans widget chrome (« tap zones »). MSG_CONTROL
+  avec `$DA = $80 | id` distingue hotzones (bit 7) des widgets (id 0..15).
+  Démo `score` : zone vide sous les boutons → reset. Pattern dérivé de
+  `mist64/geos kernal/icon/icon1.s`. MVP n'unifie pas les 3 hit-testers
+  existants (refactor structurel séparé) ; ajoute une 4e couche
+  orthogonale placée APRÈS widgets pour ne pas casser les apps existantes.
+
 ## [2026-05-30l] — Timers d'app (pattern GEOS InitProcesses)
 
 ### Added — `SYS_TIMER_SET/CLEAR` + `MSG_TIMER`
