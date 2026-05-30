@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30i] — ADR-30 Étape 4 livrée (GU_SPIN incrémenteur)
+
+### Added — Widget incrémenteur déclaratif (GeoWorks SpinClass)
+- `GU_SPIN` widget ajouté à GenUI. Format : rect + max8. Clic haut = +1,
+  bas = -1, clamp `[min..max]` (réutilise `GU_HINT_MIN_VALUE` Étape 3).
+  Visuel : face lightgray + cadre darkgray + value 2 chars décimaux.
+  Démo ctl_demo : spin sous LIST (rel y=124, max=20). Validation
+  headless oricrobot positive. 24/24 verts (cyc gui_demo bumpé pour
+  bootstrap plus lourd).
+
 ## [2026-05-30h] — ADR-30 Étape 2b livrée (MSG_MENU à l'app)
 
 ### Added — Dispatch menu actionable

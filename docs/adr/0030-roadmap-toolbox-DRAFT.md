@@ -389,6 +389,32 @@ d'un `MSG_MENU` à l'app sur clic item est planifié en Étape 2b.
 - Pas de sous-menus (`GenInteractionClass` cascading) — alignement
   GeoWorks complet réservé à une étape ultérieure.
 
+### 7.4. Étape 4 — `GU_SPIN` (incrémenteur) — **RATIFIÉE 2026-05-30**
+
+**Implémentation livrée** :
+- `GU_SPIN = $0F` (tag) + `WG_TYPE_SPIN = $09` (type widget).
+- `sud_spin` (wm.s) : parser format `relx16 rely16 relw16 relh16 max8`.
+  Value init 0, max stocké à WIDGET_TABLE+15. Couleur lightgray.
+- `kernel_tk_spin` (tk.s) : dessine face lightgray + cadre darkgray +
+  value formatée en 2 chars décimaux (via TB_WIN_SCRATCH bank 1) à
+  (x+4, y+2). Format simple : tens en boucle sub-10, ones via reste.
+- `_wm_widget_hit` : SPIN ajouté à la liste des widgets cliquables.
+- `_wm_draw_widget_body` : dispatch `_wdws_spin → kernel_tk_spin`.
+- `kernel_ctl_spin_click` : MOUSE_Y < centre → +1 (haut), sinon -1 (bas).
+  Clamp `value ≥ WIDGET_MIN_VALUES[id]` (réutilise hint Étape 3) et
+  `value ≤ max`. Redraw ciblé via `kernel_wm_redraw_widget`.
+- `mlc_ctl_spin` : dispatch dans `_ml_classify` quand clic sur widget
+  type SPIN → appelle handler + retourne MSG_CONTROL avec id.
+- SDK : `GU_SPIN = 15` dans oricos.h.
+- Démo : ctl_demo ajoute `GU_SPIN 140,124,24,18 max=20` (sous LIST).
+
+**Validation** : repro headless via oricrobot : 3 clics top → value=3 ;
+1 clic bottom → value=2 ; cap max/min respecté. 24/24 suites
+Phosphoric vertes (cyc bumpés à 220k init pour bootstrap kernel
+plus lourd avec dispatchers étendus).
+
+**Coût réel** : ~180 LOC asm + 1 LOC ctl_demo + cyc test bumpé.
+
 ### 7.2b. Étape 2b — `MSG_MENU` à l'app sur clic item — **RATIFIÉE 2026-05-30**
 
 **Implémentation livrée** :
