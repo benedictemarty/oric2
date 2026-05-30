@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30f] — Fix bug taskbar focus (onglet slot ≥ 1 non cliquable)
+
+### Fixed — OricOS `kernel_taskbar_hit` `_tbh_advance:`
+- Ajoute `.a16` au label `_tbh_advance:` dans `wm.s`. Cause racine :
+  ca65 `.smart` encodait `adc #TB_BTN_STRIDE` en immédiat 8-bit (2 octets)
+  au lieu de 16-bit (3 octets) parce que le label est atteint via bcc/bcs
+  depuis le bounds check M=16 (pas via fall-through, donc `.smart` perd
+  l'état M). En M=16 runtime, TB_BTN_X devenait `$8D80` au lieu de `$0080`
+  → tous les slots > 0 considérés hors-bounds → onglet « Editor » et au-
+  delà non-cliquable. Reproduit headless via `oricrobot` puis verrouillé
+  par `test_oricos_taskbar_focus_3_windows`. 24/24 suites Phosphoric vertes.
+
+### Added — Phosphoric `test_oricos_taskbar_focus_3_windows`
+- Nouveau test d'intégration (`tests/integration/test_oricos_helloc.c`)
+  qui verrouille le fix : boot OricOS + spawn ctl_demo (slot 2 focused),
+  clic taskbar onglet Editor (slot 1) à (190, 760), asserte `WM_FOCUS = 1`.
+
 ## [2026-05-30e] — ADR-31 ratifiée (clip widget hors rect parent)
 
 ### Ratified — ADR-31 option A
