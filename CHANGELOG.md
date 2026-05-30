@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30h] — ADR-30 Étape 2b livrée (MSG_MENU à l'app)
+
+### Added — Dispatch menu actionable
+- `EV_MENU_CLICK = 5` + `kernel_event_push_menu` posté quand l'app clique
+  un item d'un menu déclaré via `GU_MENU` (callback statique=0). Repack
+  `MSG_MENU + $DA = (menu << 4) | item` à la classification. ctl_demo
+  déclare un handler qui imprime `"ctl: menu m=X i=Y"` et sort sur
+  `App > Quit`. Test verrouille (24/24 verts).
+- Aligné GeoWorks `GenInteractionClass` / `OnInteractionClick`.
+
 ## [2026-05-30g] — ADR-30 Étape 2 livrée (GU_MENU + GU_MENU_ITEM)
 
 ### Added — Menu déclaratif aligné GeoWorks GenPrimary/eMenuC

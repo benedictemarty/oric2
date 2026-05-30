@@ -389,12 +389,32 @@ d'un `MSG_MENU` à l'app sur clic item est planifié en Étape 2b.
 - Pas de sous-menus (`GenInteractionClass` cascading) — alignement
   GeoWorks complet réservé à une étape ultérieure.
 
-### 7.2b. Étape 2b — `MSG_MENU` à l'app sur clic item (à instruire)
+### 7.2b. Étape 2b — `MSG_MENU` à l'app sur clic item — **RATIFIÉE 2026-05-30**
 
-Faire que `kernel_menu_handle_click → mlc_invoke` poste un `MSG_MENU` au
-TASK_CUR de la fenêtre focused avec id menu + id item. L'app décide
-dans son `MainLoop`. Aligne avec `GenInteractionClass` GeoWorks +
-`OnInteractionClick`. Coût estimé : ~80 LOC.
+**Implémentation livrée** :
+- `EV_MENU_CLICK = 5` (kernel.s) — nouveau type d'événement.
+- `kernel_event_push_menu` (event.s) — pousse `EV_MENU_CLICK` dans
+  `EVENT_RING` avec payload `MSG_LO = item_id`, `MSG_HI = menu_id`.
+  Entrée : A = `(menu_id << 4) | item_id` packé.
+- `kernel_menu_handle_click _mhc_invoke` (tk.s) — quand `WG_CB_VEC = 0`
+  ET `MENU_DYN_ACTIVE = $A5`, appelle `kernel_event_push_menu(packed)`
+  au lieu du silent-consume v1. L'item_id (0 ou 1) est sauvé sur la
+  pile avant `_mhc_invoke`, puis poppé et packé avec `MENU_I` (menu_id).
+- `_ml_classify mlc_menu` (wm.s) — translation `EV_MENU_CLICK → MSG_MENU`.
+  Repack en `$DA = (menu_id << 4) | item_id` pour l'app.
+- ctl_demo `main` — handler `if (msg == MSG_MENU)` qui décode
+  `oricos_msg_id()` en `menu = packed >> 4` + `item = packed & 0x0F`
+  et imprime `"ctl: menu m=X i=Y\r\n"`. `App > Quit` (menu=0, item=1) →
+  `break` → `MSG_CLOSE → break` (équivalent).
+- Verrouillage : `test_oricos_ctl_demo` étendu avec clic « App » dans la
+  barre de menu (20, 6) puis clic « About » (20, 20) → asserte
+  `text_buf_contains("ctl: menu m=0 i=0")`. 24/24 suites vertes.
+
+**Coût réel** : ~50 LOC asm + 14 LOC C ctl_demo + 8 LOC test (vs 80
+estimés). API stable pour les apps. Note : le bar-click (cliquer sur
+le titre du menu) génère aussi `MSG_MENU` côté legacy avec `$DA` non-
+réinitialisé → l'app peut voir des `i=` aléatoires sur ce path. À
+corriger si nécessaire (initialiser `$DA = $FF` dans `mlc_md_notmenu`).
 
 ### 7.3. Étape 3 — `GU_HINT_MIN_VALUE` (attribut min sur GenValue) — **RATIFIÉE 2026-05-30**
 
