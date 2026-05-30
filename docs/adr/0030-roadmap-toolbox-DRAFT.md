@@ -353,22 +353,48 @@ pré-existant (OricOS n'a pas de clip-list ni backing par fenêtre).
 Plus visible avec `GU_LIST` qui prend ~48 px. **ADR-31** ouvert le
 2026-05-30 pour instruire le pattern de clip widget hors rect parent.
 
-### 7.2. Étape 2 — `GU_MENU` + `GU_MENU_ITEM` (déclaratif)
+### 7.2. Étape 2 — `GU_MENU` + `GU_MENU_ITEM` (déclaratif) — **RATIFIÉE 2026-05-30**
 
-Refactor `menu_defs` (actuel table en asm) en déclaratif GenUI. Approche
-recommandée : *parallèle* (les deux coexistent) v1, puis migration apps,
-puis suppression `menu_defs` v2.
+**Implémentation livrée (MVP)** :
+- `GU_MENU = $0C` et `GU_MENU_ITEM = $0D` ajoutés dans `kernel.s`.
+- Structures bank 1 : `MENU_DYN_ACTIVE` (`$0164B0`), `MENU_DYN_COUNT`,
+  `MENU_DYN_ITEM_CNT`, `MENU_DYN_STR_OFF` + `MENU_DYN_STR_BUF` (192 octets
+  à `$0164C0`).
+- `sud_menu` (wm.s) : au 1er appel, zéroise les 32 octets de `menu_defs`
+  et bascule `MENU_DYN_ACTIVE = $A5`. Copie la chaîne inline dans
+  `MENU_DYN_STR_BUF`, écrit `title_ptr` et `bar_x` (4 ou 76) dans
+  `menu_defs[slot]`.
+- `sud_menu_item` (wm.s) : ajoute l'item au dernier menu (cap 2 items).
+  CB = 0 v1 (clic consommé silencieusement).
+- `kernel_menu_draw` + `kernel_menu_handle_click` (tk.s) : consultent
+  `MENU_DYN_COUNT` au lieu de `MENU_N` si `MENU_DYN_ACTIVE = $A5`.
+- SDK : `GU_MENU = 12`, `GU_MENU_ITEM = 13` dans `oricos.h`.
+- Démo : `apps/ctl_demo/ctl.c` déclare `GU_MENU "App" + GU_MENU_ITEM
+  "About" + GU_MENU_ITEM "Quit"`.
 
-- Tags `GU_MENU = 12` + `GU_MENU_ITEM = 13`.
-- `GU_MENU` : nom du menu (chaîne inline) + suivi par 0+ `GU_MENU_ITEM`
-  jusqu'au prochain `GU_MENU` ou `GU_END`.
-- `GU_MENU_ITEM` : label inline + callback offset16 (comme `GU_BUTTON`).
-- Stockage interne : continue à utiliser `menu_defs` (juste construit par
-  parser au lieu d'asm hardcodé).
-- Test : `test_oricos_genui_menu`.
+**Validation** : `test_oricos_ctl_demo` (Phosphoric) étendu avec
+assertions sur `MENU_DYN_*` et contenu `MENU_DYN_STR_BUF`. 24/24 verts.
+Validation interactive utilisateur : **à faire** — `make` + `./oric1-emu
+--xvga --kernel ... --ctl-demo`, observer la barre de menu top qui
+affiche « App » au lieu de « System View ».
 
-Coût estimé : ~250 LOC asm + ~30 LOC test C. Valeur : haute (apps peuvent
-enfin déclarer leurs menus en C pur).
+**Coût réel** : ~180 LOC asm + 8 LOC ctl_demo + 32 LOC test C
+(vs ~250 LOC estimés). MVP sans MSG_MENU (clic silencieux) — l'envoi
+d'un `MSG_MENU` à l'app sur clic item est planifié en Étape 2b.
+
+**Limitations v1 explicites** :
+- Cap MENU_N = 2 menus × 2 items = 4 actions max.
+- CB statique = 0 (pas de dispatch app).
+- Pas de raccourcis clavier (`Alt+letter`, eMenu underscore prefix).
+- Pas de sous-menus (`GenInteractionClass` cascading) — alignement
+  GeoWorks complet réservé à une étape ultérieure.
+
+### 7.2b. Étape 2b — `MSG_MENU` à l'app sur clic item (à instruire)
+
+Faire que `kernel_menu_handle_click → mlc_invoke` poste un `MSG_MENU` au
+TASK_CUR de la fenêtre focused avec id menu + id item. L'app décide
+dans son `MainLoop`. Aligne avec `GenInteractionClass` GeoWorks +
+`OnInteractionClick`. Coût estimé : ~80 LOC.
 
 ### 7.3. Étape 3 — `GU_HINT_MIN_VALUE` (attribut min sur GenValue) — **RATIFIÉE 2026-05-30**
 

@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30g] — ADR-30 Étape 2 livrée (GU_MENU + GU_MENU_ITEM)
+
+### Added — Menu déclaratif aligné GeoWorks GenPrimary/eMenuC
+- Tags `GU_MENU = 12` + `GU_MENU_ITEM = 13` ajoutés à GenUI. Au 1er
+  `GU_MENU` dans une table d'app, le kernel bascule `MENU_DYN_ACTIVE`
+  et override les menus statiques `System/View`. Strings copiées
+  bank app → bank 1 (`MENU_DYN_STR_BUF`, 192 octets). MVP v1 : cap
+  2 menus × 2 items, callbacks=0 (clic consommé silencieusement).
+- Démo : `ctl_demo` déclare `App > About + Quit`.
+- Verrouillage : assertions test_oricos_ctl_demo (`MENU_DYN_*`,
+  contenu STR_BUF). 24/24 suites Phosphoric vertes.
+- Étape 2b à venir : `MSG_MENU` à l'app sur clic item.
+
 ## [2026-05-30f] — Fix bug taskbar focus (onglet slot ≥ 1 non cliquable)
 
 ### Fixed — OricOS `kernel_taskbar_hit` `_tbh_advance:`
