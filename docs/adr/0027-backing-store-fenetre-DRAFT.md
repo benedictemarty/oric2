@@ -1,14 +1,24 @@
-# ADR-27 — Modèle de backing store fenêtre
+# ADR-27 (DRAFT) — Modèle de backing store fenêtre
 
-- **Statut** : **RATIFIÉ — option (b) : stride GPU configurable + backing
-  store compact** (2026-05-30q). Critères moratoire §10 réunis : dossier
-  chiffré + 50 %+ d'implémentation (Étapes A + B1 + B2 + B2.c livrées)
-  + cohérence ADR-19/20/21 maintenue. Validation `test_oricos_compact_backing_store`
-  (12/12 helloc, 24/24 globales). Étapes C1 (clip surface compacte) et
-  C2 (allocation multi-banques contiguës) reportées à demande réelle.
+- **Statut** : **DRAFT — option (b) retenue, ratification 2026-05-30q
+  RÉTRACTÉE le 2026-05-30t** après validation interactive `--compact`.
+  Constats : la plomberie compact (Étapes A + B1 + B2) leak `bpl` vers
+  des chemins kernel direct non-instrumentés (`kernel_menu_draw`,
+  `_wm_draw_one` chrome, etc.) → rendu corrompu en interaction réelle
+  (carrés noirs aux positions des fenêtres système ; menu déroulé
+  multiplié sur l'écran après clic). Le test unitaire
+  `test_oricos_compact_backing_store` (12/12) couvrait un cas trop
+  restreint (compose seul, sans interaction).
+- **État actuel du code** : plomberie A/B1/B2 + hardening M=8 conservée
+  comme **dormante** (`WM_COMPACT_FLAGS` reste à 0 partout, comportement
+  runtime identique au pré-ADR-27). 24/24 suites Phosphoric vertes.
+  task_compact, flag CLI `--compact`, test unitaire = revertés.
+- **À instruire avant ré-ratification** : audit exhaustif des chemins
+  de dessin kernel direct, plus tests d'intégration ciblés par chemin
+  (menu, taskbar, chrome, dialogues), pas uniquement le compose-loop.
 - **Date d'ouverture** : 2026-05-27
-- **Date de ratification** : 2026-05-30q
-- **Décideurs** : bmarty (choix option b + ratification), Claude Code
+- **Date de ratification (rétractée)** : 2026-05-30q (rétractée 2026-05-30t)
+- **Décideurs** : bmarty (choix option b + dé-ratification), Claude Code
 - **Origine** : audit GPU toolbox senior (2026-05-27), Finding B. Découvert
   à l'occasion du fix BLIT v0.2 (byte_w/byte_h 16-bit, Phosphoric 1.22.87).
 

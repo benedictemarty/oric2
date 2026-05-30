@@ -7,6 +7,30 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30t] — ADR-27 dé-ratifiée : non-transparence interactive
+
+### Removed — Étape B2.c reverté, retour DRAFT
+- Validation interactive `--compact` (cf. 2026-05-30s finding) a montré
+  que la plomberie compact leak `bpl` vers des chemins kernel non-
+  instrumentés (`kernel_menu_draw`, `_wm_draw_one` chrome) → rendu
+  corrompu en interaction réelle. Test unitaire trop restreint
+  (compose-loop seul, sans interaction) couvrait un cas non
+  représentatif.
+- Revertés : `task_compact_entry` OricOS, spawn boot, vars test,
+  flag CLI `--compact` Phosphoric, test `test_oricos_compact_backing_store`
+  désactivé (`#if 0`).
+- **Plomberie dormante conservée** (A + B1 + B2 + hardening M=8) :
+  shadow, garde IRQ, table flags, helpers, modifs window_base/compose/
+  redraw. Comme `WM_COMPACT_FLAGS` reste à 0 partout, comportement
+  runtime identique au pré-ADR-27 (24/24 verts).
+- Dossier renommé `0027-backing-store-fenetre.md` →
+  `-DRAFT.md`. CLAUDE.md §2 : ADR-27 retirée. §3 : ré-ouverte avec
+  rétractation et critères de ré-instruction. ADR-31 (clip widget)
+  redevient « obsolète à la ratification ADR-27 », pas « redondante ».
+- À ré-instruire avant ratification : audit exhaustif des chemins de
+  dessin kernel direct + tests d'intégration ciblés (menu, taskbar,
+  chrome, dialogues) — pas seulement compose-loop.
+
 ## [2026-05-30s] — Hardening gardes shadow `bpl` (M=8 forcé) + finding WM
 
 ### Hardening — M=8 explicite dans les 3 gardes shadow `bpl`

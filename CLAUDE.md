@@ -50,10 +50,9 @@ Ces décisions sont **non-négociables** sans nouvelle discussion explicite avec
 | ADR-24 | Souris | Position absolue 10-bit + deltas, IRQ `$0360-$036F` |
 | ADR-25 | Concurrence | Exec-classique : Forbid/Permit + block/wake, pas de spin |
 | ADR-26 | GUI API | GenUI/SpecUI déclaratif, SYS_MAIN_LOOP, messages sémantiques |
-| ADR-27 | Backing store fenêtre | Option (b) : stride GPU (BPL) configurable par opcode + backing store compact slot par slot (`WM_COMPACT_FLAGS[slot]=$A5`) ; shadow kernel `bpl` + garde IRQ ; Étapes A/B1/B2/B2.c livrées, C1/C2 différées |
 | ADR-28 | Threading WM | Option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ (`TC_WM_FLAG=$A5`) ; réf Intuition/GEOS |
 | ADR-29 | Drag notification hint | Hint déclaratif aligné GeoWorks : default DELAYED (app notifiée 1× à la release), override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; réf PC/GEOS `gValueC.def` |
-| ADR-31 | Clip widget hors rect parent | Option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` (test dans `_wm_draw_widget_body`) ; rendue redondante à terme par ADR-27 (backing store contraint le rendu par construction), mais conservée v1 — pas de migration coûteuse pour un cas couvert |
+| ADR-31 | Clip widget hors rect parent | Option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` (test dans `_wm_draw_widget_body`) ; obsolète à la ratification ADR-27 (backing store) |
 
 **Détail, alternatives écartées, implications** → [`docs/adr/ADR_SUMMARY.md`](docs/adr/ADR_SUMMARY.md) et fichiers individuels `docs/adr/00XX-*.md`.
 
@@ -99,7 +98,21 @@ expliciter avant d'avancer.
 
 ### ~~ADR-25~~ → ratifiée 2026-05-25, déplacée vers §2 (modèle Exec-classique : Forbid/Permit + block/wake)
 
-### ~~ADR-27~~ → ratifiée 2026-05-30q, déplacée vers §2 (option (b) : stride GPU (BPL) configurable + backing store compact slot par slot ; shadow kernel `GFX_BPL_SHADOW=$016900` + garde IRQ `kernel_wm_mouse_step` + table `WM_COMPACT_FLAGS[slot]=$A5` ; concurrence option 2 retenue : helpers GPU bracketés `sei/plp` ; Étapes A/B1/B2/B2.c livrées + validation `test_oricos_compact_backing_store` 12/12 + 24/24 globales ; C1 (clip surface compacte) et C2 (allocation multi-banques contiguës) reportées au critère §6.1 réel ; dossier : `docs/adr/0027-backing-store-fenetre.md`)
+### ADR-27 — Modèle de backing store fenêtre (DRAFT, option (b) retenue, plomberie dormante — dé-ratifiée 2026-05-30t)
+
+**Statut** : ratifiée 2026-05-30q, **rétractée 2026-05-30t** après
+validation interactive `--compact` qui a révélé que la plomberie compact
+leak `bpl` vers des chemins kernel direct non-instrumentés
+(`kernel_menu_draw`, `_wm_draw_one` chrome, etc.) → rendu corrompu en
+interaction réelle. Le test unitaire `test_oricos_compact_backing_store`
+(12/12) couvrait un cas trop restreint (compose seul). La plomberie
+A/B1/B2 + hardening M=8 reste posée comme **dormante**
+(`WM_COMPACT_FLAGS` reste à 0 partout → comportement runtime identique
+au pré-ADR-27). task_compact, flag CLI `--compact`, test unitaire =
+revertés. À ré-instruire avant ratification : audit exhaustif des
+chemins de dessin kernel direct + tests d'intégration ciblés
+(menu, taskbar, chrome, dialogues). Dossier :
+`docs/adr/0027-backing-store-fenetre-DRAFT.md`.
 
 ### ~~ADR-28~~ → ratifiée 2026-05-29, déplacée vers §2 (option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ ; gated `TC_WM_FLAG=$A5` ; implémentation Étapes 0/1/2/3 + §6.6 + §6.7 livrée, suite `make tests` verte ; simplifie ADR-27 §0ter point 5 ; dossier : `docs/adr/0028-threading-window-manager.md`). **Rétractations** (2026-05-30 suite test interactif utilisateur) : §1.2ter « famine réfutée » + §6.7 « quota anti-drop button-UP » étaient mal-ciblés (le bug fin-de-course n'est ni un drop ni un coût IRQ — c'est un bottleneck app, cf. ADR-29). Étape 3 (skip mouse_step IRQ) déjà revertée pour bug interactif. Le design option C tient ; les rétractations sont tracées dans le fichier ADR-28.
 
