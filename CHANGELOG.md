@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30d] — ADR-31 Étape 1 livrée (clip widget hors rect parent)
+
+### Added — OricOS `_wm_draw_widget_body` skip widget hors rect parent
+- Patch local 15 LOC dans `tk.s` : si `rel.x+w > win.w` ou `rel.y+h > win.h`,
+  le widget est skippé au dispatch (`_wdb_clip_skip` : `sep #$20` + `rts`).
+  Option A d'ADR-31 (recommandation senior). Élimine le bug visuel
+  observé interactivement le 2026-05-30 (widgets peints hors rect window
+  après resize-down). 24/24 suites Phosphoric vertes. Ratification ADR-31
+  en attente de validation interactive utilisateur (leçon ADR-28).
+
 ## [2026-05-30c] — Test ctl_demo durci : assertion min hint (ADR-30 Étape 3)
 
 ### Added — Phosphoric `test_oricos_ctl_demo`
