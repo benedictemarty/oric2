@@ -40,9 +40,21 @@ store compact. Avancement :
   comportement runtime **identique** (24/24 suites vertes). Leçon `.smart`
   enregistrée : `.a16` non refermée pollue les helpers voisins → entrée
   arbitraire des helpers = `php/sep #$20/.../plp` systématique.
-- ⏳ **Étape B (prochaine)** : garde IRQ save/restore `bpl` autour de
-  `kernel_wm_mouse_step` (point §0ter 5) + bascule compact slot 0 derrière
-  flag, validation transparence par la suite verte.
+- ✅ **Étape B1 livrée (2026-05-30o)** : garde IRQ posée sur
+  `kernel_wm_mouse_step` (point §0ter 5). Refactor en wrapper + body :
+  fast-path shadow == 0 (cas par défaut, ~10 cyc) ; sinon push shadow,
+  force `bpl=0`, exécute body, restore. Effet runtime nul tant que B2
+  inactif (24/24 verts). Sécurité posée avant le flip.
+- ⏳ **Étape B2 (prochaine)** : bascule compact slot 0 derrière flag
+  `WM_COMPACT_FLAG`. Modifications attendues :
+  - `kernel_gfx_window_base` (point §0ter 1) : pose `bpl=byte_w` si
+    slot du caller est en mode compact.
+  - 7 wrappers `sys_gfx_*` (point §0ter 2) : `bpl=0` après dessin.
+  - `kernel_wm_compose` (point §0ter 3) : `bpl=byte_w` par slot compact
+    avant BLIT, `bpl=0` en `wcmp_done`.
+  - `kernel_wm_redraw` / `_drag` (point §0ter 4) : `bpl=0` à l'entrée.
+  - Test dédié : créer fenêtre slot 0 ≤ 128 px, activer compact, dessiner
+    rect rouge en backing store, FLUSH, valider position framebuffer.
 - ⏳ **Étape C (suite)** : généralisation tous slots + allocation multi-banques
   contiguës (point §0ter 6) + clip surface compacte (point §0ter 7).
 

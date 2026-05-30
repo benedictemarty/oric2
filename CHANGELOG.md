@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30o] — ADR-27 Étape B1 : garde IRQ `bpl` (transparence)
+
+### Added — `kernel_wm_mouse_step` enveloppé d'une garde transparente
+- Wrapper IRQ : si shadow ≠ 0, push shadow + force `bpl=0` (stride
+  XVGA 512) le temps des redraws framebuffer, puis restore. Si
+  shadow == 0 (cas par défaut), `jmp` direct au body — ~10 cyc.
+- Effet runtime nul tant qu'aucun appelant ne touche `set_bpl` :
+  la garde est dormante mais prête. 24/24 suites vertes.
+- Pré-requis sécurité avant Étape B2 (bascule compact slot 0).
+
 ## [2026-05-30n] — ADR-27 Étape A : shadow kernel `bpl` (plomberie passive)
 
 ### Added — Pose des fondations pour le flip backing-store compact
