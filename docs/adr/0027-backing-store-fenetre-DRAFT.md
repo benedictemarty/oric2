@@ -56,14 +56,48 @@ store compact. Avancement :
     `bpl=0` en `wcmp_done` (point §0ter 3).
   - `kernel_wm_redraw` : `bpl=0` à l'entrée (point §0ter 4).
   - Flag inactif sur tous les slots → no-op runtime, 24/24 verts.
-- ⏳ **Étape B2.c (activation)** : flip réel d'un slot en compact +
-  test de transparence. Reportée à un sprint dédié ou validation
-  interactive (cf. méthode ADR-29/30). Test attendu : crée fenêtre slot 0
-  ≤ 128 px, écrit `$A5` à `WM_COMPACT_FLAGS[0]`, app dessine rect
-  rouge via SYS_GFX_FILL_RECT, SYS_WIN_FLUSH, lecture framebuffer
-  XVGA = rect à `(win.x+10, win.y+10)`.
-- ⏳ **Étape C (suite)** : généralisation tous slots + allocation multi-banques
-  contiguës (point §0ter 6) + clip surface compacte (point §0ter 7).
+- ✅ **Étape B2.c livrée (2026-05-30q)** : activation effective + test
+  de transparence. Task de test `task_compact_entry` (alloc.s) crée
+  fenêtre 64×64 à (50,50), écrit `$A5` à `WM_COMPACT_FLAGS[handle]`,
+  dessine bg bleu + rect rouge à (10,10,20,20) en compact stride 32,
+  compose. Test C `test_oricos_compact_backing_store` lit `vram_peek`
+  framebuffer XVGA à (61,61) → 7 (rouge), (52,52) → 1 (bleu).
+  12/12 tests `helloc` verts, 24/24 globales. **Flip compact validé
+  fonctionnellement** — la plomberie n'est plus juste dormante, elle
+  produit le bon rendu. Bug fix capturé : ABI `SYS_WIN_CREATE` exige
+  16-bit LO+HI séparés (`$D0-$D7`), pas double-`sta` qui clobbe HI.
+- ⏳ **Étape C (à instruire à la demande)** : 2 chantiers indépendants.
+  - **C1 — Clip surface compacte** (point §0ter 7) : `gpu_fill_rect_impl`
+    et `gpu_set_pixel` clippent aujourd'hui à XVGA 1024×768 ; en compact
+    étroit, un dessin out-of-bounds débordera dans les banques voisines.
+    Robustesse à ajouter (option : registres GPU `clip_w/clip_h`, ou
+    clip kernel-side dans les wrappers `sys_gfx_*`). Pas de cas
+    déclencheur réel actuel — différer jusqu'à premier dépassement.
+  - **C2 — Allocation multi-banques contiguës** (point §0ter 6) :
+    requis pour fenêtres > 128 px de haut en pleine largeur (cf. §3
+    de ce dossier). Modifie `sys_win_create` + allocateur LIFO actuel
+    (ADR-2.h v0.1) qui ne supporte pas le contigu. Sprint dédié à
+    instruire au critère §6.1 (app cible réelle).
+
+## Ratification proposée (2026-05-30q)
+
+Le moratoire §10 (CLAUDE.md) exige :
+1. ✅ **Dossier d'instruction écrit** : ce document, ≥ 2 alternatives
+   chiffrées dans §4, recommandation senior tracée.
+2. ✅ **≥ 50 % d'implémentation de référence** : Étapes A + B1 + B2 +
+   B2.c livrées. Tout le chemin GPU (`gfx_window_base`, `finish`, 5
+   wrappers, `compose`, `redraw`) bascule slot par slot. Validation
+   bout-en-bout par `test_oricos_compact_backing_store`.
+3. ✅ **Cohérence ADR existantes** : ADR-19 (SDRAM unifiée) inchangée.
+   ADR-20 (XVGA 1024×768×4bpp) inchangée — la stride 512 reste défaut.
+   ADR-21 (GPU blitter) étendue de manière compatible : `SET_BPL` ($08)
+   ajouté sans toucher la memory map ($0340-$034F pleins, contrainte
+   tranchée §0bis). ADR-31 (clip widget) devient redondante à terme
+   (le backing store contraint le rendu par construction).
+
+**Statut proposé** : DRAFT → **RATIFIÉ** (option b confirmée).
+**Statut Étape C** : décisions ouvertes (à instruire à la demande
+réelle, pas de spéculation prématurée).
 
 ## 0ter. Plan précis du flip compact (Étape 2, à exécuter en un bloc testé)
 

@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30q] — ADR-27 Étape B2.c : activation + test transparence
+
+### Added — Flip compact validé bout-en-bout
+- Task de test `task_compact` (gated `TC_CPCT_FLAG=$01EEA0`) : crée
+  fenêtre 64×64 à (50,50), active `WM_COMPACT_FLAGS[handle]=$A5`,
+  dessine bg bleu + rect rouge en compact stride 32, compose loop.
+- Test C `test_oricos_compact_backing_store` : vérifie flag posé,
+  pixel framebuffer (61,61) = 7 (rouge), pixel (52,52) = 1 (bleu).
+- 12/12 tests `helloc`, 24/24 suites globales.
+- Plomberie ADR-27 option (b) validée fonctionnellement → seuil
+  moratoire §10 atteint (50%+ d'implémentation + dossier chiffré
+  + cohérence ADR-19/20/21) → ratification ADR-27 instructible.
+
 ## [2026-05-30p] — ADR-27 Étape B2 : plomberie compact slot (flag inactif)
 
 ### Added — Tout le chemin GPU peut basculer en compact, slot par slot
