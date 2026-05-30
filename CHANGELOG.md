@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30e] — ADR-31 ratifiée (clip widget hors rect parent)
+
+### Ratified — ADR-31 option A
+- Validation interactive utilisateur positive : resize-down `ctl_demo` →
+  widgets dépassants (scrollbar, list) disparaissent proprement au lieu
+  de rester peints hors rect window.
+- `CLAUDE.md` §3 → §2 (ligne ratifiée ajoutée au tableau, entrée §3
+  remplacée par redirect, body d'instruction supprimé).
+- `docs/adr/0031-clip-widget-rect-parent-DRAFT.md` renommé en
+  `docs/adr/0031-clip-widget-rect-parent.md` (DRAFT retiré, date de
+  ratification ajoutée).
+- `ADR_SUMMARY.md` mis à jour.
+
 ## [2026-05-30d] — ADR-31 Étape 1 livrée (clip widget hors rect parent)
 
 ### Added — OricOS `_wm_draw_widget_body` skip widget hors rect parent

@@ -1,10 +1,12 @@
-# ADR-31 (DRAFT) — Clip des widgets hors rect window parent
+# ADR-31 — Clip des widgets hors rect window parent
 
-- **Statut** : **option A implémentée 2026-05-30, ratification en attente de
-  validation interactive utilisateur** (leçon ADR-28). DRAFT non ratifié.
-  Patch local livré dans `tk.s _wm_draw_widget_body` (skip si
-  `rel.x+w > win.w` OR `rel.y+h > win.h`), 24/24 suites Phosphoric vertes.
+- **Statut** : **ratifiée 2026-05-30** (option A). Validation interactive
+  utilisateur positive (resize-down `ctl_demo` → widgets dépassants
+  disparaissent proprement). Patch local 15 LOC dans
+  `tk.s _wm_draw_widget_body` (skip si `rel.x+w > win.w` OR
+  `rel.y+h > win.h`), 24/24 suites Phosphoric vertes.
 - **Date d'ouverture** : 2026-05-30
+- **Date de ratification** : 2026-05-30
 - **Décideurs** : bmarty (arbitrage), Claude Code (instruction)
 - **Contexte technique** : bug visuel observé interactivement par
   l'utilisateur le 2026-05-30 lors de la validation d'ADR-30 Étape 1

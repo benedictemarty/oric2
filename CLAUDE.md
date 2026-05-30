@@ -52,6 +52,7 @@ Ces décisions sont **non-négociables** sans nouvelle discussion explicite avec
 | ADR-26 | GUI API | GenUI/SpecUI déclaratif, SYS_MAIN_LOOP, messages sémantiques |
 | ADR-28 | Threading WM | Option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ (`TC_WM_FLAG=$A5`) ; réf Intuition/GEOS |
 | ADR-29 | Drag notification hint | Hint déclaratif aligné GeoWorks : default DELAYED (app notifiée 1× à la release), override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; réf PC/GEOS `gValueC.def` |
+| ADR-31 | Clip widget hors rect parent | Option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` (test dans `_wm_draw_widget_body`) ; obsolète à la ratification ADR-27 (backing store) |
 
 **Détail, alternatives écartées, implications** → [`docs/adr/ADR_SUMMARY.md`](docs/adr/ADR_SUMMARY.md) et fichiers individuels `docs/adr/00XX-*.md`.
 
@@ -123,22 +124,7 @@ ADR à finaliser au seuil 50 %** (moratoire §10). Dossier :
 
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 
-### ADR-31 — Clip des widgets hors rect window parent (dossier d'instruction, 2026-05-30)
-
-**Question** : que faire quand un widget rect dépasse son window rect après
-resize-down ? Bug observé interactivement le 2026-05-30 pendant validation
-d'ADR-30 Étape 1 (`GU_LIST`) : widgets restent peints en dehors du nouveau
-rect window. Pré-existant à ADR-30, touche tous les widgets, simplement
-plus visible avec `GU_LIST` (~48 px). Cause racine : OricOS n'a ni
-clip-list, ni backing store par fenêtre, ni damage tracking. 3 options
-chiffrées : (A) skip widget hors rect (~15 LOC) ; (B) clip partiel (~50
-LOC) ; (C) clip-list / damage tracking architectural (~500-1000 LOC).
-**Recommandation senior tracée : (A)** pour court terme (résout 100 % du
-symptôme observé avec patch local trivial), (C) tracée comme refinement
-long terme synchronisé avec ADR-27 (backing store) et ADR-28 §6.5 (damage
-tracking). ADR-31 deviendra **obsolète** quand ADR-27 sera ratifiée
-(backing store contraint le rendu = clip implicite). Dossier :
-`docs/adr/0031-clip-widget-rect-parent-DRAFT.md`.
+### ~~ADR-31~~ → ratifiée 2026-05-30, déplacée vers §2 (option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` dans `_wm_draw_widget_body` ; validation interactive utilisateur positive ; deviendra obsolète à la ratification ADR-27 backing store ; dossier : `docs/adr/0031-clip-widget-rect-parent.md`)
 
 **Question** : quelle couverture cible OricOS sur la hiérarchie de classes
 `Gen*` de PC/GEOS (40 classes) ? Audit factuel WebFetch 2026-05-30 du
