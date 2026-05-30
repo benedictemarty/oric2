@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30u] — ADR-27 §0quater : audit chemins kernel direct
+
+### Added — Dossier d'instruction pour ré-ratification
+- Audit `grep jsr kernel_gfx_*` post-revert B2.c : **36 sites
+  kernel direct** non-instrumentés (chrome, taskbar, icônes, widgets
+  tk, démos boot) qui dessinent dans le framebuffer XVGA en bypassant
+  `window_base`/`finish`. Causent le leak `bpl` observé en validation
+  interactive.
+- 4 stratégies chiffrées : C-1 patch chaque appel, **C-2 à la source
+  des helpers GPU (recommandée)**, C-3 entry points WM, C-4 pivot
+  option (a) multi-banques.
+- Recommandation C-2 : modifier `kernel_gfx_fill_rect16/text16/line/
+  fill_rect` pour forcer `bpl=0` si `GFX_BASE_HI ≥ $10` (cible XVGA)
+  ET shadow ≠ 0. 1 changement = 36 sites couverts. Coût ~10 cyc/appel.
+- Plan d'instruction tracé : tests d'intégration ciblés par chemin
+  (menu, taskbar, widgets) en plus du compose-loop.
+- Statut : DRAFT (option (b) toujours retenue, ratification après
+  C-2 implémentée + tests verts + validation interactive positive).
+
 ## [2026-05-30t] — ADR-27 dé-ratifiée : non-transparence interactive
 
 ### Removed — Étape B2.c reverté, retour DRAFT

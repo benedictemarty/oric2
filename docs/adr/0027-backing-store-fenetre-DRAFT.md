@@ -92,25 +92,91 @@ store compact. Avancement :
     (ADR-2.h v0.1) qui ne supporte pas le contigu. Sprint dédié à
     instruire au critère §6.1 (app cible réelle).
 
-## Ratification proposée (2026-05-30q)
+## Ratification rétractée (2026-05-30t)
 
-Le moratoire §10 (CLAUDE.md) exige :
-1. ✅ **Dossier d'instruction écrit** : ce document, ≥ 2 alternatives
-   chiffrées dans §4, recommandation senior tracée.
-2. ✅ **≥ 50 % d'implémentation de référence** : Étapes A + B1 + B2 +
-   B2.c livrées. Tout le chemin GPU (`gfx_window_base`, `finish`, 5
-   wrappers, `compose`, `redraw`) bascule slot par slot. Validation
-   bout-en-bout par `test_oricos_compact_backing_store`.
-3. ✅ **Cohérence ADR existantes** : ADR-19 (SDRAM unifiée) inchangée.
-   ADR-20 (XVGA 1024×768×4bpp) inchangée — la stride 512 reste défaut.
-   ADR-21 (GPU blitter) étendue de manière compatible : `SET_BPL` ($08)
-   ajouté sans toucher la memory map ($0340-$034F pleins, contrainte
-   tranchée §0bis). ADR-31 (clip widget) devient redondante à terme
-   (le backing store contraint le rendu par construction).
+La ratification 2026-05-30q a été **rétractée** suite à la validation
+interactive `--compact` : la plomberie compact leak `bpl` vers des
+chemins kernel direct non-instrumentés (cf. §0quater). Le test
+`test_oricos_compact_backing_store` (12/12) couvrait un cas trop
+restreint (compose-loop seul, sans interaction). Le moratoire §10 exige
+maintenant de COMPLÉTER §0quater avant ré-instruction.
 
-**Statut proposé** : DRAFT → **RATIFIÉ** (option b confirmée).
-**Statut Étape C** : décisions ouvertes (à instruire à la demande
-réelle, pas de spéculation prématurée).
+## 0quater. Audit chemins kernel direct framebuffer XVGA (2026-05-30t)
+
+Le compose-loop n'est PAS le seul écrivain du framebuffer XVGA. Le
+kernel dessine son chrome, ses widgets, son menu, sa taskbar
+**directement** dans le framebuffer via `kernel_gfx_fill_rect16` /
+`text16` / `line` / `clear` SANS passer par `sys_gfx_*` (donc sans
+`window_base` ni `finish`). Quand le flip compact est actif, ces appels
+voient potentiellement un `bpl` résiduel ≠ 512 → dessin à mauvaise
+stride → corruption visuelle (rect noirs, motifs étalés).
+
+### Inventaire (grep `jsr kernel_gfx_*` post-revert B2.c)
+
+**Catégorie A — sys_gfx_* wrappers (5, déjà OK)** :
+- `wm.s:5068-5102` : 5 wrappers clear/fill_rect/blit/line/text avec
+  `window_base` + `finish`.
+
+**Catégorie B — compose BLIT (instrumenté par B2)** :
+- `wm.s:1247-1268` : set_bpl per-slot compact + restore.
+
+**Catégorie C — chemins kernel direct framebuffer XVGA (LEAK)** :
+- `wm.s` `_wm_draw_one` chrome titlebar/close/maximize/minimize : ~10
+  sites (lignes 1371, 1379, 1504, 1544, 1591, 1630, 1656, 1707, 1721,
+  1769, 1848).
+- `wm.s` taskbar `_taskbar_draw` : 2956 (et autres dans la fonction).
+- `wm.s` icônes (`kernel_icon_draw_all`) : 807, 840.
+- `wm.s` early/init (`wm_init` etc.) : 43, 56, 69, 81, 92, 103.
+- `tk.s` toolkit (`kernel_tk_button`, `frame`, `label`, `view`,
+  `scrollbar`, `radio`, `check`, `text_field`, `list`, `spin`,
+  `field`) : ~20 sites (150-1390).
+- `boot.s` démos GPU init : ~10 sites (122-416, peu critique hors
+  démarrage).
+
+**Total Catégorie C ≈ 36 sites kernel direct non-instrumentés.**
+
+### Stratégies d'instrumentation possibles
+
+| # | Stratégie | Sites à modifier | Coût/appel | Risque |
+|---|---|---|---|---|
+| **C-1** | Patcher chaque appel : `bpl=0` set avant `jsr kernel_gfx_*` | 36 sites | ~30 cyc + set_bpl trigger | invasif, oublis possibles |
+| **C-2** | Modifier `kernel_gfx_fill_rect16` / `text16` à la source : si `GFX_BASE_HI ∈ [$10..$16]` (framebuffer XVGA), force `bpl=0` automatiquement | 2-3 helpers GPU | ~10 cyc/appel (compare + skip-if-shadow=0) | élégant, 1 changement couvre tous les chemins |
+| **C-3** | Wrapping high-level : chaque entry point WM (redraw, draw_one, menu_draw, taskbar_draw, icon_draw, draw_widget) ouvre/ferme par `bpl=0`/restore. | ~10 entry points | ~30 cyc/entry | identification des entry points = mini-audit |
+| **C-4** | Pivoter vers option (a) ADR-27 (multi-banques stride 512 partout) | 1 sprint allocateur | 0 leak possible | pas de gain SDRAM pour fenêtres étroites |
+
+**Recommandation senior tracée** : **C-2** — modification à la source.
+Justification : les 36 sites Catégorie C sont par construction des
+dessins XVGA (`GFX_BASE_HI=$10..$15` framebuffer). Une heuristique
+unique au point d'entrée GPU intercepte tous les cas, présents et
+futurs (apps qui dessineraient en direct futurement). Coût négligeable
+(skip si shadow=0 = cas usuel). Découple le kernel de la politique
+backing-store. C-3 demande aussi une décision sur les entry points.
+C-1 est trop fragile.
+
+### Plan d'instruction C-2 (à exécuter pour ré-ratification)
+
+1. Modifier `kernel_gfx_fill_rect16` (gfx.s) : ajouter en tête une
+   garde « si `GFX_BASE_HI ≥ $10` ET shadow ≠ 0 alors `set_bpl(0)` ».
+2. Idem `kernel_gfx_text16`.
+3. Idem `kernel_gfx_line` et `kernel_gfx_fill_rect` (8-bit variants).
+4. Pas besoin de toucher `kernel_gfx_clear` (impl C ne consomme pas
+   `bpl`, c'est un memset linéaire).
+5. Pas besoin de toucher `kernel_gfx_blit` (utilisé uniquement par
+   compose qui pose son `bpl` explicitement).
+6. Tests d'intégration ciblés (nouveaux) :
+   - Test menu dropdown avec slot compact actif (= reproduire le bug
+     interactif vu en validation).
+   - Test taskbar/chrome draw avec slot compact actif.
+   - Test widgets (button/list) avec slot compact actif.
+7. Validation interactive : `--compact` doit produire un rendu propre.
+
+### Statut post-audit
+
+DRAFT (option (b) toujours retenue ; ratification après §0quater
+complète avec C-2 implémentée et tests verts + validation interactive
+positive).
+
+
 
 ## 0ter. Plan précis du flip compact (Étape 2, à exécuter en un bloc testé)
 
