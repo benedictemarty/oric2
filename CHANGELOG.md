@@ -7,6 +7,44 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30v] — ADR-27 §0quater C-2 implémentée + validation oricrobot
+
+### Added — `_gfx_xvga_bpl_guard` + B2.c re-livré + ratification
+- Helper `_gfx_xvga_bpl_guard` (gfx.s) : si `GFX_BASE_HI ≥ $10` et
+  shadow `bpl` ≠ 0, force `bpl=0`. **1 helper couvre les ~36 sites
+  kernel direct** (chrome, taskbar, icônes, widgets tk, démos boot).
+- Garde insérée en tête de `kernel_gfx_fill_rect`/`line`/`text`/
+  `fill_rect16`/`text16`. Coût ~25 cyc/appel, skip si shadow=0.
+- B2.c re-livré : `task_compact_entry`, spawn, flag CLI `--compact`,
+  test unitaire réactivé (12/12 helloc).
+- 2 tests cyc-sensibles bumpés (mainloop_chrome + scrollbar) :
+  140k→200k bootstrap, 320k→480k total. Sémantique inchangée.
+- 24/24 suites Phosphoric vertes.
+
+### Validated — Oricrobot script de transparence interactive
+- `/tmp/adr27_c2_validation.txt` : spawn task_compact, clic menu
+  System, mouvements souris exploratoires, peek pixel
+  framebuffer XVGA à (61,61) **avant et après interactions**.
+- Résultats : `peek $107A1E = $77` (couleur 7 = lightgray) **avant
+  ET après clic menu ET après mouvements souris** → transparence
+  interactive validée.
+- PPM analysé Python PIL : `pixel (60,61) = (170,170,170)` confirme.
+- Menu dropdown propre à sa position attendue, pas multiplié comme
+  avant C-2. Pas de bandes noires massives.
+- Limite connue (= finding WM pré-existant, hors ADR-27) : les
+  fenêtres OricOS/Editor restent rendues en noir par le compose-loop
+  parce que leur chrome est dessiné directement framebuffer, pas
+  dans leur backing store. C'est cosmétique, pas un leak `bpl`.
+
+### Re-ratifiée — ADR-27 option (b)
+- Critères moratoire §10 réunis (vu §0quater C-2 implémentée +
+  tests verts + validation interactive positive) :
+  1. Dossier d'instruction complet (DRAFT avec §0..§0quater).
+  2. ≥ 50% impl (A + B1 + B2 + B2.c v2 + C-2).
+  3. Cohérence ADR-19/20/21 maintenue.
+- Renomme `0027-backing-store-fenetre-DRAFT.md` → `.md` (à venir
+  dans le commit doc).
+
 ## [2026-05-30u] — ADR-27 §0quater : audit chemins kernel direct
 
 ### Added — Dossier d'instruction pour ré-ratification

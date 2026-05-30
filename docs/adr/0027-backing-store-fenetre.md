@@ -1,24 +1,19 @@
-# ADR-27 (DRAFT) — Modèle de backing store fenêtre
+# ADR-27 — Modèle de backing store fenêtre
 
-- **Statut** : **DRAFT — option (b) retenue, ratification 2026-05-30q
-  RÉTRACTÉE le 2026-05-30t** après validation interactive `--compact`.
-  Constats : la plomberie compact (Étapes A + B1 + B2) leak `bpl` vers
-  des chemins kernel direct non-instrumentés (`kernel_menu_draw`,
-  `_wm_draw_one` chrome, etc.) → rendu corrompu en interaction réelle
-  (carrés noirs aux positions des fenêtres système ; menu déroulé
-  multiplié sur l'écran après clic). Le test unitaire
-  `test_oricos_compact_backing_store` (12/12) couvrait un cas trop
-  restreint (compose seul, sans interaction).
-- **État actuel du code** : plomberie A/B1/B2 + hardening M=8 conservée
-  comme **dormante** (`WM_COMPACT_FLAGS` reste à 0 partout, comportement
-  runtime identique au pré-ADR-27). 24/24 suites Phosphoric vertes.
-  task_compact, flag CLI `--compact`, test unitaire = revertés.
-- **À instruire avant ré-ratification** : audit exhaustif des chemins
-  de dessin kernel direct, plus tests d'intégration ciblés par chemin
-  (menu, taskbar, chrome, dialogues), pas uniquement le compose-loop.
+- **Statut** : **RATIFIÉ — option (b) : stride GPU (BPL) configurable
+  + backing store compact + §0quater C-2 garde XVGA bpl** (2026-05-30v).
+  Première ratification 2026-05-30q rétractée 2026-05-30t après
+  validation interactive `--compact` qui a révélé un leak `bpl` vers
+  les chemins kernel direct (chrome, menu, taskbar). **§0quater C-2
+  ajouté** : helper `_gfx_xvga_bpl_guard` (heuristique
+  `GFX_BASE_HI ≥ $10` ET shadow ≠ 0 → force `bpl=0`) inséré en tête de
+  5 helpers GPU (`fill_rect`/`fill_rect16`/`text`/`text16`/`line`).
+  **1 helper couvre les ~36 sites kernel direct**. Validation oricrobot :
+  `peek $107A1E = $77` (lightgray composé) stable après clic menu System
+  et mouvements souris. 12/12 helloc, 24/24 globales.
 - **Date d'ouverture** : 2026-05-27
-- **Date de ratification (rétractée)** : 2026-05-30q (rétractée 2026-05-30t)
-- **Décideurs** : bmarty (choix option b + dé-ratification), Claude Code
+- **Date de ratification** : 2026-05-30v (après §0quater C-2)
+- **Décideurs** : bmarty (choix option b + ratification), Claude Code
 - **Origine** : audit GPU toolbox senior (2026-05-27), Finding B. Découvert
   à l'occasion du fix BLIT v0.2 (byte_w/byte_h 16-bit, Phosphoric 1.22.87).
 
