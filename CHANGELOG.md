@@ -7,6 +7,26 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30n] — ADR-27 Étape A : shadow kernel `bpl` (plomberie passive)
+
+### Added — Pose des fondations pour le flip backing-store compact
+- Shadow kernel `GFX_BPL_SHADOW = $016900` (2B) miroirant le registre
+  GPU `bpl` non lisible (ADR-27 §0bis option 4).
+- Helper `kernel_gfx_get_bpl_shadow` + maintien automatique dans
+  `kernel_gfx_set_bpl`. Init shadow = 0 dans `kernel_wm_init`.
+- Étape **passive** : aucun appelant ne touche encore `set_bpl`, donc
+  shadow reste à 0, comportement runtime identique (24/24 verts).
+- Étape B suivante : garde IRQ save/restore dans `kernel_wm_mouse_step`
+  + bascule compact slot 0.
+
+### Note `.smart` ca65 (leçon Étape A)
+- Une directive `.a16` posée au début d'un helper sans `.a8` refermant
+  pollue l'état que `.smart` propage aux helpers voisins → encodage
+  immédiat 8 vs 16-bit divergent (a cassé 46 tests sur la 1ère mouture).
+- Fix généralisable : entrée arbitraire → `php/sep #$20/.../plp`. La
+  routine reste autonome vis-à-vis du contexte M du caller, et `.smart`
+  voit M=8 stable.
+
 ## [2026-05-30m] — Hot-zones cliquables (pattern GEOS DoIcons)
 
 ### Added — `SYS_HOTZONE_SET/CLEAR` + bit 7 du `$DA` MSG_CONTROL

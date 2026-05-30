@@ -32,6 +32,19 @@ store compact. Avancement :
   indépendante de la stride). Recommandation : **bundler le flip compact avec
   l'allocation multi-banques** en un sprint délibéré, plutôt que de modifier le
   compositeur (cœur testé) pour un gain partiel.
+- ✅ **Étape A livrée (2026-05-30n)** : plan en 3 étapes incrémentales retenu
+  (vs sprint atomique du DRAFT). Étape A = **plomberie passive du shadow `bpl`**.
+  Posé : constante `GFX_BPL_SHADOW = $016900` (2B bank 1), maintien dans
+  `kernel_gfx_set_bpl`, helper `kernel_gfx_get_bpl_shadow`, init = 0 dans
+  `kernel_wm_init`. Aucun appelant ne pose encore `set_bpl` → shadow = 0,
+  comportement runtime **identique** (24/24 suites vertes). Leçon `.smart`
+  enregistrée : `.a16` non refermée pollue les helpers voisins → entrée
+  arbitraire des helpers = `php/sep #$20/.../plp` systématique.
+- ⏳ **Étape B (prochaine)** : garde IRQ save/restore `bpl` autour de
+  `kernel_wm_mouse_step` (point §0ter 5) + bascule compact slot 0 derrière
+  flag, validation transparence par la suite verte.
+- ⏳ **Étape C (suite)** : généralisation tous slots + allocation multi-banques
+  contiguës (point §0ter 6) + clip surface compacte (point §0ter 7).
 
 ## 0ter. Plan précis du flip compact (Étape 2, à exécuter en un bloc testé)
 
