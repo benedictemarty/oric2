@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30w] — Finding chrome-direct-FB résolu (WM_NO_BACKING_FLAGS)
+
+### Fixed — Fenêtres système plus rendues en noir en mode --compact
+- Table `WM_NO_BACKING_FLAGS[slot]=$A5` (8B `$01690B`). compose
+  skip les slots taggés → leur chrome direct framebuffer reste.
+- Slots 0/1 (OricOS, Editor, créés au boot) sont taggés.
+- task_compact (slot 2) et apps régulières non-taggées → compose
+  les copie normalement.
+- Validation oricrobot : PPM pixel (105,115) chrome OricOS =
+  lightgray, (305,315) chrome Editor = bleu, (61,61) task_compact
+  rect = lightgray. **Aucun noir nulle part** (vs avant : rect
+  noirs à la place des fenêtres système).
+- Cyc-bumpé test_oricos_radio (140k → 200k bootstrap, 280k → 440k).
+- 24/24 suites Phosphoric vertes.
+
 ## [2026-05-30v] — ADR-27 §0quater C-2 implémentée + validation oricrobot
 
 ### Added — `_gfx_xvga_bpl_guard` + B2.c re-livré + ratification
