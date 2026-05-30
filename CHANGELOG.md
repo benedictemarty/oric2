@@ -7,6 +7,27 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30s] — Hardening gardes shadow `bpl` (M=8 forcé) + finding WM
+
+### Hardening — M=8 explicite dans les 3 gardes shadow `bpl`
+- `php/sep #$20/plp` autour des `lda f:GFX_BPL_SHADOW / ora` dans :
+  `kernel_wm_redraw` (entrée), `kernel_wm_compose:wcmp_done`,
+  `kernel_gfx_window_base:gwb_set_default`. Sûreté générale contre
+  callers M=16 (`.smart` ne couvre pas les branchements).
+
+### Finding — compose vs `_wm_draw_one` chrome direct framebuffer
+- Validation interactive `--compact` révèle que `task_compact` qui
+  boucle `kernel_wm_compose` copie les backing stores vides des
+  fenêtres système (OricOS, Editor) → rect noirs à leur place.
+- Cause **préexistante ADR-27** : chrome des fenêtres système dessiné
+  par `_wm_draw_one` directement dans framebuffer XVGA, pas dans le
+  backing store. compose-loop écrase le rendu correct.
+- **Hors périmètre ADR-27** : la plomberie compact reste correcte
+  (test unitaire `test_oricos_compact_backing_store` 12/12).
+- À tracer comme chantier WM séparé (option : faire dessiner le
+  chrome dans le backing store des fenêtres système, ou flush
+  sélectif). Pas de remise en cause de la ratification ADR-27.
+
 ## [2026-05-30r] — ADR-27 RATIFIÉE (option (b))
 
 ### Changed — Promotion DRAFT → ratifiée
