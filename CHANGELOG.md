@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30k] — Sous-menus cascading (pattern GEOS DoMenu)
+
+### Added — Menus déclaratifs hiérarchiques
+- `GU_SUBMENU` + `GU_MENU_OPEN` ajoutés à GenUI (post-clôture ADR-30).
+  Un item de top-menu peut ouvrir un submenu caché via cb_hi=$80.
+  Pattern dérivé de mist64/geos `kernal/menu/menu1.s` (cf. session de
+  lecture GEOS sources 2026-05-30). Cap v1 : 2 top-bar + 2 submenus,
+  mono-niveau, dropdown unique (parent disparaît quand fils ouvre — v2
+  GeoWorks-style avec MENU_STACK tracé pour itération future). Démo
+  ctl_demo : `Edit > Font > [Sans, Serif]`.
+
 ## [2026-05-30j] — ADR-30 Étape 5 livrée + ADR-30 clos (GU_FIELD)
 
 ### Added — Champ étiqueté gFieldC + clôture ADR-30
