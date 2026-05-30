@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30p] — ADR-27 Étape B2 : plomberie compact slot (flag inactif)
+
+### Added — Tout le chemin GPU peut basculer en compact, slot par slot
+- Table `WM_COMPACT_FLAGS[slot]` ($00 = stride 512 = défaut ; $A5 =
+  stride compacte `byte_w = W>>1`). Reste à $00 partout → comportement
+  runtime inchangé.
+- `kernel_gfx_window_base` pose `bpl` selon le flag du slot owner.
+- `kernel_gfx_finish` restaure `bpl=0` en fin de syscall (5 wrappers).
+- `kernel_wm_compose` pose `bpl=byte_w` par slot compact avant BLIT,
+  restaure en `wcmp_done`.
+- `kernel_wm_redraw` force `bpl=0` à l'entrée (garde principale en
+  plus de la garde IRQ B1).
+- **Comportement** : flag inactif sur tous les slots → no-op partout,
+  24/24 suites vertes. Activation = sprint B2.c séparé (test dédié
+  ou validation interactive).
+
 ## [2026-05-30o] — ADR-27 Étape B1 : garde IRQ `bpl` (transparence)
 
 ### Added — `kernel_wm_mouse_step` enveloppé d'une garde transparente

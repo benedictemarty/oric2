@@ -45,16 +45,23 @@ store compact. Avancement :
   fast-path shadow == 0 (cas par défaut, ~10 cyc) ; sinon push shadow,
   force `bpl=0`, exécute body, restore. Effet runtime nul tant que B2
   inactif (24/24 verts). Sécurité posée avant le flip.
-- ⏳ **Étape B2 (prochaine)** : bascule compact slot 0 derrière flag
-  `WM_COMPACT_FLAG`. Modifications attendues :
-  - `kernel_gfx_window_base` (point §0ter 1) : pose `bpl=byte_w` si
-    slot du caller est en mode compact.
-  - 7 wrappers `sys_gfx_*` (point §0ter 2) : `bpl=0` après dessin.
-  - `kernel_wm_compose` (point §0ter 3) : `bpl=byte_w` par slot compact
-    avant BLIT, `bpl=0` en `wcmp_done`.
-  - `kernel_wm_redraw` / `_drag` (point §0ter 4) : `bpl=0` à l'entrée.
-  - Test dédié : créer fenêtre slot 0 ≤ 128 px, activer compact, dessiner
-    rect rouge en backing store, FLUSH, valider position framebuffer.
+- ✅ **Étape B2 livrée — plomberie (2026-05-30p)** : tout le chemin GPU
+  peut basculer slot par slot via `WM_COMPACT_FLAGS[slot]`. Posé :
+  - Table 8B + magic `$A5` + scratch `WCMP_SLOT_ID`.
+  - `kernel_gfx_window_base` lit le flag et pose `bpl=byte_w` ou `bpl=0`
+    selon (point §0ter 1).
+  - `kernel_gfx_finish` (nouveau) : confine `byte_w` au syscall
+    (point §0ter 2). Inséré dans 5 wrappers `sys_gfx_*`.
+  - `kernel_wm_compose` : `bpl=byte_w` per-slot compact avant BLIT,
+    `bpl=0` en `wcmp_done` (point §0ter 3).
+  - `kernel_wm_redraw` : `bpl=0` à l'entrée (point §0ter 4).
+  - Flag inactif sur tous les slots → no-op runtime, 24/24 verts.
+- ⏳ **Étape B2.c (activation)** : flip réel d'un slot en compact +
+  test de transparence. Reportée à un sprint dédié ou validation
+  interactive (cf. méthode ADR-29/30). Test attendu : crée fenêtre slot 0
+  ≤ 128 px, écrit `$A5` à `WM_COMPACT_FLAGS[0]`, app dessine rect
+  rouge via SYS_GFX_FILL_RECT, SYS_WIN_FLUSH, lecture framebuffer
+  XVGA = rect à `(win.x+10, win.y+10)`.
 - ⏳ **Étape C (suite)** : généralisation tous slots + allocation multi-banques
   contiguës (point §0ter 6) + clip surface compacte (point §0ter 7).
 
