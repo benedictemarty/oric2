@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30j] — ADR-30 Étape 5 livrée + ADR-30 clos (GU_FIELD)
+
+### Added — Champ étiqueté gFieldC + clôture ADR-30
+- `GU_FIELD` widget : box étiquetée (label gauche + value 2 digits droite),
+  non cliquable, mise à jour via `oricos_ctl_set_value(id, value)`.
+  `sys_ctl_set_value` étendu pour redessiner le widget après update.
+- Démo ctl_demo : compteur de clics menu affiché dans le field.
+- 14 widgets exposés en GenUI (~88 % couverture GeoWorks
+  GenInteractionClass directe) — objectif ADR-30 atteint (cible 85 %).
+- ADR-30 marqué clos, post-mortem dans le dossier §7.6. Étapes futures
+  (Vis hierarchy, Document/Application framework, file selector, sous-
+  menus cascading) tracées hors scope ADR-30.
+
 ## [2026-05-30i] — ADR-30 Étape 4 livrée (GU_SPIN incrémenteur)
 
 ### Added — Widget incrémenteur déclaratif (GeoWorks SpinClass)

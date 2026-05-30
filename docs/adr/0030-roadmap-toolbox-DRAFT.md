@@ -389,6 +389,63 @@ d'un `MSG_MENU` à l'app sur clic item est planifié en Étape 2b.
 - Pas de sous-menus (`GenInteractionClass` cascading) — alignement
   GeoWorks complet réservé à une étape ultérieure.
 
+### 7.5. Étape 5 — `GU_FIELD` (champ étiqueté) — **RATIFIÉE 2026-05-30**
+
+**Implémentation livrée (clôture ADR-30)** :
+- `GU_FIELD = $10` + `WG_TYPE_FIELD = $0A`.
+- `sud_field` (wm.s) : parser format `relx16 rely16 relw16 relh16 +
+  label_inline_null`. Copie le label (bank app) vers `FIELD_STR_BUF`
+  (bank 1, 128 octets à `$016600`) avec curseur `FIELD_STR_OFF`. Pointe
+  `WIDGET_TABLE+12/13` (strptr) sur la copie. Value init 0.
+- `FIELD_STR_OFF` reset au début de chaque `sys_ui_define` pour permettre
+  des recharges propres.
+- `kernel_tk_field` (tk.s) : draw face blanche + cadre darkgray + label
+  texte noir à `(x+2, y+2)` (lit strptr depuis WIDGET_TABLE) + value
+  formatée 2 digits à `(x+w-16, y+2)`. Non cliquable (pas ajouté à
+  `_wm_widget_hit`).
+- **`sys_ctl_set_value`** : ajoute un `kernel_wm_redraw_widget` après
+  l'écriture de la value — permet aux GU_FIELD (et autres value widgets
+  passifs) de refléter immédiatement la nouvelle valeur sans qu'une
+  app ait à demander un redraw manuel.
+- SDK : `GU_FIELD = 16` + nouveau helper inline `oricos_ctl_set_value
+  (id, value)` (utilise `SYS_CTL_SET_VALUE = $1C`).
+- Démo : ctl_demo déclare `GU_FIELD "Clicks"` à rel (12, 130, 120, 16).
+  Sur chaque `MSG_MENU` avec item valide, l'app incrémente le compteur
+  local + appelle `oricos_ctl_set_value(7, clicks)` → le field se
+  redessine avec la nouvelle value.
+
+**Validation** : repro headless via oricrobot. Test `test_oricos_ctl_demo`
+étendu avec assertion `WIDGET_TABLE[7*16+14] == 1` après le clic « About »
+(slot 7 = GU_FIELD). 24/24 suites Phosphoric vertes.
+
+**Coût réel** : ~140 LOC asm + 5 LOC SDK + 4 LOC ctl_demo.
+
+### 7.6. ADR-30 cloturé — clôture & post-mortem
+
+**Couverture atteinte** : 14 widgets exposés post-Étape 5 :
+- Direct interaction (GeoWorks gen* + own) : `GU_BUTTON`, `GU_CHECK`,
+  `GU_RADIO`, `GU_SCROLL_V/H`, `GU_VIEW`, `GU_TEXT`, `GU_LIST`,
+  `GU_SPIN`, `GU_FIELD`.
+- Containers + UI : `GU_LABEL`, `GU_WINDOW`, `GU_TITLE`, `GU_MENU`,
+  `GU_MENU_ITEM`.
+- Hints : `GU_HINT_IMMEDIATE_DRAG_NOTIFY`, `GU_HINT_MIN_VALUE`.
+
+**~88 % couverture** des widgets d'interaction directe GeoWorks (objectif
+fixé à 85 % dans le dossier d'instruction).
+
+**Coût total ADR-30** : ~850 LOC asm + ~50 LOC SDK + ~25 LOC démos +
+extension du test E2E `test_oricos_ctl_demo` qui valide chaque étape.
+
+**Étapes ouvertes au-delà d'ADR-30** :
+- Vis* hierarchy (renderer / clipping) : couplé à ADR-27 (backing store).
+- `GenApplicationClass` / `GenDocumentClass` framework : nécessite
+  multitâche avancé + lifecycle apps formalisé.
+- `gFSelC` (file selector) : nécessite SD FS write + dialog system.
+- Sous-menus cascading (`GenInteractionClass`) : extension `GU_MENU`.
+
+À instruire séparément si la roadmap mène vers des apps utilisateur
+plus complexes (éditeur, browser de fichiers, etc.).
+
 ### 7.4. Étape 4 — `GU_SPIN` (incrémenteur) — **RATIFIÉE 2026-05-30**
 
 **Implémentation livrée** :
