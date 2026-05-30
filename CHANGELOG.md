@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31a] — Dual font VGA8 chrome XVGA fixé (cause : bank byte ld65)
+
+### Fixed — Bug VGA8 upload isolé et résolu
+- Cause : ld65 résout les symboles de segment en 16-bit (sans bank
+  info) → `#^kernel_charset_xvga` = $00 au lieu de $01 → upload
+  lisait bank 0 garbage au lieu de bank 1 VGA8.
+- Fix : constante 24-bit explicite `CHARSET_XVGA_SRC = $015C00`
+  (avec bank), utilisée par `kernel_tk_font_init`. Cohérent avec le
+  pattern existant `CHARSET_SRC = $015800` pour la fonte Atmos.
+- 5 lignes de code modifiées.
+- Validation oricrobot : chrome XVGA en VGA8 IBM CGA (titres
+  OricOS/Editor, menus About/Clear, OK, horloge T:4A) tout lisible.
+  Banner mode TEXT Oric 1 reste sur Atmos. 24/24 verts.
+- **Leçon** : utiliser constante 24-bit (`= $01XXXX`) plutôt que
+  symbole de segment pour les adresses bank-1 référencées via `#^`.
+
 ## [2026-05-30z] — Horloge taskbar + infra dual font (VGA8 bug à debug)
 
 ### Added — Horloge taskbar "T:HH" (polish UI)
