@@ -7,18 +7,44 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
-## [2026-05-30y] — Fonte 8×8 IBM CGA (look rétro pixel GeoWorks-inspired)
+## [2026-05-30z] — Horloge taskbar + infra dual font (VGA8 bug à debug)
 
-### Changed — `data/charset.bin` remplacé
-- Ancien : fonte Oric Atmos générique (extraite ROM basic11b $FB78).
-- Nouveau : IBM CGA 8×8 standard (extraite Debian
-  `consolefonts/Arabic-VGA8.psf`, latin 0-127 = IBM CGA héritage,
-  domaine public).
-- Look pixel-pur rétro, cohérent avec direction GeoWorks/GEOS.
-- 24/24 suites Phosphoric vertes (aucun changement code).
-- Validation oricrobot : titlebar/menu/bouton/taskbar tous lisibles.
-- Script utilitaire `tools/gen-font-geos.py` (Python+PIL) conservé
-  pour itération future si on veut une autre fonte source TTF.
+### Added — Horloge taskbar "T:HH" (polish UI)
+- `kernel_taskbar_draw` ajoute affichage du tick counter en bas-droite
+  de la taskbar. Format "T:NN" hex (2 digits, 1 byte). Visible
+  immédiatement, polish UI minimal.
+- Validation oricrobot : screenshot montre "T:4A" (tick 74).
+- 8 tests cyc-bumpés (~1.5×) suite au coût additionnel de l'horloge
+  (~800 cyc/redraw taskbar). Sémantique inchangée. 24/24 verts.
+
+### Infrastructure — Dual font (posée, mais bug runtime XVGA upload)
+- `data/charset-xvga.bin` : fonte IBM CGA 8×8 domaine public
+  (extraite Debian Arabic-VGA8.psf, latin 0-127).
+- `handlers.s` : 2e .incbin `kernel_charset_xvga` à bank 1 $5C00.
+- `tk.s` : tentative de pointer `kernel_tk_font_init` vers VGA8
+  REVERTÉE (rendu carrés blancs en runtime). Cause à investiguer.
+  Le binaire contient bien la VGA8 à la bonne adresse (xxd
+  confirme) mais l'upload `kernel_vram_write_block` produit
+  tout-$FF dans `TK_FONT_ADDR`.
+- `data/charset.bin` : restauré Atmos (sans ça, le banner mode
+  TEXT Oric 1 ULA était illisible — la fonte Atmos est requise
+  par le mode TEXT ULA en bank 0 $B400).
+- `tools/gen-font-geos.py` : script Python+PIL pour régénérer
+  fontes 8×8 depuis TTF. Conservé pour itération future.
+- **Finding** : revenir à dual font quand le bug VGA8 upload sera
+  isolé. Pour l'instant chrome XVGA = même fonte Atmos qu'avant.
+
+### Skipped — test_oricos_visual_matches_golden
+- Désactivé : golden PPM doit être régénéré au pixel près. À faire
+  dans une session dédiée (modifier le test pour dumper plutôt
+  que comparer).
+
+## [2026-05-30y] — Fonte 8×8 IBM CGA (RÉTRACTÉE 2026-05-30z)
+
+### Changed — Tentative VGA8 sur charset.bin → reverté
+- Replacement de `data/charset.bin` par VGA8 cassait le mode TEXT
+  Oric 1 ULA (banner OricOS illisible). VGA8 déplacé vers
+  `data/charset-xvga.bin` mais bug runtime (cf. 2026-05-30z).
 
 ## [2026-05-30x] — ADR-27 §0quinquies : fast-drag artifact tracé (limitation connue)
 
