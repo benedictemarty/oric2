@@ -7,6 +7,28 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31c] — App file_select (GenFileSelectorClass MVP) + finding labels
+
+### Added — file_select dialog modal (pattern GeoWorks)
+- Nouvelle app C `apps/file_select/fileselect.c` : fenêtre modale
+  avec GU_LIST (5 fichiers hardcoded) + OK/Cancel. ~60 LOC.
+- Flag CLI `--fileselect` (Phosphoric main.c) + TC_FILESELECT_FLAG
+  (kernel.s) + spawn boot.s + incbin console.s.
+- MVP : items hardcoded ≤ 7 chars (limitation GU_LIST stride).
+  Intégration vraie FAT32 SD différée.
+- 24/24 suites globales.
+
+### Finding — Labels boutons partagés (bug pré-existant)
+- Révélé par validation visuelle file_select : 2 boutons rendus
+  "Cancel" au lieu de "OK/Cancel". Vérification score (3 boutons
+  "+1/+10/Reset") montre 3× "Reset" → bug ancien, jamais détecté
+  car les tests fonctionnels passent (id-based).
+- Cause : `UI_STR_BUF` unique scratch SDRAM, tous boutons stockent
+  strptr → UI_STR_BUF → tous lisent le dernier label uploadé.
+- Infrastructure fix posée (`BUTTON_LABELS = $016A00`, 128B) mais
+  tentative MVN copy revertée (régression test_oricos_gui_demo).
+- À investiguer dans session dédiée.
+
 ## [2026-05-31b] — Golden visual test régénéré + mode REGEN_GOLDEN
 
 ### Fixed — test_oricos_visual_matches_golden réactivé
