@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30l] — Timers d'app (pattern GEOS InitProcesses)
+
+### Added — `SYS_TIMER_SET/CLEAR` + `MSG_TIMER`
+- Nouveaux syscalls `$1E/$1F` + table 8 timers. Tick VIA T1 décrémente,
+  fire = post `MSG_TIMER` à l'app via `_ml_classify`. SDK helpers
+  `oricos_timer_set/clear`. Démo `score` : auto-incrément 30 ticks.
+  Pattern dérivé de mist64/geos `process1.s` (cf. session 2026-05-30).
+
+### Leçon réutilisable
+- Le dispatcher COP **écrase X** avant d'indexer la syscall_table → tous
+  les handlers syscall doivent lire arg1 depuis `DP_SYS_ARG_X` (ZP $11),
+  pas depuis le registre X. Documenté dans le code de `sys_timer_set`.
+
 ## [2026-05-30k] — Sous-menus cascading (pattern GEOS DoMenu)
 
 ### Added — Menus déclaratifs hiérarchiques
