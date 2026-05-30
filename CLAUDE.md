@@ -121,7 +121,7 @@ ADR à finaliser au seuil 50 %** (moratoire §10). Dossier :
 
 ### ~~ADR-29~~ → ratifiée 2026-05-30, déplacée vers §2 (hint déclaratif aligné GeoWorks, default DELAYED, override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; implémentation Étape 1 livrée + validation interactive utilisateur positive ; révèle et corrige bug pré-existant `_wm_redraw_ctl` ; dossier : `docs/adr/0029-drag-notification-hint.md`)
 
-### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étape 1 ratifiée 2026-05-30**)
+### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 
 ### ADR-31 — Clip des widgets hors rect window parent (dossier d'instruction, 2026-05-30)
 

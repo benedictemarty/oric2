@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30b] — ADR-30 Étape 3 ratifiée (GU_HINT_MIN_VALUE)
+
+### Ratified — ADR-30 Étape 3 : `GU_HINT_MIN_VALUE` (attribut min GenValue)
+- **Étape 3 d'ADR-30 ratifiée** suite à validation interactive utilisateur
+  positive (`ctl_demo` : scrollbar retourne `v=20..60` au lieu de `v=00..40`).
+- **Pivot d'instruction** : audit factuel WebFetch a révélé que
+  [`gRangeC.def`](https://github.com/bluewaysw/pcgeos/blob/master/Include/Objects/gRangeC.def)
+  contient juste « *soon-to-be-dead GenRangeClass... Nuked. 7/7/92 cbh* »
+  — GeoWorks a **supprimé `GenRangeClass`** en juillet 1992 car
+  `GenValueClass` a déjà `ATTR_GEN_VALUE_MINIMUM`/`MAXIMUM`
+  ([`gValueC.def`](https://github.com/bluewaysw/pcgeos/blob/master/Include/Objects/gValueC.def)
+  lignes 93-148). OricOS suit le design final : **pas de nouveau widget
+  `WG_TYPE_RANGE`**, juste un **hint déclaratif** sur `GU_SCROLL_V/H`.
+- **Coût réel** : ~25 LOC asm + 4 LOC SDK + 2 LOC démo (vs ~150 LOC estimés
+  pour un `GU_RANGE` séparé). Pivot a divisé le coût par 5.
+- Détail OricOS dans [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md).
+- Conforme moratoire CLAUDE.md §10 (audit factuel + impl 100 % +
+  cohérence ADR-29 pattern hints).
+
 ## [2026-05-30] — ADR-30 Étape 1 ratifiée (GU_LIST) + ADR-31 (DRAFT) ouverte
 
 ### Ratified — ADR-30 Étape 1 : GU_LIST (alignement GeoWorks GenList)

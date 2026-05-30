@@ -370,21 +370,42 @@ puis suppression `menu_defs` v2.
 Coût estimé : ~250 LOC asm + ~30 LOC test C. Valeur : haute (apps peuvent
 enfin déclarer leurs menus en C pur).
 
-### 7.3. Étape 3 — `GU_RANGE` (slider borné min+max)
+### 7.3. Étape 3 — `GU_HINT_MIN_VALUE` (attribut min sur GenValue) — **RATIFIÉE 2026-05-30**
 
-Hérite de `GU_SCROLL_V` (`gRangeC` hérite de `gValueC` chez GeoWorks).
-Différence : value bornée à `[min, max]` au lieu de `[0, max]`. Hint drag
-notification d'ADR-29 s'applique automatiquement.
+**Pivot d'instruction** : audit factuel WebFetch a révélé que `gRangeC.def`
+contient juste « *soon-to-be-dead GenRangeClass... Nuked. 7/7/92 cbh* »
+— GeoWorks a **supprimé `GenRangeClass`** en juillet 1992 car
+`GenValueClass` a déjà `ATTR_GEN_VALUE_MINIMUM` et `ATTR_GEN_VALUE_MAXIMUM`
+(`gValueC.def` lignes 93-148). Pas de classe Range séparée nécessaire.
 
-- Tag `GU_RANGE = 14` avec attributs `relx16 rely16 w16 h16 min8 max8`.
-- Widget type `WG_TYPE_RANGE` (avec champ supplémentaire `min` dans
-  `WIDGET_TABLE` ? — choix architectural à instruire).
-- `_wm_scroll_update` modifié pour clamp `[min, max]` au lieu de `[0,
-  course]` quand type=RANGE.
-- Test : `test_oricos_genui_range`.
+**Décision** : OricOS suit le design final GeoWorks — pas de nouveau widget
+`WG_TYPE_RANGE`, juste un **hint déclaratif `GU_HINT_MIN_VALUE`** sur les
+`GU_SCROLL_V/H` existants. Cohérent avec ADR-29 pattern hints, extensible
+(futur `GU_HINT_MAX_VALUE`, `GU_HINT_INCREMENT`).
 
-Coût estimé : ~150 LOC asm + ~30 LOC test C. Valeur : moyenne (utile pour
-settings, volume, brightness).
+**Implémentation livrée** :
+- `GU_HINT_MIN_VALUE = $0E` (tag + 1 byte payload).
+- `WIDGET_MIN_VALUES = $0163B0` (8 × 1B, un par widget).
+- `UI_PENDING_MIN_VALUE = $0163B8` (1B, posé par parser sur prochain widget).
+- `sud_hint_min_value` dans `wm.s sud_loop`.
+- `_waw_count` (tk.s) copie `UI_PENDING_MIN_VALUE → WIDGET_MIN_VALUES[id]`.
+- `sys_ctl_get_value` retourne `WIDGET_VALUE + WIDGET_MIN_VALUES[id]`.
+- SDK : `#define GU_HINT_MIN_VALUE 14` (`oricos.h`).
+- Démo : `ctl_demo` configuré avec `GU_HINT_MIN_VALUE 20` → range 20..60.
+
+**Coût réel** : ~25 LOC asm + 4 LOC SDK + 2 LOC démo (vs ~150 LOC estimés).
+Le pivot d'instruction a divisé le coût par 5.
+
+**Validation interactive utilisateur 2026-05-30** : `v=20..60` selon
+position du scrollbar (au lieu de `v=00..40`). Confirmé positif.
+
+**Conformité moratoire CLAUDE.md §10** :
+1. ✅ Dossier d'instruction : audit factuel `gRangeC.def` + `gValueC.def`,
+   pivot documenté (GenRange nuked, GenValue MINIMUM utilisé seul).
+2. ✅ Implémentation prête : 100 % du code livré (parser + storage +
+   syscall + SDK + démo).
+3. ✅ Cohérence ADR : extension naturelle du pattern hints ADR-29, pas de
+   contradiction. Aligné design final GeoWorks 1992+.
 
 ### 7.4. Étape 4 — `GU_SPIN` (incrémenteur numérique)
 
