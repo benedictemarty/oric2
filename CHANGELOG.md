@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31b] — Golden visual test régénéré + mode REGEN_GOLDEN
+
+### Fixed — test_oricos_visual_matches_golden réactivé
+- Mode regen ajouté : `REGEN_GOLDEN=1 make test-oricos-visual`
+  écrit le golden depuis le frame courant. Pratique pour mettre à
+  jour quand fonte/banner/etc change.
+- Golden `tests/golden/oricos_boot.ppm` régénéré post-VGA8 + horloge.
+- Test compare normal (sans env var) repasse vert. Plus de skip.
+- 24/24 suites globales, golden inclus.
+
 ## [2026-05-31a] — Dual font VGA8 chrome XVGA fixé (cause : bank byte ld65)
 
 ### Fixed — Bug VGA8 upload isolé et résolu
