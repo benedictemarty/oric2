@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30c] — Test ctl_demo durci : assertion min hint (ADR-30 Étape 3)
+
+### Added — Phosphoric `test_oricos_ctl_demo`
+- Assertion `WIDGET_MIN_VALUES[3] == 20` (slot SCROLL_V, après les 2 widgets
+  chrome auto-attachés titre+close) + `text_buf_contains("ctl: v=66")` :
+  vérifie que `GU_HINT_MIN_VALUE 20` est bien posé sur le widget SCROLL_V
+  et que `SYS_CTL_GET_VALUE` retourne `raw(46) + min(20) = 66`. Suite
+  570→570 verts (10/10 `test-oricos-helloc`, 24/24 suites). Durcit la
+  validation Étape 3 (mémoire suivi).
+
 ## [2026-05-30b] — ADR-30 Étape 3 ratifiée (GU_HINT_MIN_VALUE)
 
 ### Ratified — ADR-30 Étape 3 : `GU_HINT_MIN_VALUE` (attribut min GenValue)
