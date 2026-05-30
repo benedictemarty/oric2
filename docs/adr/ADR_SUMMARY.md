@@ -115,6 +115,9 @@ Registres `$0360-$036F`. Position absolue 10-bit + deltas read-clear. IRQ dédi�
 ### ADR-26 — Modèle GUI déclaratif GenUI/SpecUI (GeoWorks-like) (ratifiée 2026-05-26)
 UI déclarative (tables `GU_WINDOW`/`GU_BUTTON`/…). `SYS_MAIN_LOOP` bloque et retourne des messages sémantiques (`MSG_KEY`/`MSG_CLOSE`/…). GenUI/SpecUI séparés. Syscalls `$15-$1A` ajoutés. Cf. `docs/adr/0026-modele-gui-declaratif.md`.
 
+### ADR-27 — Modèle de backing store fenêtre : option (b) stride GPU configurable (ratifiée 2026-05-30q)
+Option (b) retenue : stride GPU (BPL) configurable par opcode `SET_BPL` ($08, Phosphoric 1.22.88) + backing store compact slot par slot. Aucun port I/O GPU libre ($0340-$034F pleins) → BPL via opcode, pas de registre dédié (compat ADR-21/22/memory-map). **Shadow kernel** `GFX_BPL_SHADOW=$016900` (le GPU n'expose pas `bpl` en lecture). **Concurrence option 2** : 7 helpers GPU bracketés `php;sei…plp` → commandes atomiques vis-à-vis des IRQ, corrige aussi la race ARG préexistante. **Garde IRQ** : wrapper `kernel_wm_mouse_step` push/force `bpl=0`/pop si shadow ≠ 0 (fast-path sinon). **Activation** : `WM_COMPACT_FLAGS[slot]=$A5` → `kernel_gfx_window_base` pose `bpl=byte_w` ; `kernel_gfx_finish` restaure `bpl=0` en fin de syscall ; `kernel_wm_compose` pose `bpl=byte_w` par slot compact avant BLIT, restaure en `wcmp_done` ; `kernel_wm_redraw` force `bpl=0` à l'entrée. Validation `test_oricos_compact_backing_store` 12/12 + 24/24 globales. **Étapes C1 (clip surface compacte)** et **C2 (allocation multi-banques contiguës)** reportées au critère §6.1 réel (aucune app cible ne déclenche actuellement). Rend ADR-31 redondante à terme mais conservée v1. Cf. `docs/adr/0027-backing-store-fenetre.md`.
+
 ### ADR-28 — Threading du Window Manager : option C hybride (ratifiée 2026-05-29)
 Sépare mécanisme (IRQ) et politique (tâche). **IRQ** : `mouse_read` + `cursor_blit` (latence courte) + `raw_push` dans `RAW_RING`. **Tâche serveur `task_wm_entry`** : consomme `RAW_RING` (`raw_wait`/`raw_pop`), exécute la politique (`kernel_wm_mouse_step` : hit-test, focus, drag, redraw…) en contexte tâche, puis repousse les events destinés à l'app dans `EVENT_RING` (passe-plat). Gated `TC_WM_FLAG=$A5` (off par défaut → comportement inchangé). **Rétractations 2026-05-30** : §1.2ter « famine réfutée » + §6.7 « quota anti-drop button-UP » mal-ciblés (le vrai bug est traité par ADR-29, pré-existant). §6.6 (curseur dupliqué supprimé) reste valide (gain mesuré). Étape 3 (skip mouse_step IRQ) revertée pour bug interactif. Le design option C tient ; justifications retenues = race GPU, sûreté callback (ADR-15), coût drag-fenêtre 53 %. Simplifie ADR-27 §0ter point 5. Cf. `docs/adr/0028-threading-window-manager.md`. Réf : AmigaOS `input.device`/`intuition.library`, GEOS, SymbOS.
 
@@ -129,4 +132,4 @@ Patch local option A : `_wm_draw_widget_body` (tk.s) teste avant dispatch si `WG
 
 ---
 
-*Extrait automatique — révisé 2026-05-30 (ratification ADR-31). Conserver en cohérence avec `CLAUDE.md` §2.*
+*Extrait automatique — révisé 2026-05-30q (ratification ADR-27). Conserver en cohérence avec `CLAUDE.md` §2.*

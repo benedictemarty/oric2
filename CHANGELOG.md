@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-30r] — ADR-27 RATIFIÉE (option (b))
+
+### Changed — Promotion DRAFT → ratifiée
+- `docs/adr/0027-backing-store-fenetre-DRAFT.md` renommé en
+  `0027-backing-store-fenetre.md` ; en-tête mis à jour (statut
+  RATIFIÉ, date de ratification 2026-05-30q).
+- `CLAUDE.md` §2 : ADR-27 ajoutée à la table des décisions figées
+  (option (b) stride GPU configurable + backing store compact). §3 :
+  entrée déplacée en `~~ADR-27~~ → ratifiée 2026-05-30q`.
+- `CLAUDE.md` ADR-31 : reformulée (« rendue redondante à terme par
+  ADR-27 (backing store contraint le rendu par construction), mais
+  conservée v1 — pas de migration coûteuse pour un cas couvert »).
+- `ADR_SUMMARY.md` : nouvelle section ADR-27 (synthèse étapes A/B1/
+  B2/B2.c, concurrence option 2, garde IRQ, activation
+  `WM_COMPACT_FLAGS[slot]=$A5`, C1/C2 différées).
+- Cohérence ADR-19 (SDRAM inchangée) / ADR-20 (stride 512 reste
+  défaut) / ADR-21 (extension compatible : SET_BPL opcode sans
+  toucher la memory map $0340-$034F).
+
 ## [2026-05-30q] — ADR-27 Étape B2.c : activation + test transparence
 
 ### Added — Flip compact validé bout-en-bout

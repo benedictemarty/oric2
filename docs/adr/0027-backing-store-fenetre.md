@@ -1,11 +1,14 @@
-# ADR-27 (DRAFT) — Modèle de backing store fenêtre
+# ADR-27 — Modèle de backing store fenêtre
 
-- **Statut** : **en cours d'instruction — option (b) retenue par l'humain**
-  (2026-05-27). DRAFT non ratifié (moratoire §10 : ratification à finaliser
-  quand la migration kernel atteindra le seuil 50 % + cohérence ADR-21).
-  Référence GPU (registre BPL configurable) **implémentée** (Phosphoric 1.22.88).
+- **Statut** : **RATIFIÉ — option (b) : stride GPU configurable + backing
+  store compact** (2026-05-30q). Critères moratoire §10 réunis : dossier
+  chiffré + 50 %+ d'implémentation (Étapes A + B1 + B2 + B2.c livrées)
+  + cohérence ADR-19/20/21 maintenue. Validation `test_oricos_compact_backing_store`
+  (12/12 helloc, 24/24 globales). Étapes C1 (clip surface compacte) et
+  C2 (allocation multi-banques contiguës) reportées à demande réelle.
 - **Date d'ouverture** : 2026-05-27
-- **Décideurs** : bmarty (choix option b), Claude Code
+- **Date de ratification** : 2026-05-30q
+- **Décideurs** : bmarty (choix option b + ratification), Claude Code
 - **Origine** : audit GPU toolbox senior (2026-05-27), Finding B. Découvert
   à l'occasion du fix BLIT v0.2 (byte_w/byte_h 16-bit, Phosphoric 1.22.87).
 
