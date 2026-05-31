@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31f] — Audit 65C816 §3.1 : garde linker CODE overflow
+
+### Added
+- **OricOS / `kernel.s` + `kernel.cfg`** : assertion linker
+  `(__CODE_LOAD__ + __CODE_SIZE__) <= $5400` (via `define = yes` sur
+  segment CODE). Tout débordement CODE vers la zone data runtime
+  ($5400-$54FF) est désormais une **erreur de build** au lieu d'une
+  corruption silencieuse. Réf audit : `AUDIT_65C816_REMEDIATION.md`
+  §3.1.
+
 ## [2026-05-31e] — Audit 65C816 §2.1 : fuite bank teardown (P0)
 
 ### Fixed
