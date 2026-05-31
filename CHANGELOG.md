@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31k] — Audit 65C816 §3.6 COMPLET : couche géométrie isolée
+
+### Refactored
+- **OricOS** : primitive `_point_in_rect16` (UNE frontière `rep/sep`,
+  AUCUNE branche ne la traverse) + refactor des 4 hit-testers WM
+  (`_wm_chrome_hit`, `_wm_resize_hit`, `_wm_widget_hit`,
+  `_wm_hotzone_hit`) pour l'appeler. Élimine la zone fragile pointée
+  par l'audit §3.6.1 (bcc/bcs traversant rep/sep). 4 commits atomiques,
+  tests verts entre chaque. Couverture identique avec ~1 implémentation
+  géométrique au lieu de 4. Réf : `AUDIT_65C816_REMEDIATION.md` §3.6
+  + axe 8.2.
+
 ## [2026-05-31j] — Audit 65C816 §3.6 partiel : macros ASSERT_A*/I* + scratch resize
 
 ### Added
