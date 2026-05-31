@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31z] — ADR-32 Étape 4 / §3.1 : validation headless mode complet
+
+### Added
+- **Phosphoric / test_oricos_taskmode_full** : valide en headless le
+  mode complet ADR-32 Étape 4 (= IRQ_CONFORMITE §3.1) : `TC_WM_FLAG=$A5`
+  + `WM_TASKMODE=$A5` ensemble → IRQ skip mouse_step, task_wm consomme
+  RAW_RING et exécute mouse_step + cursor_blit en contexte tâche.
+  Scénario : mouse_move + clic titlebar. Curseur bouge, focus change,
+  pas de STP. Signal fort que l'infrastructure §3.1 fonctionne ;
+  validation interactive utilisateur reste requise pour drag/resize.
+  Cible `make test-oricos-taskmode-full` (+ aggrégateur `tests`).
+  Réf : ADR-32 Étape 4, IRQ_CONFORMITE §3.1.
+
 ## [2026-05-31y] — IRQ_CONFORMITE §5.4 : test_oricos_zp_race scaffolding
 
 ### Added
