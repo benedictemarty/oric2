@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31i] — Audit 65C816 §5 : nettoyages cosmétiques
+
+### Cleaned
+- **OricOS / `kernel.s`** : commentaire ADR-20 corrigé `SVGA 800×600`
+  → `XVGA 1024×768` (incohérence vs reste du kernel).
+- **OricOS / `fat.s`** : `cmp #$00` redondant supprimé après
+  `kernel_alloc_bank` (Z déjà positionné).
+Réf : `AUDIT_65C816_REMEDIATION.md` §5.
+
 ## [2026-05-31h] — Audit 65C816 §3.2 : fuite page de pile
 
 ### Fixed
