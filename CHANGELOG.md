@@ -7,6 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31x] — IRQ_CONFORMITE §3.4 NMI doc + §5 assertion budget IRQ
+
+### Added
+- **OricOS / handlers.s** : commentaire NMI ajouté (aucune source NMI
+  câblée v1). Réf : IRQ_CONFORMITE §3.4.
+- **Phosphoric / test_oricos_wm_cost** : assertion fin-de-test
+  `kernel_irq_handler.cmax ≤ IRQ_HANDLER_MAX_BASELINE` (baseline v1 =
+  18000 cycles, marge ~3% sur observé 17355). Anti-régression
+  validé. Post-§3.1 (ADR-32 Étape 4) baseline à descendre à 4096
+  (= période T1, goal IRQ_CONFORMITE §5 point 1). Réf :
+  IRQ_CONFORMITE §5.
+
+### Investigated (reverté)
+- **OricOS / handlers.s** : court-circuit conditionnel kbd_poll/wake
+  testé (KBD2_STATUS bit7), gain ~24 cycles/IRQ. Cassait sentinelles
+  cycle-précises ctl_demo (drag scrollbar). Reverté, note in-line à
+  reconsidérer après §3.1.
+
 ## [2026-05-31w] — IRQ_CONFORMITE §3.3 A : invariant index 8-bit + audit CI
 
 ### Added
