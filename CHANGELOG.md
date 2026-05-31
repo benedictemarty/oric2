@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31e] — Audit 65C816 §2.1 : fuite bank teardown (P0)
+
+### Fixed
+- **OricOS / `se_teardown` (wm.s)** : libération du bank de code de
+  l'app au `sys_exit` (était fuit). Garde `PB ≥ BANK_POOL_BASE` pour
+  ne jamais pousser un bank kernel (PB=1) sur la free-list. Élimine
+  l'épuisement `ERR_BANK_EXHAUSTED` après ~124 spawn/exit. Réf audit :
+  `AUDIT_65C816_REMEDIATION.md` §2.1. Suite tests Phosphoric verte.
+
 ## [2026-05-31c] — App file_select (GenFileSelectorClass MVP) + finding labels
 
 ### Added — file_select dialog modal (pattern GeoWorks)
