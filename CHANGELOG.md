@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31w] — IRQ_CONFORMITE §3.3 A : invariant index 8-bit + audit CI
+
+### Added
+- **OricOS** : invariant « X=1 aux points préemptibles » documenté en
+  tête de `handlers.s` (le `sep #$30` avant `pha/phx/phy` de
+  `kernel_irq_handler` détruit X.hi/Y.hi si caller en X=0). Audit
+  complet : 8 sites `rep #$10/#$30` kernel, 3 RÉELS (scroll_up,
+  sd_copy, ae_copy bundle load) annotés in-line avec risque +
+  mitigation actuelle (boucle bornée OU contexte rare). Nouvelle
+  cible Makefile `audit-rep-x` (baseline 8 sites) câblée à `all:`
+  bloque le build sur régression. v1 stable — suite Phosphoric verte,
+  aucun bug observable. Plan v2 : sei/cli wrappers ou option B IRQ
+  save 16-bit (multi-fichiers atomique). Réf : `IRQ_CONFORMITE.md`
+  §3.3 A.
+
 ## [2026-05-31v] — GFX ABI livré (audit §3) + fix dette ZP via save/restore
 
 ### Added
