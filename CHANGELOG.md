@@ -7,6 +7,26 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31o] — Fix audit-smart `#$30` ignoré + corpus de régression
+
+### Fixed
+- **OricOS / `tools/audit-smart.py`** : pré-filtre `"20" in operand`
+  écartait `rep/sep #$30` du tracker M-state → verdicts faussement
+  verts sur tous les fichiers utilisant `rep/sep #$30` (presque tout
+  le kernel). Fix : suppression du pré-filtre, `parse_imm` + `val &
+  0x20` suffit. Boucle morte du handler `.a16` aussi nettoyée.
+- **Nouveau corpus `tools/tests/`** : 4 fixtures `.s` (2 bad : `#$20`
+  + `#$30`, 2 good : `.a16` explicite + sans branche M=16) + runner
+  `test_audit_smart.py`. **Régression vérifiée** : ancien code →
+  fixture `#$30` raté ; nouveau code → 4/4 OK. `make audit-smart`
+  lance le corpus AVANT le scan kernel.
+- **Conséquence importante** : audit-smart relancé sur le kernel
+  actuel → toujours propre. Les refactors §3.6 et changements
+  ADR-32 livrés cette session étaient *vraiment* propres, pas
+  faussement propres.
+- Réf : critique utilisateur 2026-05-31 (revue toolbox) + audit
+  axe 8.3.
+
 ## [2026-05-31n] — ADR-32 Étapes 2+3 : flag `WM_TASKMODE` (gates atomiques)
 
 ### Added
