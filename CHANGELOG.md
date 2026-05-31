@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31h] — Audit 65C816 §3.2 : fuite page de pile
+
+### Fixed
+- **OricOS / `kernel_task_create` (sched.s)** : page de pile dérivée du
+  pid (`page = pid + 1` pour pid ≥ 3, saute I/O $03) au lieu d'un bump
+  `STACK_NEXT_PAGE` qui ne redescendait jamais. Pids 1/2 conservés en
+  cas spécial (task A/B). Plus de fuite par construction. Suite tests
+  Phosphoric verte sans régression. Réf : `AUDIT_65C816_REMEDIATION.md`
+  §3.2.
+
 ## [2026-05-31g] — Audit 65C816 : test verrouillant fix §2.1
 
 ### Added
