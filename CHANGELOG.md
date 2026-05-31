@@ -7,6 +7,16 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31g] — Audit 65C816 : test verrouillant fix §2.1
+
+### Added
+- **Phosphoric / `test_oricos_teardown_bank`** : nouveau test d'intégration
+  qui spawn `bundle_clock` (TC_CLOCKAPP_FLAG=$A5), laisse clock sortir
+  (~4 ticks, pas de clavier), asserte `BANK_FREE_TOP >= 1` et bank libéré
+  ≥ BANK_POOL_BASE. Régression vérifiée : revert temporaire du fix §2.1 →
+  test FAIL ; restauration → test PASS. Ajouté à l'aggregate `make tests`.
+  Réf : `AUDIT_65C816_REMEDIATION.md` §2.1.
+
 ## [2026-05-31f] — Audit 65C816 §3.1 : garde linker CODE overflow
 
 ### Added
