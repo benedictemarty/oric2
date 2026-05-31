@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31p] — Fix `%u` cassé pour val ≥ 32768 + corpus natif
+
+### Fixed
+- **OricOS / `liboricos.c`** : `%u` faisait `itoa((int)v, …, 10)` →
+  en env int=16-bit, `(int)40000` = -25536 → `itoa` ajoutait `-`
+  et imprimait `"-25536"`. Toute app printf un compteur > 32767
+  voyait des résultats faux silencieusement. Fix : primitive
+  interne `_utoa(uint16_t, char*, int)` unsigned-only, utilisée
+  par `%u`, `%x`, et wrappée par `itoa` (signed).
+- **Nouveau corpus natif** `tools/oricos-sdk/lib/tests/` (22 cas,
+  uint16_t critiques en bases 10/16 + sprintf). Stub minimal
+  d'`oricos.h` pour compile gcc native. Cible `make test-libc-fmt`.
+  Anti-régression : sans le fix, le test échoue à la COMPILE
+  (signal plus fort qu'un FAIL runtime).
+- Réf : critique utilisateur 2026-05-31 (revue toolbox).
+
 ## [2026-05-31o] — Fix audit-smart `#$30` ignoré + corpus de régression
 
 ### Fixed
