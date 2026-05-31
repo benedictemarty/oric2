@@ -7,6 +7,27 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31t] — P1 : install.sh `rm crt0.o` → duplicate `jsr main`
+
+### Fixed
+- **OricOS / `install.sh`** : retrait du `rm crt0.o` après création de
+  `libcrt0.a`. Cause des 6 tests Phosphoric en fail avec fresh build
+  depuis 881c9f3 (= depuis le premier commit hello_c). Le driver clang
+  auto-ajoute `-l:crt0.o` (literal filename) ; sans notre crt0.o en
+  `oricos/lib/`, ld.lld retombait sur `common/lib/crt0.o` qui a SON
+  propre `.call_main: jsr main`. Concaténé avec la nôtre (via -lcrt0
+  → libcrt0.a) → **2 jsr main back-to-back** → main() s'exécute
+  DEUX fois → 2e run bloque sur SYS_READ_CHAR (key déjà délivrée
+  au 1er run) → CPU stuck.
+- **Validation** : suite Phosphoric **COMPLET vert** pour la première
+  fois de toute cette session de remédiation. test_oricos_helloc :
+  **12/12 PASS** (vs 6/12 avant). Suite tests Phosphoric COMPLET vert.
+- **Conséquence rétrospective** : tous mes fixes SDK de la session
+  (audit-smart, %u, calloc, print_string, GFX ABI) étaient bien
+  fondés — ils n'avaient simplement jamais pu être validés
+  end-to-end à cause de ce bug d'install.sh. Le P0 (Makefile stamp)
+  garantit que ce type de divergence ne pourra plus s'accumuler.
+
 ## [2026-05-31s] — `Makefile` P0 : install.sh câblé dans la chaîne make
 
 ### Added
