@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31y] — IRQ_CONFORMITE §5.4 : test_oricos_zp_race scaffolding
+
+### Added
+- **Phosphoric / test_oricos_zp_race** : infrastructure du test
+  verrouillant la course ZP IRQ↔task sur SYS_WIN_CREATE (audit §3.3a).
+  Combine PC-hook + mouse2_move_abs POISON + flag WM_TASKMODE. Status
+  v1 : 2/2 PASS mais bug pas reproduit en legacy (hook tire sur 1er
+  kernel_wm_add ≠ task_win). Raffinement v2 attendu post-§3.1 :
+  tâche test dédiée + sentinelle sync, OU compteur d'arming PC-hook.
+  Cible `make test-oricos-zp-race` ajoutée à `make tests`. Réf :
+  IRQ_CONFORMITE §5.4.
+
 ## [2026-05-31x] — IRQ_CONFORMITE §3.4 NMI doc + §5 assertion budget IRQ
 
 ### Added
