@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31l] — Dossier d'instruction ADR-32 (course ZP IRQ↔tâche)
+
+### Added — `docs/adr/0032-zp-race-irq-task-DRAFT.md`
+- Dossier d'instruction (conforme moratoire CLAUDE.md §10 cond. 1)
+  pour le fix de la course ZP IRQ↔tâche identifiée par
+  `AUDIT_65C816_REMEDIATION.md` §3.3a — **suspect n°1 du revert
+  ADR-28 Étape 3**.
+- 3 options chiffrées : (A) sei épars partout, (B) migration
+  complète `mouse_step` hors IRQ vers tâche serveur WM, (C)
+  partition stricte ZP. Recommandation senior tracée : **(B)**,
+  finalise option C d'ADR-28 sans rejouer le revert.
+- Plan d'atomicité critique : flag `WM_TASKMODE` de bascule
+  runtime, harnais d'injection event-async (axe 8.5,
+  `cpu816_set_pc_hook` Phosphoric) PRÉALABLE à toute migration.
+- Plan d'implémentation 6 étapes, rollback instantané, ratification
+  graduelle après validation interactive utilisateur sur tous les
+  scenarios qui avaient fait reverter ADR-28 Étape 3.
+- Référencé dans `CLAUDE.md` §3 (ADR ouvertes).
+
 ## [2026-05-31k] — Audit 65C816 §3.6 COMPLET : couche géométrie isolée
 
 ### Refactored

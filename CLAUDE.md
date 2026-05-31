@@ -105,6 +105,26 @@ expliciter avant d'avancer.
 
 ### ~~ADR-29~~ → ratifiée 2026-05-30, déplacée vers §2 (hint déclaratif aligné GeoWorks, default DELAYED, override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; implémentation Étape 1 livrée + validation interactive utilisateur positive ; révèle et corrige bug pré-existant `_wm_redraw_ctl` ; dossier : `docs/adr/0029-drag-notification-hint.md`)
 
+### ADR-32 — Course ZP IRQ↔tâche : propriétaire unique WM (dossier d'instruction, **DRAFT 2026-05-31**)
+
+**Question** : comment fermer la course ZP entre contexte IRQ
+(`kernel_wm_mouse_step`, `_cursor_draw`) et contexte tâche
+(`sys_win_create`, `sys_gfx_*`, MainLoop) identifiée par l'audit
+`AUDIT_65C816_REMEDIATION.md` §3.3a comme **suspect n°1 du revert
+ADR-28 Étape 3** ? `forbid` ne masque PAS les IRQ (ADR-25). 206 sites
+d'écriture `sta WM_ARG_*`/`sta GFX_*`/`sta WM_DP_*` dans `wm.s`,
+patchwork `sei` ad-hoc épars sur certains sites tâche (`_ml_classify`,
+`_wm_widget_hit`, `_wm_redraw_ctl`) — laisse `sys_win_create` non
+gardé. 3 options chiffrées : (A) statu quo + `sei` épars partout ;
+(B) migration complète `mouse_step` (focus, drag, resize, redraw,
+compose, **callbacks**, **curseur**) hors IRQ vers tâche serveur WM —
+finalise option C ADR-28 ; (C) partition stricte ZP IRQ-only.
+**Recommandation senior tracée : (B)**, avec **plan d'atomicité**
+critique (flag `WM_TASKMODE` de bascule, anti-revert ADR-28 Étape 3)
+et **harnais d'injection event-async préalable** (axe 8.5,
+`cpu816_set_pc_hook` côté Phosphoric). Dossier :
+`docs/adr/0032-zp-race-irq-task-DRAFT.md`.
+
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 
 ### ~~ADR-31~~ → ratifiée 2026-05-30, déplacée vers §2 (option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` dans `_wm_draw_widget_body` ; validation interactive utilisateur positive ; deviendra obsolète à la ratification ADR-27 backing store ; dossier : `docs/adr/0031-clip-widget-rect-parent.md`)
