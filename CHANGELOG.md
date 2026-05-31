@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31u] — Investigation GFX ABI : dette ZP kernel↔user (P2)
+
+### Investigation
+- **OricOS** : tentative de relivrer GFX_FILL_RECT via $D0-$D4 (audit §3
+  toolbox) échoue sur `test_oricos_clock`. Root cause : conflit
+  pré-existant kernel ZP `$90-$93` (`GFX_BPL_LO/HI`, `GFX_ARG4_*`)
+  OVERLAP user imag-regs `__rc7..__rc10`. La recompilation contre
+  la nouvelle oricos.h change l'allocation rc du compilateur LLVM,
+  réveillant le conflit qui était fortuitement évité avec l'ABI
+  $73-$78. **GFX ABI reverté** ; documenté en §9 P2 (move kernel
+  ZP hors zone imag-regs OU offset link.ld). Suite Phosphoric
+  reste verte au HEAD.
+
 ## [2026-05-31t] — P1 : install.sh `rm crt0.o` → duplicate `jsr main`
 
 ### Fixed
