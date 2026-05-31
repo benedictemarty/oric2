@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31q] — Fix `calloc` overflow 16-bit + corpus natif
+
+### Fixed
+- **OricOS / `malloc.c`** : `calloc(256, 256)` = 65536 wrappait à 0
+  en size_t 16-bit (env OricOS) → `malloc(0)` → buffer 2 octets →
+  caller écrit 65534 octets de trop → corruption silencieuse du
+  bank. Fix : helper `_calloc_overflows(nmemb, size)` qui détecte
+  le wrap AVANT le mul (via `nmemb > SIZE_MAX / size`), retourne
+  NULL net si overflow.
+- **Nouveau corpus natif** (`tools/oricos-sdk/lib/tests/test_liboricos_calloc.c`) :
+  15 cas testant le helper directement (cas zéro, limites SIZE_MAX,
+  overflows triviaux/non-triviaux) + simulation uint16_t qui
+  verrouille le cas exact du bug OricOS (256×256). Cible
+  `make test-libc-calloc`. Anti-régression : sans le fix, le test
+  ne compile pas.
+- Réf : critique utilisateur 2026-05-31 (revue toolbox).
+
 ## [2026-05-31p] — Fix `%u` cassé pour val ≥ 32768 + corpus natif
 
 ### Fixed
