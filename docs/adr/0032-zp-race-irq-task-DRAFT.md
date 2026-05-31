@@ -511,3 +511,51 @@ interactif. Documenter le motif dans la révision ADR-32.
 
 *Rédigé 2026-05-31 — dossier d'instruction Claude Code à partir de
 `AUDIT_65C816_REMEDIATION.md` §3.3a / §3.3b / §5 curseur / axes 8.1, 8.5.*
+
+---
+
+## 9. Rétractation Étape 4 — validation interactive KO (2026-05-31)
+
+**Constat** : test interactif utilisateur avec `--wm-taskmode` (=
+`TC_WM_FLAG=$A5 + WM_TASKMODE=$A5`) → **curseur invisible**. Test
+contrôle `--wm-server` seul (TC_WM_FLAG=$A5, WM_TASKMODE=$00) →
+curseur OK.
+
+**Conclusion factuelle** : la migration de `cursor_blit` du contexte
+IRQ vers le contexte tâche (via `task_wm`) ne tient PAS sans plan
+d'atomicité supplémentaire. Test headless (`test_oricos_taskmode_full`)
+mesurait uniquement `CURSOR_OLD_X/Y` (état logique post-blit) — pas
+le pixel persisté. Headless vert ≠ interactif vert.
+
+**Hypothèses techniques candidates** (non instruites) :
+1. **Préemption T1 mid-blit** : en IRQ, `cursor_blit` était atomique
+   (I=1). En task, T1 peut couper save→draw→restore ; un autre code
+   écrit dans la zone curseur → backing store corrompu.
+2. **Race ZP `WM_ARG_*` / `GFX_*`** : exactement le sujet §3.3a.
+   `sys_gfx_*` appelé depuis MainLoop d'une autre task peut stomper
+   les ZP que `cursor_blit` utilise.
+3. **Backing store re-save avant restore** : events souris en rafale →
+   save(A) puis save(B) sans restore intermédiaire → corruption
+   permanente du backing.
+
+**Décision** : conformément au §7 « arrêt anticipé » (1 tentative
+échouée sur 2 autorisées), **Étape 4 = NON ratifiée**. L'instruction
+Étape 4 v2 doit livrer :
+- (a) plan d'atomicité explicite (Forbid/Permit insuffisant car ne
+  masque pas IRQ — ADR-25) : soit `sei`/`cli` autour de cursor_blit en
+  task, soit migration de l'horloge `cursor_blit` vers une chaîne
+  d'événements task-only avec collapsing.
+- (b) test interactif headless qui mesure le **pixel** (pas l'état
+  logique) — e.g. inspection VRAM à un offset précis du curseur après
+  séquence d'events, ou snapshot PPM comparé.
+- (c) option C (partition ZP) instruite comme repli.
+
+**Pas de revert kernel** : `WM_TASKMODE` reste défini, default `$00`,
+flag CLI `--wm-taskmode` conservé comme **harness de debug** pour
+investiguer les hypothèses (1)/(2)/(3).
+
+**Coût immédiat** : harnais d'audit du curseur en contexte task à
+construire avant toute nouvelle tentative Étape 4.
+
+**Référence implémentation** : ce que GEOS / SymbOS / Intuition font
+pour le curseur — à étudier avant Étape 4 v2.

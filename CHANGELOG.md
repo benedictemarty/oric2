@@ -7,6 +7,28 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31aa] — ADR-32 Étape 4 NON ratifiée — rétractation interactive
+
+### Changed
+- **ADR-32 §9** : ajout rétractation Étape 4. Test interactif utilisateur
+  avec `--wm-taskmode` (TC_WM_FLAG + WM_TASKMODE = $A5) → **curseur
+  invisible**. Test contrôle `--wm-server` seul → curseur OK. Donc la
+  bascule `WM_TASKMODE=$A5` (migration `cursor_blit` IRQ→task) ne tient
+  pas sans plan d'atomicité supplémentaire.
+- **Leçon méthodo** : `test_oricos_taskmode_full` mesurait
+  `CURSOR_OLD_X/Y` (état logique post-blit) — pas le pixel. **Headless
+  vert ≠ interactif vert**. Étape 4 v2 doit livrer un test pixel-level
+  (inspection VRAM à offset curseur, ou snapshot PPM comparé).
+- **Pas de revert kernel** : `WM_TASKMODE` reste défini, default `$00`,
+  flag CLI `--wm-taskmode` conservé comme harness de debug pour
+  instruire les hypothèses (préemption T1 mid-blit / race ZP §3.3a /
+  re-save backing avant restore).
+
+### Added
+- **Phosphoric / main.c** : option `--wm-taskmode` (pose `TC_WM_FLAG +
+  WM_TASKMODE = $A5` au boot). Conservée comme harness debug malgré
+  rétractation.
+
 ## [2026-05-31z] — ADR-32 Étape 4 / §3.1 : validation headless mode complet
 
 ### Added
