@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31j] — Audit 65C816 §3.6 partiel : macros ASSERT_A*/I* + scratch resize
+
+### Added
+- **OricOS / `kernel.s`** : 4 macros `ASSERT_A16/A8/I16/I8` (via
+  `.asize`/`.isize` de ca65) → vérification à l'assemblage de
+  l'invariant mode M/X en tête de routine. Pré-requis axe 8.3.
+  Placées en entrée des 4 hit-testers WM (`_wm_chrome_hit`,
+  `_wm_resize_hit`, `_wm_widget_hit`, `_wm_hotzone_hit`).
+- **OricOS / `kernel.s` + `wm.s`** : nouveau scratch ZP `WM_RH_TMP`
+  ($32, 2B) dédié `_wm_resize_hit`. Remplace l'overload de
+  `WM_ARG_DX` (arg syscall partagé avec IRQ — conflit identifié
+  audit §3.6.2). Suite tests Phosphoric verte. Réf :
+  `AUDIT_65C816_REMEDIATION.md` §3.6 + axe 8.3.
+
 ## [2026-05-31i] — Audit 65C816 §5 : nettoyages cosmétiques
 
 ### Cleaned
