@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31n] — ADR-32 Étapes 2+3 : flag `WM_TASKMODE` (gates atomiques)
+
+### Added
+- **OricOS / `kernel.s` + `handlers.s` + `event.s`** : nouveau flag
+  `WM_TASKMODE = $01EE68`. Gate atomique unique : default $00 →
+  mouse_step en IRQ (legacy), $A5 → mouse_step dans `task_wm` après
+  `raw_pop` (l'IRQ skip son appel). Atomicité par flag unique
+  (anti-revert ADR-28 Étape 3) — soit IRQ, soit task, jamais les
+  deux ni aucun.
+- Default LEGACY → comportement utilisateur inchangé, suite tests
+  Phosphoric verte. Activation requiert Étape 4 (migration
+  `_cursor_draw` hors IRQ + validation interactive) AVANT flip du
+  défaut. Le flag existe pour permettre aux tests d'injection async
+  (avec `cpu816_set_pc_hook` Phosphoric, Étape 1 déjà livrée) de
+  valider le nouveau chemin sans impact production. Réf :
+  `docs/adr/0032-zp-race-irq-task-DRAFT.md` §3 + §5.
+
 ## [2026-05-31m] — ADR-32 Étape 1 : harnais PC-hook Phosphoric
 
 ### Added
