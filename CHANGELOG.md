@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31m] — ADR-32 Étape 1 : harnais PC-hook Phosphoric
+
+### Added
+- **Phosphoric** : `cpu816_set_pc_hook` / `cpu816_clear_pc_hook` —
+  un test peut armer un callback qui fire à un (PBR, PC) précis,
+  juste avant le fetch d'opcode. Pré-requis pour les tests
+  d'injection event-async ADR-32 §4 (anti-revert ADR-28 Étape 3).
+  3 cas testés (`test_pc_hook`), 0 régression suite tests
+  Phosphoric. Réf : `docs/adr/0032-zp-race-irq-task-DRAFT.md`
+  Étape 1 + axe 8.5 audit.
+
 ## [2026-05-31l] — Dossier d'instruction ADR-32 (course ZP IRQ↔tâche)
 
 ### Added — `docs/adr/0032-zp-race-irq-task-DRAFT.md`
