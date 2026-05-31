@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31v] — GFX ABI livré (audit §3) + fix dette ZP via save/restore
+
+### Added
+- **OricOS** : `oricos_gfx_fill_rect` écrit désormais dans le bloc
+  `$D0-$D4` (PAS `$73-$78`). Kernel `sys_gfx_fill_rect` save/restore
+  `$90-$93` (`GFX_BPL/ARG4`) qui overlap user imag-regs `__rc7-__rc10`.
+  Solution P2 option D — 8 instructions kernel (4 pha + 4 pla) plutôt
+  que refactor invasif (options A/B/C). Ferme la course IRQ↔task §3.3a
+  pour ce syscall. 2 sites kernel-internal (task_wdraw, task_compact)
+  migrés aussi.
+- **Suite Phosphoric COMPLET verte** — 12/12 test_oricos_helloc, 0 FAIL
+  global. Régression chronique des 6 tests depuis 881c9f3 entièrement
+  résolue (P0 + P1 + P2 GFX ABI). Réf : critique utilisateur
+  2026-05-31 (revue toolbox §3).
+
 ## [2026-05-31u] — Investigation GFX ABI : dette ZP kernel↔user (P2)
 
 ### Investigation
