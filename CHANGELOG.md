@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31s] — `Makefile` P0 : install.sh câblé dans la chaîne make
+
+### Added
+- **OricOS / `Makefile`** : mécanisme stamp file (`tools/oricos-sdk/
+  .installed-stamp`) qui force `install.sh` dès qu'un fichier SDK
+  source change (oricos.h, liboricos.c, malloc.c, crt0.S, link.ld,
+  mos-oricos.cfg, install.sh). Le stamp recompile aussi les apps
+  (suppr `apps/*/build/*.{bin,oos,oosobj}`) pour qu'elles linkent
+  contre la nouvelle `liboricos.a`. Sans ça, le SDK source et la
+  `.a` installée pouvaient diverger silencieusement — cause racine
+  du désastre 2026-05-31 (6 tests Phosphoric fail avec fresh build
+  depuis 881c9f3 = commit initial hello_c). Nouvelle cible
+  `make sdk-install` pour forcer. Variable `LLVM_MOS` overridable.
+  Reste P1 : les 6 tests qui fail avec fresh build sont un bug
+  pré-existant non résolu par P0 (qui empêche juste la prochaine
+  divergence). Réf : critique utilisateur 2026-05-31 + bisect.
+
 ## [2026-05-31r] — `oricos_print_string` : N COP → 1 COP
 
 ### Changed
