@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-05-31r] — `oricos_print_string` : N COP → 1 COP
+
+### Changed
+- **OricOS / `oricos.h`** : `oricos_print_string` bouclait sur
+  `oricos_print_char` → N COP pour N caractères. Fix : wrapper
+  inline asm sur SYS_PRINT_STRING ($02) qui existe déjà côté
+  kernel — **UN SEUL COP** pour toute la chaîne. Bank = DBR app
+  (posé par crt0 phk/plb). Bonus : `printf("%s", …)` aussi
+  optimisé via `_vfmtcore` (1 COP + strlen pour le count).
+  Sprintf path inchangé. Gain typique × 10-20 sur le débit
+  console des apps textuelles. Comportement utilisateur
+  identique, juste plus rapide. Réf : critique utilisateur
+  2026-05-31 (revue toolbox).
+
 ## [2026-05-31q] — Fix `calloc` overflow 16-bit + corpus natif
 
 ### Fixed
