@@ -203,3 +203,130 @@ hypothèses ADR-32 §9.
 
 *Rédigé 2026-05-31 — dossier d'instruction Claude Code suite
 rétractation ADR-32 §9 et étude GEOS comparative.*
+
+---
+
+## 8. Implémentation livrée (2026-06-01)
+
+Phases A-D livrées, plusieurs cycles d'instruction/debug nécessaires :
+
+**Phase A** : ADR-33 DRAFT (ce dossier).
+**Phase B** : `sprite_device.c` (sprite 16×16 4bpp transparent) + 8 tests
+unitaires PASS. I/O `$0370-$037F`.
+**Phase C** : Wiring compositor — `sprite_overlay()` appelé après
+`hires_oric2_xvga_render` (rendu SDL + screenshot). Routing I/O
+`$0370-$037F` → `sprite_read/write`. Champ `emu->sprite` ajouté à
+`emulator_t`.
+**Phase D** : Kernel — `kernel_wm_draw_cursor`/`cursor_blit` réécrits
+en écriture sprite HW. Bitmap **PC/GEOS pBasic authentique** (porté
+depuis `bluewaysw/pcgeos Library/SpecUI/CommonUI/CUtils/cutilsVariable.def`
+lignes 567-608, identique aux 3 styles UI Motif/CUA/Open Look).
+
+### Bugs résolus durant l'implémentation
+
+1. **DBR ignoré par Phosphoric** — `cpu816_mem_read` n'utilise pas le
+   DBR (commentaire « strict bus 16-bit B1.7 »). `lda f:label,X` avec
+   label en bank 1 résout à bank 0 → sprite lit garbage. **Fix** :
+   `lda [DP_PTR],y` (long indirect indexed, opcode `$B7`) avec bank
+   byte explicite en ZP.
+2. **Mode M=8/X=8 non garanti** — ca65 `.smart` suit l'état lexical
+   mais le runtime peut différer. `lda #$01` en M=16 devient
+   `lda #$4801` (3 bytes) → décalage. **Fix** : `sep #$30` + `.a8 .i8`
+   explicites à l'entrée de `sprite_init` et `draw_cursor`.
+3. **`bitmap` non propagé** — ca65/ld65 n'attache pas le bank byte au
+   label `cursor_bitmap_data`. **Fix** : voir #1 (bank `$01` codé dur
+   en ZP).
+4. **Tests adaptés** : `test_oricos_cursor_backing_store` → SKIP
+   (obsolète par construction). `test_oricos_wm_server`/
+   `taskmode_full` : `CURSOR_OLD` → alias `MOUSE_X/Y`.
+
+### Validation interactive utilisateur
+
+- **Test 1 — mode legacy** (`--ctl-demo` sans `--wm-taskmode`) :
+  flèche PC/GEOS visible, suit la souris. ✅
+- **Test 2 — mode taskmode** (`--ctl-demo --wm-taskmode`) :
+  flèche visible mais **ne suit pas la souris**. ❌
+
+---
+
+## 9. Diagnostic test 2 (validation interactive KO)
+
+Bug isolé : sprite ne suit que **quand `ctl_demo` est actif**. Sans
+app (juste kernel + WM en taskmode), le sprite suit normalement
+(`test_oricos_taskmode_full` PASS).
+
+Reproduit en headless : `test_oricos_ctl_taskmode_starve` (ADR-33 §10
+nouveau target). 10 mouse moves rapides avec
+`TC_CTLAPP_FLAG + TC_WM_FLAG + WM_TASKMODE = $A5` → **0/10 moves
+suivent**.
+
+### Symptômes observés (instrumentés)
+
+- `RAW_RING_COUNT = 1` stable (event pendant non drainé)
+- `RAW_WAITER = 0` (task_wm pas en wait, ou wake l'a clear)
+- `TCB[task_wm].state = 03 BLOCKED` (jamais réveillée)
+- task_wm tourne ≥ 255 fois pendant le boot (settle 3M cycles), puis
+  **0 itération** pendant les moves (compteur reset à 0)
+- `MOUSE_BTN = 00` (pas de bouton, donc cursor_blit DEVRAIT être appelé
+  via la branche `motion-only`)
+- `FORBID_COUNT = 0` (Forbid n'est pas tenu)
+- Scheduler alterne entre pid 1 (task_a), 2 (task_b), 3 (task_c) ;
+  task_wm (pid 8) jamais picked
+
+### Tentatives de fix sans succès
+
+- `php / sep #$30 / plp` autour de `kernel_wm_draw_cursor` (M-mode
+  garanti)
+- `save/restore SCHED_PTR` dans `kernel_raw_wake` (race ZP ADR-32 §3.3a
+  hypothèse) — pas d'effet observable
+
+### Hypothèses restantes (non instruites)
+
+1. **TCB corruption** : `TCB_TABLE_BASE = CHARSET_XVGA_SRC = $015C00`.
+   Le charset (1024 oct) couvre TCB[1..16]. Si le charset est uploadé
+   au boot et la zone repurposée pour TCB, les écritures de state TCB
+   se font dans la même mémoire. Une écriture mal placée pourrait
+   corrompre task_wm.STATE. **À vérifier** : kernel_install_charset
+   est-il vraiment terminé avant les premiers kernel_task_create ?
+2. **kernel_raw_wake clear RAW_WAITER prématuré** : peut-être WAITER
+   est clear avant que le scheduler ne consulte. Race scheduler.
+3. **ctl_demo SYS_GFX_FILL_RECT massif** : si ctl_demo tient
+   suffisamment longtemps le CPU en sys_gfx, l'IRQ MOU2 reste
+   masquée. Mais T1 scheduler IRQ devrait toujours préempter.
+4. **kernel_app_spawn** crée le task ctl_demo avec un pid > 8 mais
+   sa TCB est dans la zone charset (overlap §10.1).
+
+### Prochaine instruction
+
+Session dédiée (1-2h+). Plan d'attaque :
+1. **Vérifier l'overlap charset/TCB** : dump charset bytes initial à
+   $015C00 vs TCB après boot — comparer. Si TCB écrite par tâche après
+   `kernel_install_charset` → OK. Sinon, BUG critique.
+2. **Tracer kernel_sched_find_next** : à chaque IRQ T1, log pid choisi.
+   Si task_wm jamais choisi malgré state=READY momentané → bug sched.
+3. **Tracer raw_wake** : à chaque appel, log RAW_WAITER avant/après et
+   TCB[waiter].STATE avant/après. Identifie si raw_wake EST appelée et
+   ce qu'elle fait.
+
+---
+
+## 10. Bug ouvert : `task_wm` starve avec `ctl_demo` + `WM_TASKMODE` (2026-06-01)
+
+**Statut** : ouvert, instruction reportée à une session dédiée.
+
+**Repro** : `test_oricos_ctl_taskmode_starve` (Phosphoric, hors
+aggrégateur `tests` car FAIL intentionnel).
+
+**Impact** : `--wm-taskmode` (ADR-32 Étape 4 v2 via sprite HW) ne
+peut pas être ratifié comme default tant que ce bug n'est pas résolu,
+parce que tout scenario réel inclut au moins une app utilisateur.
+
+**Workaround actuel** : ne PAS poser `WM_TASKMODE=$A5` par défaut. Le
+mode legacy (`WM_TASKMODE=$00`) marche parfaitement avec le sprite HW
+PC/GEOS. C'est suffisant pour le sprint courant : sprite HW remplace
+le backing store software, ferme ADR-32 §9 par construction pour le
+chemin legacy.
+
+**Ratification ADR-33 partielle** : ratifier sur le scenario legacy.
+ADR-32 §9 reste partiellement ouverte (Étape 4 v2 via sprite + taskmode
+demande la résolution du §10 ci-dessus).
