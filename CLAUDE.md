@@ -54,6 +54,7 @@ Ces décisions sont **non-négociables** sans nouvelle discussion explicite avec
 | ADR-28 | Threading WM | Option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ (`TC_WM_FLAG=$A5`) ; réf Intuition/GEOS |
 | ADR-29 | Drag notification hint | Hint déclaratif aligné GeoWorks : default DELAYED (app notifiée 1× à la release), override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; réf PC/GEOS `gValueC.def` |
 | ADR-31 | Clip widget hors rect parent | Option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` (test dans `_wm_draw_widget_body`) ; rendue redondante à terme par ADR-27 (backing store contraint le rendu par construction), mais conservée v1 — pas de migration coûteuse pour un cas couvert |
+| ADR-33 | Sprite HW curseur | Sprite 16×16 4bpp transparent dans le compositor (Phosphoric `sprite_device`, à terme ULA HDL). I/O `$0370-$037F`. Bitmap **PC/GEOS pBasic** authentique (porté `bluewaysw/pcgeos`). Remplace backing store software, ferme ADR-32 §9 par construction pour le chemin legacy default (`WM_TASKMODE=$00`). `--wm-taskmode` reste expérimental (bug task_wm starve §10 ouvert). Audit §4.4 livré sur toutes les composites GPU (fill_rect/fill_rect16/line/text/text16). Réf : `docs/adr/0033-sprite-hw-cursor-DRAFT.md` |
 
 **Détail, alternatives écartées, implications** → [`docs/adr/ADR_SUMMARY.md`](docs/adr/ADR_SUMMARY.md) et fichiers individuels `docs/adr/00XX-*.md`.
 
