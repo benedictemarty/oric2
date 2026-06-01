@@ -7,6 +7,33 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-02] — BUG_drag_v2_fragments Fix A : delta 16-bit drag taskmode
+
+### Fixed
+- **Bug A (delta tronqué 8-bit) résolu** suite expert
+  `BUG_drag_v2_fragments.md`. En `WM_TASKMODE=$A5`, le coalescing MOVED
+  fusionne N events en 1 → delta dérivé `WHERE - WM_LAST` pouvait dépasser
+  ±127 px. La v2 stockait ce delta tronqué 8-bit dans `MOUSE_DX/DY` puis
+  `_sext8_to16` inversait le signe → fenêtre déplacée du mauvais côté
+  (« faux drag inverse » dans capture utilisateur).
+- **Fix A** : nouveaux slots `MOUSE_DX16/DY16` (16-bit signé) en parallèle
+  des `MOUSE_DX/DY` 8-bit (legacy IRQ conservé). `task_wm_install_event_state`
+  écrit le delta 16-bit complet ; `wm_step_do_drag` / `_wm_do_resize`
+  lisent `MOUSE_DX16/DY16` directement (M=16, plus de `_sext8_to16`).
+  `kernel_mouse_read` (legacy IRQ) sign-extend `MOU2_DX/DY` 8-bit →
+  `MOUSE_DX16/DY16` pour cohérence.
+- **Conséquence CODE budget** : `TICK_COUNTER` poussé `$5430→$5500`
+  (gap `$54F6-$557F` libre). Assertion `__CODE_LOAD__ + __CODE_SIZE__
+  <= $5500` mise à jour. 2 tests Phosphoric (boot/helloc) mis à jour.
+- **Note Fix B** : rect englobant `kernel_wm_redraw_drag` initialement
+  tenté → régression 29/48 tests headless → reporté en session de debug
+  dédiée. Bug B (erase partiel sur sauts coalescés > largeur fenêtre)
+  toujours présent visuellement, mais la fenêtre va au bon endroit
+  (correction de Bug A).
+- **Tests** : suite Phosphoric verte (incl. `test_oricos_taskmode_full`,
+  `test_oricos_ctl_taskmode_starve` drag scenario W/H préservé).
+- Commits OricOS `62f2690` + Phosphoric `8e5222b`.
+
 ## [2026-05-31aa] — ADR-32 Étape 4 NON ratifiée — rétractation interactive
 
 ### Changed
