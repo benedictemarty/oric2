@@ -310,6 +310,42 @@ Session dédiée (1-2h+). Plan d'attaque :
 
 ---
 
+## 9bis. Bug RÉSOLU : course atomicité GPU_BPL (2026-06-01)
+
+**Diagnostic externe** : `BUG_curseur_fige_gpu_bpl.md` (analyse indépendante).
+
+Mon §9 ci-dessus pointait sur task_wm starve — c'était la **mauvaise piste**
+pour le scenario interactif default. Le vrai bug en mode legacy (qui est le
+default `WM_TASKMODE=$00`) :
+
+**Cause** : `kernel_gfx_fill_rect16` faisait `jsr _gfx_xvga_bpl_guard`
+AVANT son propre `php;sei`. Le guard a sa propre section critique (envoie
+une commande SET_BPL GPU complète). Trou I=0 entre le `plp` du guard et le
+`sei` de fill_rect16. IRQ MOU2 fire dans le trou → `mouse_step` →
+`kernel_gfx_set_bpl` (son propre SET_BPL) entrelacé avec le FILL en cours.
+Le GPU reçoit `SET_BPL(stride X) → SET_BPL(stride 0) → FILL` → framebuffer
+peint au mauvais stride → sprite composé par-dessus invisible/hors écran.
+
+**Fix** (commit `eddf8ac`) : déplacer `php;sei` AVANT `jsr _gfx_xvga_bpl_guard`
+dans `kernel_gfx_fill_rect16`. Section critique élargie englobant guard+fill.
+Le `sei` interne du guard reste correct (nesting propre, `plp` restaure I=1
+du sei externe).
+
+**Validation interactive utilisateur (2026-06-01)** : SDL legacy mode +
+`--ctl-demo` + stress mouse → curseur reste fluide. ✅
+
+**Reste à faire (§4.4 du dossier)** : étendre le même pattern aux autres
+commandes composites (`kernel_wm_redraw`, `wcmp`, autres helpers GPU qui
+appellent `set_bpl` puis enchaînent). Audit + fix systématique à instruire.
+
+**Pourquoi mon §9 était à côté** : j'avais focalisé sur le test 2
+(`--wm-taskmode`) qui a effectivement un bug différent (task_wm starve §10
+ci-dessous). Le diagnostic externe a recadré : le bug curseur figé du test 1
+(legacy default) est antérieur, lié à ADR-27 patches BPL, orthogonal au
+sprite ADR-33.
+
+---
+
 ## 10. Bug ouvert : `task_wm` starve avec `ctl_demo` + `WM_TASKMODE` (2026-06-01)
 
 **Statut** : ouvert, instruction reportée à une session dédiée.
