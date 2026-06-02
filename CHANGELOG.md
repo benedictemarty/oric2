@@ -7,6 +7,25 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-02c] — Palier 1 : relocation variables RAM kernel ($5432→$9032)
+
+Origine : audit `BUG_code_ecrase_variables.md` (corruption silencieuse de CODE
+par les écritures `TASK_*` runtime — l'assert linker `<= $5500` était mal
+calibré, le vrai plancher était $5432). Remap `$0154xx` → `$0190xx` côté
+OricOS + suivi des littéraux côté Phosphoric.
+
+- **OricOS** : 28 décl dans `kernel/kernel.s` remappées vers zone libre $9000+.
+- **Phosphoric** : ~80 littéraux `0x0154xx` dans 8 tests intégration +
+  `src/main.c` remappés. Refs `0x0155xx` (TICK_COUNTER, NMI_HANDLER) intactes.
+- **Résultat** : suite Phosphoric 100 % verte (gain net 7+ tests débloqués
+  vs baseline — les fails pré-existants `event_syscall`/`mainloop_*`/`ui_define`/
+  `dlgbox`/`alert` étaient eux aussi des effets de la corruption silencieuse).
+- **Différé** : Fix B (rect englobant `kernel_wm_redraw_drag` pour fragments
+  drag taskmode) stashé — sa taille (+111 octets) décale les symboles wm.s
+  au point de casser `test_oricos_clock` (budget cyc serré). À reprendre avec
+  optim taille (subroutine + factor X/Y, viser ≤ 50 octets) + Option D (gate
+  `WM_TASKMODE=$A5`, validé par mot expert : rect englobant inutile en legacy).
+
 ## [2026-06-02b] — Gouvernance debug CLAUDE.md §5bis-§5octies + fix sat8 §5ter
 
 ### Added
