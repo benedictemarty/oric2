@@ -7,6 +7,27 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-02b] — Gouvernance debug CLAUDE.md §5bis-§5octies + fix sat8 §5ter
+
+### Added
+- **OricOS/CLAUDE.md** : 7 sections de gouvernance (§5bis-§5octies) tirées
+  des bugs résolus récemment. Invariant event-source taskmode, largeur
+  16-bit grandeurs dérivées, discipline RMW M-aware, 9 règles process
+  debug (R1-R9), frontière kernel/émulateur, checklist commit 9 points.
+
+### Fixed
+- **§5ter / audit grep proactif** : sat8 propre dans `install_event_state`
+  (`event.s` helper `_install_sat8`). Remplace troncature 8-bit
+  (commentaire trompeur « sat8 implicite ») par clamp signé [-128, +127].
+  Deltas multiples de 256 (`+256`/`−256`) ne tronquent plus à `$00`,
+  préservant le skip-zero test 8-bit dans `wm_step_do_drag`/`_wm_do_resize`.
+- Détecté par grep proactif §5ter (consommateurs `MOUSE_DX/DY` +
+  `_sext8_to16`). Alternative naïve (test 16-bit dans hot path IRQ)
+  causait régression `test_oricos_wm_cost` +19000 cycles inexpliquée
+  → préférence pour fix à la source.
+- Note : `_sext8_to16` n'a plus d'appelants après Fix A → dead code
+  à nettoyer dans une passe ultérieure.
+
 ## [2026-06-02] — BUG_drag_v2_fragments Fix A : delta 16-bit drag taskmode
 
 ### Fixed
