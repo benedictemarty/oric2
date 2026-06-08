@@ -7,6 +7,50 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-09] — Fix B (BUG_drag_v2_fragments) : désactiver coalescing MOVED en taskmode
+
+Origine : `MOT_EXPERT_drag_v2_fragments.md`. Bug A (delta 16-bit) résolu
+2026-06-02 ; Bug B (fragments visuels persistants sous drag rapide en
+`WM_TASKMODE=$A5`) restait ouvert. Cause racine confirmée : le coalescing
+MOUSE_MOVED dans `kernel_raw_push_mouse` fusionne N events IRQ en un seul
+record RAW_RING avec la position FINALE, ce qui dérive un delta `WHERE -
+WM_LAST` qui dépasse la largeur fenêtre. L'erase OLD seul dans
+`kernel_wm_redraw_drag` ne couvre pas la trajectoire OLD → NEW → fragments.
+
+### Fixed
+- **OricOS** : gate `WM_TASKMODE=$A5` au début de `kernel_raw_push_mouse`
+  qui saute le bloc de coalescing → chaque IRQ MOU2 pousse son propre event
+  individuel. `task_wm` les drain un à un → delta petit (≤ MOU2 IRQ rate
+  per event), erase OLD couvre, plus de fragments. EVENT_RING côté app
+  conserve son coalescing intact dans `kernel_event_push_mouse` (UI app
+  recevait des events groupés, pas de régression). Coût : +10 octets CODE
+  ($5259→$5263), budget IRQ_CONFORMITE §5 inchangé (mouse_step lit toujours
+  l'event poppé event-source).
+- Risque accepté : RAW_RING (16 slots) peut overflow sous burst mouse —
+  drop silencieux, pas de régression visible (task_wm verra moins d'events
+  mais leur substance est dans le suivant).
+
+### Investigation collatérale livrée
+- **Fragilité position-dépendante test_oricos_clock** documentée : tout
+  shift de CODE OricOS ≥ 50 octets fait crasher la tâche clock en milieu
+  d'iteration 2 du loop print_string (TCB state → DEAD). Investigation via
+  oricrobot (commande `cpu` ajoutée) : reproductible à +50 bytes padding
+  pure, indépendant du contenu ajouté. Cause racine non encore tranchée
+  (kernel vs émulateur §5septies). Fix B v1 alternatif (rect englobant
+  `kernel_wm_redraw_drag`, +65 octets gaté taskmode) butait sur cette
+  fragilité — d'où le pivot vers cette v2 (-coalescing, +10 octets).
+  À investiguer en cycle dédié si une autre tâche le rejoue.
+- **Phosphoric** : nouvelle commande `cpu` dans `tools/oricrobot.c` dumpe
+  PBR/PC/DBR/D/S/C/X/Y/P/E — utilisée pour tracer le hang clock, conservée
+  pour debug futur.
+
+### Notes
+- L'option E originale (rect englobant) reste valable conceptuellement
+  mais cette v2 est plus simple, plus locale, et n'augmente pas la charge
+  fill_rect16. Si une situation nécessite l'union OLD ∪ NEW (taskmode
+  + saut > IRQ rate, théoriquement impossible avec ce fix), revisiter.
+- Commit unique cross-repo (Phosphoric + OricOS).
+
 ## [2026-06-02c] — Palier 1 : relocation variables RAM kernel ($5432→$9032)
 
 Origine : audit `BUG_code_ecrase_variables.md` (corruption silencieuse de CODE
