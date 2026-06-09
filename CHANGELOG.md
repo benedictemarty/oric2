@@ -7,6 +7,29 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-09b] — Réentrance IRQ↔syscall ZP scratch : sei ciblé (Opt-A)
+
+Suite mot expert sur le hang `test_oricos_clock` ~50 octets : recadrage de
+la cause racine. PAS positionnel, c'est la **réentrance IRQ top-half ↔
+syscall sur les ZP scratch kernel** — FORBID ne couvre que tâche↔tâche.
+Confirmation via test 2 senior (sei ciblé) en A/B clean.
+
+### Fixed — OricOS
+- `sys_gfx_fill_rect`, `sys_win_flush` : `sei`/`cli` en tête/sortie. Ferme
+  la fenêtre de réentrance sur les 2 sites confirmés (commit `5017990`).
+- Suite Phosphoric 24/24 verte. IRQ_CONFORMITE §5 inchangé (14987 cyc).
+
+### Investigation — pivot Opt-C → Opt-A
+Tentative Opt-C radicale (retirer cli de cop_handler, ajouter cli aux 6
+bloquants) : régression IRQ_CONFORMITE (34k cyc) + test_oricos_win_app
+fail. Cause non identifiée v1. Reverté. Opt-C complète ouverte pour
+**ADR-32 §10** (audit systématique ZP partagés + scratch dédiée IRQ
+top-half, sprint dédié post-livraison interactive).
+
+### Référence
+`docs/CR/CR_reentrance_irq_syscall_confirmed.md` (analyse complète,
+A/B test, options, §9 pivot Opt-C→A).
+
 ## [2026-06-09] — Fix B (BUG_drag_v2_fragments) : désactiver coalescing MOVED en taskmode
 
 Origine : `MOT_EXPERT_drag_v2_fragments.md`. Bug A (delta 16-bit) résolu
