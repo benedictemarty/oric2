@@ -81,11 +81,14 @@ tape collision ZP non protégée ⇒ rejouer toute la session.
       intégrante de la ratification §10. Énoncé :
       > « Aucune routine en contexte IRQ top-half n'écrit hors de
       > `$E0–$EF` en zone page directe. »
-- [x] **`make test-position-shift` landé maintenant** (ADR-32 §10.5) —
-      **v1 livré 2026-06-09**. Sweep injection-phase MOU2 × syscall,
-      canary `clock: done`. Baseline 2 cibles PASS, intégré `make tests`,
-      24/24 vert. Détecte régression Opt-A. v2 (multi-syscall élargi,
-      phase range 0-256, sweep T1 period) optionnel selon besoin.
+- [ ] **`make test-position-shift` landé maintenant** (ADR-32 §10.5) —
+      **v1 = scaffolding seul (2026-06-09)**. Capacité de détection
+      **non démontrée** : run contradictoire (sei/cli retirés de
+      sys_gfx_fill_rect) reste vert. Cause : stimulus = move nu, jamais
+      sur la branche clic/drag qui écrit `WM_ARG_*`. v2 requis :
+      stimulus = drag, cible validation = gfx_fill_rect-sans-SEI ⇒ ROUGE,
+      détecteur mémoire direct (pas canary). Aucune pression CI sur §10
+      actuellement.
 - [ ] **Ligne ADR sur course exempt↔focus** (cf. §3.2 ci-dessus) — à
       acter avant ratification §10.
 - [ ] **`coalesce-on-overflow` RAW_RING** — optionnel : quand ring

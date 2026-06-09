@@ -678,11 +678,24 @@ Audit-smart à étendre pour catcher les violations futures
   `OricOS/CLAUDE.md`. Script `audit-irq-zp.py` ajouté à `make
   audit-smart`.
 
-### 10.5 `make test-position-shift` — **v1 LANDÉ 2026-06-09** ✅
+### 10.5 `make test-position-shift` — **v1 SCAFFOLDING (détection non démontrée)** ⚠️
 
-**Statut** : v1 livré. Cible Makefile `test-position-shift` (alias
-`test-oricos-position-shift`). Intégré dans `make tests` Phosphoric.
-24/24 vert. Source : `Phosphoric/tests/integration/test_oricos_position_shift.c`.
+**Statut** : v1 = scaffolding seul, **capacité de détection non démontrée**.
+Validé 2026-06-09 par run contradictoire : `sei`/`cli` retirés de
+`sys_gfx_fill_rect` (collision Opt-A *prouvée*), kernel rebuild, test
+relancé ⇒ **toujours vert** sur les 18 runs (2 cibles × 9 phases). Aucune
+pression CI sur §10 actuellement.
+
+Cause racine (audit senior `wm.s:2124+ _wm_mouse_step_body`) : le stimulus
+v1 `mouse2_move_abs(POISON)` est un **move nu sans bouton** ⇒ branche
+`motion-seule` ⇒ `cursor_blit` seul ⇒ **aucune écriture `WM_ARG_*`**. Les
+écritures en collision (`sta WM_ARG_X/Y`) sont sur le chemin clic/drag
+(bouton tenu, `wm_step_pressed`). Le bug d'origine était un **drag**, pas
+un move.
+
+Cible Makefile et source en place (`test-position-shift` / `test-oricos-position-shift`,
+`Phosphoric/tests/integration/test_oricos_position_shift.c`) ; intégré
+dans `make tests`. La structure reste exploitable pour v2.
 
 **Mécanisme v1** (différent du draft initial — pas de pad ca65 ni de
 rebuild kernel) : sweep injection-phase MOU2 × cible syscall.
@@ -698,34 +711,54 @@ asynchrone, non critique pour boot, et c'est l'IRQ qui dans le bug
 réel (audit §3.3a) écrit dans `WM_ARG_*`, `GFX_*`, `EVT_TMP` pendant
 le body syscall.
 
-**Résultats baseline (2026-06-09)** :
+**Run de validation contradictoire (2026-06-09)** :
 
-| Cible | Phases 0-64 | Attendu | Observé |
-|---|---|---|---|
-| `kernel_gfx_fill_rect` (Opt-A SEI'd) | 9 PASS | PASS-all | PASS-all ✅ |
-| `kernel_wm_add` (non protégé) | 9 PASS | may-FAIL | PASS-all v1 ⚠️ |
+| Run | Cible | Attendu | Observé | Verdict |
+|---|---|---|---|---|
+| Opt-A en place | `kernel_gfx_fill_rect` | PASS-all | PASS-all | trivial (SEI masque) |
+| **Opt-A retiré (sei/cli commentés)** | `kernel_gfx_fill_rect` | **FAIL ≥1 phase** | **PASS-all** | ⚠️ **stimulus n'exerce pas la collision** |
 
-La cible non protégée passe v1 sur la plage de phase 0-64 — soit (a) la
-fenêtre vulnérable est ailleurs (body wm_add ~100+ cyc), soit (b) le
-mécanisme MOU2-only seul ne capture pas tous les patterns de la classe.
-**Net immédiat acquis** : régression Opt-A (retrait accidentel `sei`/`cli`)
-serait détectée comme X sur la ligne `kernel_gfx_fill_rect`.
+Le sweep arme `mouse2_move_abs` (move nu), mais la collision `WM_ARG_*` est
+sur le chemin clic/drag de `_wm_mouse_step_body`. v1 ne touche jamais la
+branche en collision.
 
-**Limites v1 → extensions v2** :
-- Plage phase étroite (0-64 step 8). Élargir 0-256 step 4.
-- 2 cibles seulement. Ajouter `kernel_gfx_blit`,
-  `kernel_gfx_window_base`, `kernel_gfx_text`, `kernel_event_push_*`,
-  callees IRQ MOU2 du tableau §10.2.
-- MOU2 unique. Ajouter sweep T1 period via patch
-  `via->t1_latch` post-boot (en respectant la dépendance scheduler).
-- Pas de pad ca65 ⇒ ne reproduit pas la condition exacte du bug
-  original (+120 octets CODE). Le rebuild kernel reste une option v2
-  via script externe `tools/inject-pad-shift.py` (forme initialement
-  proposée).
+**Corrections requises pour v2** (consigne senior, 3 points) :
+1. **Stimulus = drag** (button-down + 2-3 moves espacés), pas move nu.
+   Force la branche `wm_step_pressed` ⇒ écritures `WM_ARG_X/Y` ⇒ collision
+   exerçable.
+2. **Cible de validation = `kernel_gfx_fill_rect` *sans* SEI**, pas
+   `kernel_wm_add`. Collision Opt-A *prouvée* — critère « v2 marche » =
+   le drag injecté la fait rougir. Reproduire d'abord la collision connue,
+   appliquer à wm_add ensuite.
+3. **Détecteur ≠ canary `clock: done`**. La canary détecte un hang ; une
+   corruption `WM_ARG_*` peut produire une fenêtre mal placée sans planter.
+   Lire `WM_DP_TMP` / rect post-syscall et comparer à l'attendu (état
+   mémoire direct, plus sensible).
 
-**Sprint v1** : ½ jour, livré.
-**Sprint v2** : 1 jour, optionnel — déclenché si nouvelle classe
-suspectée ou avant ratification §10.
+**Raffinements secondaires v2** :
+- Plage phase 0-256 step 4 pour aligner la fenêtre une fois la bonne
+  branche exercée.
+- Confirmation que l'IRQ est *réellement* prise dans le body (cpu.irq
+  asserté + I=0 au moment voulu).
+- Extension cibles selon §10.2 *après* validation gfx_fill_rect.
+
+**Précédent existant à noter (gain pour §10)** : `kernel_wm_mouse_step` fait
+déjà save/restore de `GFX_BPL_LO/HI` autour du body. §10 généralise ce
+principe à `WM_ARG_*`/`WM_DP_TMP` — pattern existant, pas mécanique
+inventée.
+
+**Garde de progression** : ne RIEN pousser de v2 tant que
+`kernel_gfx_fill_rect` *sans SEI* n'a pas été observé ROUGE. Tant que ce
+rouge n'est pas obtenu, le test ne garde rien.
+
+**Référence nightly** : `inject-pad-shift.py` (forme draft initial) reste
+pertinente pour répondre à la question complémentaire « la croissance
+réaliste du kernel reproduit-elle le bug ? » — ground-truth occasionnel,
+pas par-run-CI.
+
+**Sprint v1** : scaffolding livré.
+**Sprint v2** : à faire — pas livré tant que stimulus drag n'a pas
+démontré ROUGE sur gfx_fill_rect-sans-SEI.
 
 **Pourquoi NOW (sign-off senior insistance)** : tests verts aujourd'hui
 sans CI dédiée → pression sur §10 disparaît → futur syscall ou layout
@@ -802,9 +835,11 @@ quand un cas burst réel est observé.
       non-Opt-A déclenche la classe, ou trimestre Q3 2026 plancher.
 - [ ] **Invariant ZP IRQ acté en ADR ratifié** (cf. 10.3) — partie
       intégrante de la ratification §10.
-- [x] **`make test-position-shift` landé maintenant** (cf. 10.5) —
-      **v1 livré 2026-06-09**. Baseline `kernel_gfx_fill_rect` PASS-all,
-      `kernel_wm_add` PASS-all sur phase 0-64. v2 multi-syscall optionnel.
+- [ ] **`make test-position-shift` landé maintenant** (cf. 10.5) —
+      **v1 = scaffolding seul (2026-06-09)**, capacité de détection
+      **non démontrée** (run contradictoire : gfx_fill_rect-sans-SEI reste
+      vert). v2 requis avec stimulus drag + détecteur mémoire direct +
+      cible de validation gfx_fill_rect-sans-SEI ⇒ ROUGE avant push.
 - [ ] **Ligne ADR sur course exempt↔focus** (cf. 10.6.a) — à acter
       avant ratification §10.
 - [ ] **`coalesce-on-overflow` RAW_RING** (cf. 10.6.b) — optionnel,

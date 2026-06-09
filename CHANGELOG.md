@@ -7,20 +7,24 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
-## [2026-06-09d] — `make test-position-shift` (ADR-32 §10.5)
+## [2026-06-09d] — `make test-position-shift` : v1 scaffolding (détection non démontrée)
 
-Verrou CI de la classe « réentrance IRQ↔syscall sur ZP scratch ».
-Sweep injection-phase MOU2 × syscall, canary `clock: done`. Détecte
-toute régression Opt-A (retrait accidentel `sei`/`cli` sur
-`sys_gfx_fill_rect` ou `sys_win_flush`). Cibles v1 :
-`kernel_gfx_fill_rect` (PASS-all attendu) + `kernel_wm_add` (PASS v1
-sur phases 0-64, à élargir v2). Intégré dans `make tests` Phosphoric,
-24/24 vert. Première condition de suivi sign-off senior (§4 du CR)
-landée.
+⚠️ **Rectification** : annoncé hier comme « verrou CI de la classe »,
+qualification fausse. Run contradictoire 2026-06-09 (sei/cli retirés
+de sys_gfx_fill_rect — collision Opt-A *prouvée*) ⇒ test toujours vert
+sur 18 runs. Cause : stimulus = move nu, jamais sur la branche clic/drag
+de `_wm_mouse_step_body` qui écrit `WM_ARG_*`. v1 = scaffolding seul
+(cible Makefile + structure + canary), aucune capacité de détection
+démontrée. **Aucune pression CI sur §10 actuellement.**
+
+v2 requis (consigne senior) : stimulus drag (button-down + moves), cible
+validation = gfx_fill_rect-sans-SEI ⇒ ROUGE avant tout push, détecteur
+mémoire direct (lecture `WM_DP_TMP`/rect) plutôt que canary `clock: done`.
 
 ### Added — Phosphoric
 - `tests/integration/test_oricos_position_shift.c` + targets
-  `test-oricos-position-shift` / `test-position-shift`.
+  `test-oricos-position-shift` / `test-position-shift`. Conservé comme
+  scaffolding v1, à enrichir en v2.
 
 ## [2026-06-09c] — Sign-off senior session Fix B v2 + Opt-A
 
