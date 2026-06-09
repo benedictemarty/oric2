@@ -164,3 +164,82 @@ dédié, justifie une ADR (ADR-32 §10 ?), 1-2 jours.
 
 *Rédigé 2026-06-09 par Claude Code, en réponse à ton analyse. Prêt à coder
 Option A dès ton OK, ou à ouvrir l'ADR Option C en premier — ton appel.*
+
+---
+
+## 9. Mise à jour 2026-06-09 (suite « go Option C ») — pivot Opt-C → Opt-A
+
+### Ce qui a été tenté (Opt-C radicale)
+
+Sur ton OK « go Option C », j'ai tenté l'approche élégante :
+1. **Retirer `cli` de `cop_handler`** → syscalls non-interruptibles par défaut.
+2. **Ajouter `cli` à l'entrée des 6 syscalls bloquants** : `sys_read_char`,
+   `sys_get_next_event`, `sys_main_loop`, `sys_do_dlgbox`, `sys_alert`,
+   `sys_sleep_ms`.
+
+L'idée : inverser le défaut — au lieu de protéger N non-bloquants avec
+`sei`, le défaut devient « non-interruptible », et les rares bloquants
+font `cli` explicite. Plus économique en code + verrou par construction.
+
+**Résultat empirique** : clock test PASS (Bug B couvert), mais :
+- **IRQ_CONFORMITE §5 régression** : `kernel_irq_handler max` 14987 → 34095 cyc
+  (>+19000 cyc, baseline 18000 dépassé). Cause exacte non identifiée v1 —
+  hypothèse : sans IRQ pendant les syscalls, l'IRQ qui finit par fire après
+  rti accumule + un context-switch lourd dans certains scénarios drag.
+- **`test_oricos_win_app` FAIL** : `WM_COUNT` reste 3 au lieu de 2, la
+  win_hello ne ferme pas sa fenêtre → bloquée quelque part. Probablement
+  un syscall que j'ai raté de marquer bloquant, ou un effet de bord sur
+  le chemin block_switch.
+
+Diagnostic non poussé jusqu'au bout — pivot pragmatique avant que
+l'investigation devienne plus longue que le bénéfice attendu.
+
+### Ce qui est livré (Opt-A pragmatique)
+
+Commit OricOS `5017990` :
+- `sys_gfx_fill_rect` : `sei` en tête, `cli` avant `rts`.
+- `sys_win_flush` : `sei` en tête, `cli` avant `rts`.
+- `cop_handler` : `cli` conservé (inchangé). Note ajoutée précisant
+  l'exception Opt-A.
+
+**Vérification** : suite Phosphoric 100 % verte (24/24 suites).
+IRQ_CONFORMITE 14987 cyc (identique baseline). Bug B couvert pour les
+deux sites confirmés par ton test 2.
+
+### Ce qui reste ouvert (pour ADR-32 §10)
+
+**Option C complète** doit être instruite proprement avec audit systématique :
+- Lister TOUS les slots ZP partagés IRQ top-half ↔ syscalls (audit Agent
+  v1 a manqué une partie — les callees internes des syscalls n'étaient
+  pas tracés ; audit v2 a trouvé `WM_DP_TMP` via `kernel_wm_offset` mais
+  encore incomplet).
+- Décider : déplacer le top-half vers ZP dédiée OU
+  refactor pour que les hot ZP scratch soient localement save/restore
+  dans chaque syscall.
+- Comprendre POURQUOI Opt-C radicale a régressé IRQ_CONFORMITE (effet de
+  bord non identifié sur le chemin scheduler ou IRQ post-syscall).
+- Élargir Opt-A : auditer les autres syscalls non-bloquants pour voir
+  lesquels ont aussi besoin de `sei` (potentiellement tous ceux qui touchent
+  WM_DP_TMP, GFX_*, SCHED_*).
+
+**Recommandation pour la suite** : sprint ADR-32 §10 dédié quand le pattern
+revient (autre cas du même bug, ou pic d'usage interactif). En attendant,
+Opt-A livré couvre les 2 sites prouvés.
+
+### Tests rejouables
+
+```bash
+# Reproducteur Bug B + Opt-A vérification
+cd OricOS
+# Inserer dans kernel/modules/wm.s avant kernel_wm_redraw_drag :
+#   .proc _pad
+#           .res 120, $EA
+#   .endproc
+make
+cd ../Phosphoric && make test-oricos-helloc | grep clock
+# → PASS (avec Opt-A : sei dans les 2 syscalls)
+# → FAIL si on revert l'Opt-A (contrôle)
+```
+
+*Mise à jour 2026-06-09. Pivot Opt-C → Opt-A documenté. Opt-A livré en
+production (commit 5017990). Opt-C ouverte pour ADR-32 §10.*
