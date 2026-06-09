@@ -243,3 +243,108 @@ cd ../Phosphoric && make test-oricos-helloc | grep clock
 
 *Mise à jour 2026-06-09. Pivot Opt-C → Opt-A documenté. Opt-A livré en
 production (commit 5017990). Opt-C ouverte pour ADR-32 §10.*
+
+---
+
+## 10. Mise à jour 2026-06-09c — investigation Opt-C jusqu'au bout
+
+Sur ton « go » d'investigation pure, j'ai re-appliqué Opt-C radicale,
+instrumenté `test_oricos_helloc` (dump TCB STATE, KBD_RING contents,
+KBD_WAITER, WM_FOCUS, kbd2 device state), et tracé exactement ce qui
+casse. **J'ai trouvé le mécanisme précis** et il invalide l'approche
+Opt-C radicale tout en confirmant Opt-A comme la bonne v1.
+
+### Le mécanisme exact
+
+Le `cli` dans cop_handler n'était **pas** qu'une discipline ADR-03 floue
+« syscalls interruptibles ». C'était une **synergie deliberate** entre
+`cli` (IRQ on pendant le syscall body) et `kernel_forbid` (FORBID=1
+pendant le syscall, gating `do_switch`). L'effet net :
+
+1. IRQ fire **PENDANT** le corps du syscall non-bloquant.
+2. IRQ top-half exécute (mouse_read, kbd_poll, event_push, kbd_wake,
+   event_wake, T1 tick…).
+3. Les wakes marquent des tâches READY, **mais** `do_switch` voit
+   FORBID=1 et fait `jmp restore_and_return` — pas de switch.
+4. Le syscall finit son travail sans préemption.
+5. `kernel_permit` (FORBID=0), `rti` au caller.
+
+C'est cette séquence qui fait que **win_app garde le CPU jusqu'à
+sys_read_char** même si `kbd_wake` a marqué task_e READY en route :
+sans préemption, win_app va directement de sys_print_string à
+sys_read_char et **pop 'Z' avant que task_e ne reprenne**.
+
+### Pourquoi Opt-C radicale casse ça
+
+En retirant `cli` de cop_handler, j'inverse la séquence :
+
+1. Syscall non-bloquant tourne avec I=1 (hérité de COP hw, jamais cli'd).
+2. IRQ **ne fire pas** pendant le corps (masquée).
+3. Syscall finit, `kernel_permit` (FORBID=0), `rti` au caller (I=0).
+4. **MAINTENANT** l'IRQ accumulée fire — mais FORBID=0.
+5. `do_switch` préempte vers task_e (récemment passée READY par
+   `kbd_wake` durant cette IRQ).
+6. task_e pop 'Z' avant que win_app n'atteigne sys_read_char.
+
+Trace A/B sur `test_oricos_win_app` (instrumenté) :
+
+| | Opt-A (5017990) | Opt-C radicale |
+|---|---|---|
+| WM_COUNT | 2 ✓ | 3 ✗ |
+| TCB[8].STATE | 00 DEAD ✓ | 03 BLOCKED ✗ |
+| KBD_RING[0] | 5A ('Z', popped) | 5A ('Z', popped) |
+| KBD_WAITER | 05 (task_e résiduel) | 08 (win_app stuck) |
+| Pop par | win_app (avant block) | task_e (avant win_app) |
+
+Dans les deux cas 'Z' est poppé. La différence c'est **qui** le pop.
+
+### Conséquence — fermeture des hypothèses précédentes
+
+1. **Opt-C radicale (« retirer cli de cop_handler »)** : **CLOSED, WRONG**.
+   Casse la synergie cli+FORBID qui est la primitive d'ordonnancement v1.
+   Pas qu'une régression IRQ_CONFORMITE — un vrai bug de logique (perte
+   de touche au profit d'une tâche concurrente non-focus).
+
+2. **Opt-A (sei ciblé sur 2 syscalls courts)** : **OK comme v1**. Coût
+   minime, préserve la synergie. Discipline par site (limitation reconnue).
+
+3. **Opt-C « vraie »** = ZP top-half IRQ dédiée. **Toujours valide pour
+   ADR-32 §10**. Le diagnostic ZP partagé (WM_DP_TMP via kernel_wm_offset,
+   etc.) reste juste ; on l'attaque par isolation de slots, pas par
+   modification du gating cli/FORBID. **Ne touche pas cop_handler ni
+   l'invariant ADR-03**.
+
+### Outil debug livré pendant l'investigation
+
+`Phosphoric/tools/oricrobot.c` : ajout commande `key XX` (push char ASCII
+à kbd2 device). Permet de scripter des scénarios kbd headless. Commitée
+avec la nouvelle commande `cpu` du round précédent.
+
+### État final
+
+- Tree clean. Suite Phosphoric 24/24 verte.
+- Opt-A (commit OricOS `5017990`) reste la v1 livrée.
+- Opt-C radicale enterrée. Opt-C « vraie » (ZP dédiée) toujours
+  candidate pour ADR-32 §10.
+- Cette investigation tranche définitivement le « caprice IRQ_CONFORMITE »
+  observé au round précédent : ce n'était PAS un effet de bord
+  scheduler/dispatch obscur. C'est `kbd_wake` qui fonctionne, mais le
+  switch immédiat post-permit redistribue les wakes vers les mauvaises
+  tâches.
+
+### Note pour ADR-32 §10 (future)
+
+Quand ce sprint sera ouvert :
+- Mécanisme cible : isoler les slots ZP top-half IRQ ($E0-$EF par
+  exemple). Auditer chaque fonction IRQ top-half (`kernel_mouse_read`,
+  `kernel_kbd_poll`+`event_push_key`, `kernel_event_wake`,
+  `kernel_sleep_tick`, `kernel_timer_tick`, `do_switch`/`tcb_ptr`/
+  `sched_find_next`) pour ses écritures ZP, déplacer celles qui
+  collisionnent avec les syscalls (WM_DP_TMP au minimum).
+- Garder cop_handler `cli` + FORBID. Pas casser la synergie.
+- Test de non-régression : `make test-position-shift` (sweeper de
+  shifts CODE, déjà identifié comme livrable utile).
+
+*Mise à jour 2026-06-09c. Investigation Opt-C bouclée. Mécanisme cli/FORBID
+synergique tracé. Opt-A confirmée comme la bonne v1. Opt-C-vraie (ZP IRQ
+dédiée) reste candidate ADR-32 §10 sans casser la synergie.*
