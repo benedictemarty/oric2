@@ -678,7 +678,54 @@ Audit-smart à étendre pour catcher les violations futures
   `OricOS/CLAUDE.md`. Script `audit-irq-zp.py` ajouté à `make
   audit-smart`.
 
-### 10.5 `make test-position-shift` — livrable séparé (NOW)
+### 10.5 `make test-position-shift` — **v1 LANDÉ 2026-06-09** ✅
+
+**Statut** : v1 livré. Cible Makefile `test-position-shift` (alias
+`test-oricos-position-shift`). Intégré dans `make tests` Phosphoric.
+24/24 vert. Source : `Phosphoric/tests/integration/test_oricos_position_shift.c`.
+
+**Mécanisme v1** (différent du draft initial — pas de pad ca65 ni de
+rebuild kernel) : sweep injection-phase MOU2 × cible syscall.
+PC-hook one-shot sur entrée `kernel_X` armé seulement après le
+premier tick clock (système stable). Delivery MOU2
+(`mouse2_move_abs(POISON, POISON)`) différée de `phase` cycles dans
+la run loop. Canary = présence de `clock: done` dans le text buffer
+Oric 1 ($BB80-$BFFF).
+
+**Pourquoi MOU2 et pas T1** : T1 alimente le tick scheduler ; le
+manipuler casse la canary uniformément ⇒ faux négatif. MOU2 est
+asynchrone, non critique pour boot, et c'est l'IRQ qui dans le bug
+réel (audit §3.3a) écrit dans `WM_ARG_*`, `GFX_*`, `EVT_TMP` pendant
+le body syscall.
+
+**Résultats baseline (2026-06-09)** :
+
+| Cible | Phases 0-64 | Attendu | Observé |
+|---|---|---|---|
+| `kernel_gfx_fill_rect` (Opt-A SEI'd) | 9 PASS | PASS-all | PASS-all ✅ |
+| `kernel_wm_add` (non protégé) | 9 PASS | may-FAIL | PASS-all v1 ⚠️ |
+
+La cible non protégée passe v1 sur la plage de phase 0-64 — soit (a) la
+fenêtre vulnérable est ailleurs (body wm_add ~100+ cyc), soit (b) le
+mécanisme MOU2-only seul ne capture pas tous les patterns de la classe.
+**Net immédiat acquis** : régression Opt-A (retrait accidentel `sei`/`cli`)
+serait détectée comme X sur la ligne `kernel_gfx_fill_rect`.
+
+**Limites v1 → extensions v2** :
+- Plage phase étroite (0-64 step 8). Élargir 0-256 step 4.
+- 2 cibles seulement. Ajouter `kernel_gfx_blit`,
+  `kernel_gfx_window_base`, `kernel_gfx_text`, `kernel_event_push_*`,
+  callees IRQ MOU2 du tableau §10.2.
+- MOU2 unique. Ajouter sweep T1 period via patch
+  `via->t1_latch` post-boot (en respectant la dépendance scheduler).
+- Pas de pad ca65 ⇒ ne reproduit pas la condition exacte du bug
+  original (+120 octets CODE). Le rebuild kernel reste une option v2
+  via script externe `tools/inject-pad-shift.py` (forme initialement
+  proposée).
+
+**Sprint v1** : ½ jour, livré.
+**Sprint v2** : 1 jour, optionnel — déclenché si nouvelle classe
+suspectée ou avant ratification §10.
 
 **Pourquoi NOW (sign-off senior insistance)** : tests verts aujourd'hui
 sans CI dédiée → pression sur §10 disparaît → futur syscall ou layout
@@ -755,8 +802,9 @@ quand un cas burst réel est observé.
       non-Opt-A déclenche la classe, ou trimestre Q3 2026 plancher.
 - [ ] **Invariant ZP IRQ acté en ADR ratifié** (cf. 10.3) — partie
       intégrante de la ratification §10.
-- [ ] **`make test-position-shift` landé maintenant** (cf. 10.5) —
-      sprint ½ jour indépendant, prioritaire.
+- [x] **`make test-position-shift` landé maintenant** (cf. 10.5) —
+      **v1 livré 2026-06-09**. Baseline `kernel_gfx_fill_rect` PASS-all,
+      `kernel_wm_add` PASS-all sur phase 0-64. v2 multi-syscall optionnel.
 - [ ] **Ligne ADR sur course exempt↔focus** (cf. 10.6.a) — à acter
       avant ratification §10.
 - [ ] **`coalesce-on-overflow` RAW_RING** (cf. 10.6.b) — optionnel,

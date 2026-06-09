@@ -81,10 +81,11 @@ tape collision ZP non protégée ⇒ rejouer toute la session.
       intégrante de la ratification §10. Énoncé :
       > « Aucune routine en contexte IRQ top-half n'écrit hors de
       > `$E0–$EF` en zone page directe. »
-- [ ] **`make test-position-shift` landé maintenant** (ADR-32 §10.5) —
-      sprint ½ jour indépendant, prioritaire. Sweep (tailles × périodes
-      T1) verrouille la classe. À étendre pour stresser **d'autres**
-      syscalls que les 2 corrigés.
+- [x] **`make test-position-shift` landé maintenant** (ADR-32 §10.5) —
+      **v1 livré 2026-06-09**. Sweep injection-phase MOU2 × syscall,
+      canary `clock: done`. Baseline 2 cibles PASS, intégré `make tests`,
+      24/24 vert. Détecte régression Opt-A. v2 (multi-syscall élargi,
+      phase range 0-256, sweep T1 period) optionnel selon besoin.
 - [ ] **Ligne ADR sur course exempt↔focus** (cf. §3.2 ci-dessus) — à
       acter avant ratification §10.
 - [ ] **`coalesce-on-overflow` RAW_RING** — optionnel : quand ring

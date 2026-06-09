@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-09d] — `make test-position-shift` (ADR-32 §10.5)
+
+Verrou CI de la classe « réentrance IRQ↔syscall sur ZP scratch ».
+Sweep injection-phase MOU2 × syscall, canary `clock: done`. Détecte
+toute régression Opt-A (retrait accidentel `sei`/`cli` sur
+`sys_gfx_fill_rect` ou `sys_win_flush`). Cibles v1 :
+`kernel_gfx_fill_rect` (PASS-all attendu) + `kernel_wm_add` (PASS v1
+sur phases 0-64, à élargir v2). Intégré dans `make tests` Phosphoric,
+24/24 vert. Première condition de suivi sign-off senior (§4 du CR)
+landée.
+
+### Added — Phosphoric
+- `tests/integration/test_oricos_position_shift.c` + targets
+  `test-oricos-position-shift` / `test-position-shift`.
+
 ## [2026-06-09c] — Sign-off senior session Fix B v2 + Opt-A
 
 CR de clôture session formalisant le sign-off externe : Fix B v2 + Opt-A
