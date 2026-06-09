@@ -7,6 +7,31 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-09e] — Fix Phosphoric DPR + Klaus 65C816 étendu (17 tests)
+
+Bug Phosphoric latent fixé : `addr816_zp`/`zp_x`/`zp_y` ignoraient `cpu->D`
+(Direct Page Register) — ~20 opcodes Direct Page simple accédaient à
+`dp_byte` au lieu de `D + dp_byte`. Conforme désormais à WDC W65C816S §6.6.
+Impact OricOS nul (DPR=0 partout) mais bug latent invisible critique pour
+conformité spec et tout consommateur futur DPR != 0.
+
+Klaus 65C816 étendu livré : 17 tests couvrant COP/IRQ/RTI/NMI stack frame
+mode N, TCD/TDC, RMW M=16 pivots (ASL/INC/DEC), régression DPR. Réponse
+au trou conformance documenté dans `BUG_phosphoric_rmw_mem_M16.md` §4.
+
+Hypothèse (δ) ADR-32 §10.5 (bug Phosphoric cause bug clock historique)
+**affaiblie** : suspects principaux écartés (T1, COP/IRQ frame, RMW M-aware,
+push/pull P). Bug clock probablement côté kernel (α lectures, β timing,
+γ stack — voir mémoire `project_adr32_chasse_slot_etat.md`).
+
+### Fixed — Phosphoric
+- `src/cpu/cpu65c816_opcodes.c` : `addr816_zp`/`zp_x`/`zp_y` ajoutent
+  `cpu->D` (Phosphoric commit `8d06198`).
+
+### Added — Phosphoric
+- `tests/unit/test_cpu65c816_cop_frame.c` (17 tests) + target Makefile
+  `test-cpu65c816-cop-frame` intégré dans `make tests` (24/24 PASS).
+
 ## [2026-06-09d] — `make test-position-shift` : v1 scaffolding (détection non démontrée)
 
 ⚠️ **Rectification** : annoncé hier comme « verrou CI de la classe »,

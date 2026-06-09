@@ -616,7 +616,31 @@ grep exhaustif `sta <SLOT>`/`stx`/`sty`/`stz` côté IRQ-callable
 et côté syscall-callable (routines appelées par `cop_handler` ou
 callees récursifs). Lister, croiser, classifier 🔴/🟠/🟡/🟢.
 
-### 10.3 Squelette ZP layout cible (proposé)
+### 10.2bis Audit invalidé 2026-06-09 (deux faux candidats consécutifs)
+
+⚠️ **Le tableau §10.2 ci-dessus était basé sur lecture statique.** Audit
+contradictoire 2026-06-09 a invalidé deux entrées clés :
+
+- **GFX_ARG2_LO 🔴** : marqué comme collision empiriquement la plus
+  probable. **Faux pour la classe Opt-A/clock**. Vérification senior
+  (`handlers.s:178-188`) : `kernel_irq_handler` skip `mouse_step` si
+  pas d'event MOU2 (`lda MOU2_STATUS / and #$80 / beq irq_no_mou`).
+  Or `test_oricos_clock` *n'injecte aucune souris*. Donc `redraw_drag`
+  jamais exécuté, `GFX_ARG2_LO` jamais écrit côté IRQ dans le bug
+  historique. **C'est une collision réelle d'une CLASSE DIFFÉRENTE**
+  (instance souris-drag), pas le slot Opt-A.
+
+- **EVT_TMP 🟡** : commentaire « consciousness pré-existante mais
+  peut-être incomplète ». **Faux : déjà gardé**. Vérification senior
+  (`event.s:340-348`) : `kernel_event_pop` fait `sei` explicite autour
+  de son usage d'EVT_TMP (commentaire « section critique vs IRQ
+  producteur »). Bouger `$6E→$E2` serait **un no-op pour le bug clock**.
+
+**Leçon** : un slot inféré par grep est un candidat, pas une collision.
+La vraie collision Opt-A/clock est **mesurée** et reste à identifier
+empiriquement (pad-shift + log ZP-IRQ pendant `sys_win_flush`).
+
+### 10.3 Squelette ZP layout cible (proposé — à re-cibler après mesure)
 
 ```
 $00–$7F  user/kernel scratch existant (à conserver)
@@ -626,7 +650,8 @@ $00–$7F  user/kernel scratch existant (à conserver)
   $20–$21  WM_DP_TMP (syscall context)
   $25–$2A  WM_CRH_TMP (syscall context)
   $2C–$31  SCHED_* (syscall context — à déplacer vers IRQ-only ?)
-  $6E      EVT_TMP → DÉPLACÉ en $E0 (IRQ-only) ❗
+  $6E      EVT_TMP — ⚠ INVALIDÉ 2026-06-09 : déjà gardé par sei dans
+           kernel_event_pop (event.s:340). Pas un slot Opt-A.
   $70–$78  GFX_* (syscall context)
   $90–$93  GFX_BPL/ARG4 (syscall context)
 $80–$DF  zone libre / userland app imag-regs llvm-mos
@@ -649,7 +674,30 @@ $F0–$FF  (existant ?)
 Audit-smart à étendre pour catcher les violations futures
 (`tools/audit-irq-zp.py` — nouveau script CI).
 
-### 10.4 Plan d'attaque ordonné
+### 10.3bis Plan v2 — promotion pad-shift comme instrument principal (2026-06-09)
+
+Senior recadre l'ordre :
+
+1. **Mesurer d'abord, deviner jamais**. Le pad-shift method
+   (`inject-pad-shift.py` initialement classé « référence nightly » au
+   §10.5) **devient l'instrument principal**, parce que c'est le seul
+   qui reproduit la condition historique du bug Opt-A/clock :
+   - aucune injection MOU2,
+   - shift CODE +N octets devant un point stable (e.g.
+     `kernel_wm_redraw_drag` ou autre).
+2. **Instrumenter les écritures ZP par contexte IRQ pendant `sys_win_flush`**
+   (et `sys_gfx_fill_rect`) : snapshot ZP $00-$FF avant/après chaque
+   step CPU sous IRQ, log changes avec PC. Croiser avec les LECTURES
+   des syscalls. Slot vu écrit-par-IRQ-puis-relu-par-syscall = vraie
+   collision.
+3. **Sentinel sur CE slot mesuré** — pas un slot déduit. Critère ROUGE
+   = `sys_win_flush` sans SEI + pad-shift contradictoire ⇒ détection.
+4. **§10 premier move sur CE slot** — rouge → move → vert end-to-end.
+
+L'instance souris/`GFX_ARG2_LO` reste un *second* test (classe valable)
+mais n'est pas le garde du bug Opt-A historique.
+
+### 10.4 Plan d'attaque ordonné (à re-cibler après mesure §10.3bis)
 
 **Étape 1 — Audit complet (1 jour)**
 - Grep exhaustif IRQ-callable vs syscall-callable pour tous les slots
