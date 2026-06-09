@@ -559,3 +559,220 @@ construire avant toute nouvelle tentative Étape 4.
 
 **Référence implémentation** : ce que GEOS / SymbOS / Intuition font
 pour le curseur — à étudier avant Étape 4 v2.
+
+---
+
+## 10. §10 — ZP top-half IRQ dédiée (préparation, attaque ordonnée par risque)
+
+> **Statut §10** : dossier d'instruction ouvert 2026-06-09 suite session
+> Bug B + Opt-A + investigation Opt-C bouclée. Élargit la portée du §1
+> initial (mouse_step) à **toutes** les routines IRQ top-half. Conditions
+> de suivi du sign-off senior intégrées (cf. CR §10).
+> Implémentation différée — sprint dédié à programmer.
+
+### 10.1 Pourquoi §10 (et pas juste mouse_step)
+
+Le §1 originel ciblait `kernel_wm_mouse_step` comme suspect n°1.
+L'investigation 2026-06-09 montre que **la classe est plus large** :
+toute routine appelée en contexte IRQ top-half qui écrit des slots ZP
+partagés avec un syscall body est sujette à la même classe de bug.
+
+La synergie `cop_handler cli` + `kernel_forbid` (cf. CR §10 du dossier
+`CR_reentrance_irq_syscall_confirmed.md`) **n'évite PAS la collision
+ZP** — elle évite la préemption tâche↔tâche. La collision survient
+quand l'IRQ écrit dans la ZP scratch puis revient au syscall body
+qui s'attendait à trouver autre chose.
+
+Opt-A (sei ciblé) couvre les 2 sites empiriquement déclencheurs
+(`sys_gfx_fill_rect`, `sys_win_flush`). C'est un **fix de point, pas
+de classe** (sign-off senior). Le danger : tests verts → pression sur
+§10 disparaît → un futur syscall touchant la même ZP rejoue toute
+la session.
+
+**Item §10 = réel, pas « un jour ».**
+
+### 10.2 Audit ZP partagés — ordonné par risque (à valider)
+
+**Légende risque** : 🔴 = collision empiriquement observée ou très
+probable ; 🟠 = collision théorique forte ; 🟡 = à vérifier ; 🟢 = OK
+(slot non partagé ou pattern save/restore documenté).
+
+| Slot | Adresse | IRQ-side writers | Syscall-side writers | Risque | Notes |
+|---|---|---|---|---|---|
+| `WM_DP_TMP` | $20–$21 | `kernel_wm_offset` (callee de mouse_step IRQ si taskmode=$00, de chrome_hit, etc.) | `kernel_wm_offset` (callee de `kernel_gfx_window_base` ← `sys_gfx_fill_rect`) | 🔴 | Collision empiriquement la plus probable. Identifié par audit Agent. |
+| `WM_ARG_X/Y/W/H` | $14–$1B | `kernel_wm_redraw_drag` IRQ (taskmode=$00), `_wm_capture_focused_rect` | `sys_win_create`, `sys_gfx_fill_rect` via `kernel_gfx_*` | 🔴 | Sites tâche n'ont pas le `sei` Opt-A → bug latent si tests futurs. |
+| `GFX_BASE_*` / `GFX_ARG2_*` / `GFX_ARG3_*` / `GFX_COLOR` | $70–$78 | `kernel_wm_redraw_drag`, `kernel_wm_compose` (potentiellement appelés en IRQ via mouse_step) | `sys_gfx_*` syscalls (tous) | 🟠 | ADR-27 §0quater C-2 `_gfx_xvga_bpl_guard` est un précédent reconnu mais partiel. |
+| `GFX_BPL` / `GFX_ARG4_*` | $90–$93 | `kernel_gfx_finish`, `kernel_gfx_window_base` (callees IRQ taskmode=$00 + syscall) | `sys_gfx_fill_rect` (save/restore explicite documenté) | 🟡 | save/restore via stack dans le syscall = mitigation locale. À auditer si IRQ écrit dedans. |
+| `EVT_TMP` | $6E | `_evt_tail_offset` (callee de `kernel_event_push_*` IRQ) | `_evt_tail_offset` (callee de syscalls postant des events) | 🟡 | Commentaire historique `kernel.s` ligne `GFX_ARG4_LO=$92 — PAS $6E (=EVT_TMP scratch IRQ)` → consciousness pré-existante mais peut-être incomplète. |
+| `SCHED_PTR` | $2C–$2E | `kernel_tcb_ptr` (callee de `do_switch`, `kbd_wake`, `event_wake`, `raw_wake`, `sleep_tick`) | `kernel_tcb_ptr` (callee de syscalls touchant TCB : `sys_exit`, `sys_main_loop`, `sys_alert`, etc.) | 🟠 | `kernel_raw_wake` (event.s:625-638) save/restore SCHED_PTR explicite → précédent reconnu, à étendre aux autres. |
+| `SCHED_CAND` / `SCHED_TMP` | $2F / $30–$31 | `kernel_sched_find_next`, `kernel_tcb_ptr`, `kernel_bitmap_*` | idem callees côté syscalls | 🟡 | Idem SCHED_PTR. À auditer pareil. |
+| `DP_KBD_TMP` | $12 | `kernel_kbd_ring_push` (callee IRQ) | `kernel_kbd_ring_pop` (callee `sys_read_char`) | 🟢 | **Précédent traité** : `kbd_ring_pop` a son propre `php/sei…plp` (cf. `kbd.s:101-107`). Modèle de mitigation acceptable mais par site. |
+| `DP_PTR` | $08–$0A | (a priori non touché en IRQ) | `kernel_app_spawn`, `kernel_print_*`, etc. | 🟢 | À reconfirmer par grep. |
+| `DP_SYS_ARG_X` | (à retrouver) | (non IRQ) | cop_handler stocke arg1 ici | 🟢 | Posé par cop avant dispatch, consommé par syscall. Sous FORBID. |
+
+**Audit à compléter avant attaque** : pour chaque ligne 🟠 ou 🟡 ci-dessus,
+grep exhaustif `sta <SLOT>`/`stx`/`sty`/`stz` côté IRQ-callable
+(routines appelées dans `kernel_irq_handler` ou ses callees récursifs)
+et côté syscall-callable (routines appelées par `cop_handler` ou
+callees récursifs). Lister, croiser, classifier 🔴/🟠/🟡/🟢.
+
+### 10.3 Squelette ZP layout cible (proposé)
+
+```
+$00–$7F  user/kernel scratch existant (à conserver)
+  $08–$0A  DP_PTR (kernel, syscall context)
+  $12      DP_KBD_TMP (legacy — peut bouger en $Exx)
+  $14–$1B  WM_ARG_X/Y/W/H (syscall context)
+  $20–$21  WM_DP_TMP (syscall context)
+  $25–$2A  WM_CRH_TMP (syscall context)
+  $2C–$31  SCHED_* (syscall context — à déplacer vers IRQ-only ?)
+  $6E      EVT_TMP → DÉPLACÉ en $E0 (IRQ-only) ❗
+  $70–$78  GFX_* (syscall context)
+  $90–$93  GFX_BPL/ARG4 (syscall context)
+$80–$DF  zone libre / userland app imag-regs llvm-mos
+$E0–$EF  ★ NOUVEAU : ZP réservée top-half IRQ ★
+  $E0–$E1  IRQ_WM_DP_TMP (clone usage de WM_DP_TMP côté IRQ)
+  $E2      IRQ_EVT_TMP (anciennement $6E)
+  $E3      IRQ_KBD_TMP (clone DP_KBD_TMP côté IRQ)
+  $E4–$E6  IRQ_SCHED_PTR (clone SCHED_PTR côté IRQ ; ou tout déplacer ici)
+  $E7      IRQ_SCHED_CAND
+  $E8–$E9  IRQ_SCHED_TMP
+  $EA–$EF  réserve / extension future
+$F0–$FF  (existant ?)
+```
+
+**Invariant à acter (cf. sign-off senior, item « invariant ZP IRQ »)** :
+
+> **« Aucune routine en contexte IRQ top-half (`kernel_irq_handler` ou
+> callee récursif) n'écrit hors de $E0–$EF en zone page directe. »**
+
+Audit-smart à étendre pour catcher les violations futures
+(`tools/audit-irq-zp.py` — nouveau script CI).
+
+### 10.4 Plan d'attaque ordonné
+
+**Étape 1 — Audit complet (1 jour)**
+- Grep exhaustif IRQ-callable vs syscall-callable pour tous les slots
+  ZP du kernel. Produire un tableau `ZP_AUDIT_IRQ.md` qui consolide
+  10.2 ci-dessus avec données vérifiées.
+- Output : décision par slot — déplacer en $Exx, ou save/restore par
+  site, ou laisser (slot non partagé).
+
+**Étape 2 — Test-position-shift land (½ jour — voir 10.5)**
+- À landger **AVANT** Étape 3 pour avoir le filet en place pendant
+  les refactors. Sweep tailles × périodes T1.
+
+**Étape 3 — Déplacement physique (1 jour)**
+- Pour chaque slot classé « migration » à l'Étape 1 : ajouter
+  symbole IRQ_xxx dans `kernel.s`, remplacer les usages côté IRQ-callable.
+- Compiler après chaque slot, run `make test-position-shift` + suite
+  complète. Petits commits atomiques.
+
+**Étape 4 — Retrait Opt-A (bonus)**
+- Une fois §10 livrée, le `sei`/`cli` sur `sys_gfx_fill_rect` +
+  `sys_win_flush` (commit `5017990`) devient redondant. Retirer pour
+  économiser cyc d'IRQ latency.
+
+**Étape 5 — Ratification + invariant acté**
+- ADR ratification (sortie DRAFT). Doc invariant ZP IRQ ajoutée à
+  `OricOS/CLAUDE.md`. Script `audit-irq-zp.py` ajouté à `make
+  audit-smart`.
+
+### 10.5 `make test-position-shift` — livrable séparé (NOW)
+
+**Pourquoi NOW (sign-off senior insistance)** : tests verts aujourd'hui
+sans CI dédiée → pression sur §10 disparaît → futur syscall ou layout
+CODE rouvre la classe. CI = visibilité = pression maintenue.
+
+**Forme proposée** :
+```bash
+# Nouveau target Makefile Phosphoric
+test-position-shift:
+        @for PAD in 16 32 50 64 80 100 128 200; do \
+          for T1_PERIOD in DEFAULT DEFAULT+13 DEFAULT-7; do \
+            ./tools/inject-pad-shift.py $(PAD) $(T1_PERIOD); \
+            make -C ../OricOS clean all; \
+            ./test_oricos_helloc; \
+            ./test_oricos_wm_cost; \
+          done; \
+        done
+        @echo "Position-shift sweep OK : $$(NCOMBOS) combos passent"
+```
+
+`inject-pad-shift.py` insère temporairement `.proc _pad_test / .res N,
+$EA / .endproc` à un point stable de `wm.s` (avant `kernel_wm_redraw_drag`)
+puis le retire. Idempotent.
+
+**Extension à prévoir** : ne pas se limiter aux 2 syscalls corrigés
+Opt-A. Le sweep doit aussi exercer `sys_gfx_blit`, `sys_gfx_line`,
+`sys_gfx_text`, `sys_win_create`, `sys_ctl_*`, etc. — pour révéler
+quel autre syscall casse en premier sous shift.
+
+**Sprint** : ½ jour, indépendant de §10 Étape 1. À landger en parallèle.
+
+### 10.6 Items collatéraux à acter
+
+**(a) Course `KBD_WAITER` exempt↔focus** (sign-off senior, ligne ADR)
+
+Avec un seul slot `KBD_WAITER`, une tâche exempte (no-window, e.g.
+`task_e`) et la tâche focus se disputent les touches selon le timing.
+La synergie cli/FORBID résout la course en faveur du focus dans le
+cas v1 grâce à la non-préemption pendant un chain
+`flush→print→read_char`. **Est-ce intentionnel ?**
+
+Options :
+- **(α)** Intentionnel : task_e est un lecteur kbd non-GUI légitime,
+  prioritaire quand il y est avant le focus. Documenter.
+- **(β)** Bug : remplacer `KBD_WAITER` slot unique par une **liste**
+  de waiters, route systématiquement vers focus quand un GUI waiter
+  existe, exempt en fallback. Plus complexe.
+- **(γ)** Hybride : `KBD_WAITER` reste unique mais `kbd_wake` filtre
+  : si un GUI waiter est en attente (à tracker via tampon),
+  prioriser ; sinon délivrer à l'exempt.
+
+**Décision attendue** : ligne dans ADR-32 §10 actant l'intention.
+Pas bloquant pour §10 ZP, mais à acter dans le même sprint pour
+clarté.
+
+**(b) RAW_RING coalesce-on-overflow** (sign-off senior, suggestion non-bloquante)
+
+Quand RAW_RING est plein (16 slots), au lieu de drop silencieux :
+fusionner les MOVED les plus anciens (delta cumulé, accepter un saut
+ponctuel). Préserve l'absence de fragments en régime normal
+(Fix B v2) ET pas de perte de mouvement sous burst.
+
+Coût : ~15-20 octets ajoutés à `kernel_raw_push_mouse`. Risque :
+re-introduit potentiellement le pattern de gros delta sous burst,
+qui était la cause originale du Bug B en taskmode. À évaluer.
+
+**Décision attendue** : option ouverte, pas dans §10 v1. Reprise
+quand un cas burst réel est observé.
+
+### 10.7 Conditions de suivi (du sign-off senior, à tracker)
+
+- [ ] **§10 inscrit comme item réel** (pas « un jour ») — ce document
+      est l'instrument. Suivi : reprise active dès qu'un syscall
+      non-Opt-A déclenche la classe, ou trimestre Q3 2026 plancher.
+- [ ] **Invariant ZP IRQ acté en ADR ratifié** (cf. 10.3) — partie
+      intégrante de la ratification §10.
+- [ ] **`make test-position-shift` landé maintenant** (cf. 10.5) —
+      sprint ½ jour indépendant, prioritaire.
+- [ ] **Ligne ADR sur course exempt↔focus** (cf. 10.6.a) — à acter
+      avant ratification §10.
+- [ ] **`coalesce-on-overflow` RAW_RING** (cf. 10.6.b) — optionnel,
+      reprise sur observation cas burst.
+- [ ] **Retrait Opt-A post-§10** (cf. Étape 4) — bonus.
+
+### 10.8 Réf croisée
+
+- `docs/CR/CR_reentrance_irq_syscall_confirmed.md` §10 : trace A/B
+  invalidation Opt-C, mécanisme cli/FORBID synergique.
+- `docs/notes/HANDOFF_inge_senior_Bug_B_session.md` : synthèse session
+  complète.
+- OricOS `02934d2` (Fix B v2), `5017990` (Opt-A).
+- Audits Agent v1+v2 (collisions ZP) : reproductibles via `make
+  audit-smart` extended.
+
+*Section §10 ajoutée 2026-06-09 suite sign-off senior. Conditions de
+suivi tracées. Implémentation pour sprint dédié — pas dans le scope
+de la session courante.*
