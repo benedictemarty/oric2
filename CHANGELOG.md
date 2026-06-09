@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-09c] — Sign-off senior session Fix B v2 + Opt-A
+
+CR de clôture session formalisant le sign-off externe : Fix B v2 + Opt-A
+shippés, Opt-C correctement non shippé. Conditions de suivi tracées
+(miroir ADR-32 §10.7) : §10 comme item réel, invariant ZP IRQ en ADR
+ratifié, `test-position-shift` à lander, ligne ADR sur course
+exempt↔focus, coalesce-on-overflow RAW_RING optionnel, retrait Opt-A
+post-§10 bonus.
+
+### Docs
+- `docs/CR/CR_signoff_session_FixB_v2_OptA.md` — sign-off + 6 conditions
+  de suivi non bloquantes pour le push.
+
 ## [2026-06-09b] — Réentrance IRQ↔syscall ZP scratch : sei ciblé (Opt-A)
 
 Suite mot expert sur le hang `test_oricos_clock` ~50 octets : recadrage de
