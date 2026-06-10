@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10v] — Titre des modales + clarification drag (retour interactif)
+
+« Pas de titre pour win2 ; draggable seulement quand win2 fermée » :
+win2 = la fenêtre modale (dialogue/alerte) qui était créée sans titre →
+titre par défaut « Dialog » / « Alert » (titlebar + taskbar, plus de
+« WinN »). Le blocage du drag des fenêtres de fond pendant qu'une modale
+est ouverte est le comportement ATTENDU (modal) — vérifié qu'il se
+débloque à la fermeture (WM_MODAL→$FF). Garde rouge→vert sur le titre.
+
 ## [2026-06-10u] — Fix dialogues (retour interactif sprint GUI)
 
 « Cancel dépasse du contour ; OK/Cancel ne fonctionnent pas, le 2e plante
