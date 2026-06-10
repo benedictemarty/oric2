@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10u] — Fix dialogues (retour interactif sprint GUI)
+
+« Cancel dépasse du contour ; OK/Cancel ne fonctionnent pas, le 2e plante
+win2 ; le titre n'apparaît pas ». Diagnostic oricrobot+PPM : OK et Cancel
+fermaient correctement (résultat + WM_COUNT corrects) mais le dialogue
+restait FANTÔME à l'écran (kernel_wm_close ne repeint pas hors app-driven)
+→ perçu comme plantage de la fenêtre derrière. Fixes : ddb_close force
+kernel_wm_redraw + draw_cursor ; boutons de dialogue 44→56 px (Cancel
+proportionnel débordait), Cancel relx 60→72. Titre vérifié OK en headless
+dans tous les scénarios (boot, après close, après drag) — c'était un
+effet de bord du fantôme. Garde rouge→vert test_oricos_dlgbox. Suite verte.
+
 ## [2026-06-10t] — Sprint « suite GUI » : hover menu, centrage, proportionnel partout
 
 Trois briques GeoWorks livrées : item de menu survolé inversé
