@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10x] — Fontes multiples : variante grasse + titres en gras (GeoWorks)
+
+Sprint GUI « go gui » : deuxième fonte = smear bold de la fonte XVGA
+(gen-font-bold.py), uploadée au boot en SDRAM (segment FONTBOLD $01D000
+fixe). Sélecteur de style TK_STYLE honoré par label_prop/text_width
+(helpers fonte + largeurs ; émission bold dans les display-lists C2b).
+Titres de fenêtres et de la barre de menu en GRAS. Garde rouge→vert
+test_oricos_bold_title (densité pixels ≥ 180). Piège diagnostiqué : le
+double upload de fonte ajoute ~40k cyc de latence boot ; en taskmode un
+clic injecté pendant le 1er rendu boot se PERD (fragilité préexistante)
+→ 6 tests menu/dialogue/app rebasés (clics après ~220k, R8). Mémoire
+process ajoutée. Suite complète verte ; validation interactive attendue.
+
 ## [2026-06-10w] — Sprint « suite GUI » VALIDÉ interactivement (« niquel »)
 
 Validation interactive positive de Bénédicte sur l'ensemble : hover
