@@ -997,15 +997,51 @@ du handler avait lui-même pré-identifiée, elle ferme la classe entière
 **Test de verrouillage** : `test_oricos_irq_frame_m16` (Phosphoric) —
 détecte la corruption de C à travers une IRQ prise en M=16 (snapshot C
 à la prise, comparaison au retour au PC interrompu). **ROUGE démontré
-sur le kernel actuel** (condition mémoire
-`feedback_test_definition_of_done` satisfaite) ; passera VERT avec le
-fix. Hors `make tests` tant que le fix n'est pas landé.
+sur le handler 8-bit historique** (3 corruptions / 5 essais, y compris
+avec les SEI Opt-A en place — condition mémoire
+`feedback_test_definition_of_done` satisfaite).
+
+### 10.10 FIX livré — option A ratifiée et implémentée (2026-06-10)
+
+**Arbitrage humain** : Bénédicte a validé l'**option A** (frame 16-bit).
+Implémentation complète le jour même :
+
+- `kernel_irq_handler` (handlers.s) : `rep #$30` AVANT `pha/phx/phy` —
+  frame de 6 octets (A/X/Y × 2) quel que soit l'état M/X de
+  l'interrompu. Pulls symétriques sous `rep #$30` aux 2 sorties
+  (no-T1 et `restore_and_return`). Annotation `.a8/.i8` au label
+  `irq_t1` (convention `.smart`, leçon bug taskbar).
+- **7 forgeurs de frame adaptés** au format 10 octets
+  [Y16][X16][A16][P][PCL][PCH][PBR] : `kernel_task_create` (frame
+  initiale $F2..$FB, S=$F1), frame fake task B (boot.s, $02F2..$02FB),
+  `sys_yield`, `sys_sleep_ms`, `sys_read_char`, `sys_get_next_event`,
+  `sys_main_loop`, `kernel_event_wait`, `raw_wait`.
+- **Incident de chantier instructif** : `sys_sleep_ms` (pattern partiel
+  sans push P/PC/PB) oublié au premier jet ⇒ frame 3 octets dépilée
+  en 6 ⇒ S dérive ⇒ PC=$0000 après ~6 ticks. Confirme la nature
+  « multi-fichiers atomique » du changement. Liste exhaustive des
+  forgeurs désormais documentée en tête de handlers.s.
+- `audit-rep-x` baseline 8 → 18 (les nouveaux `rep #$30` sont les
+  push/pull de frame, sous IRQ I=1 ou sei — non préemptibles).
+
+**Validation** :
+- `test-oricos-irq-frame-m16` : ROUGE (3/5) avant → **VERT (5/5)**
+  après. Intégré à `make tests` (garde la classe).
+- **Ground-truth** : pad +100 + SEI Opt-A retirés (condition historique
+  du bug) ⇒ `test_oricos_clock` **PASS**, 12/12 helloc. La condition
+  qui déclenchait le bug ne le déclenche plus.
+- Suite complète Phosphoric `make tests` : verte intégralement.
+- L'invariant « X=1 aux points préemptibles » (handlers.s §3.3 A)
+  n'est plus requis pour la préservation à travers l'IRQ — couverte
+  par construction. En-tête handlers.s réécrit.
 
 **Impact sur ce dossier** : §10.2/§10.3 (layout ZP $E0-$EF) restent
 pertinents pour la classe ZP souris/drag, mais ne sont PLUS le chemin
-du bug clock Opt-A. Le retrait d'Opt-A (Étape 4) devient possible dès
-que le fix (A) est landé et que `test_oricos_irq_frame_m16` +
-pad-shift ground-truth passent.
+du bug clock Opt-A. **Retrait d'Opt-A (Étape 4)** : désormais possible
+sur le plan « bug clock », mais les `sei` d'Opt-A protègent AUSSI la
+réentrance ZP souris-drag (CR A/B) — retrait à valider séparément
+contre cette classe (stimulus drag) avant de l'acter. Statu quo
+conservé en attendant.
 
 ---
 

@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10b] — ADR-32 §10.10 : FIX frame IRQ 16-bit livré (option A, validée par Bénédicte)
+
+`kernel_irq_handler` sauve/restaure désormais A/X/Y en 16-bit (`rep #$30`),
+et les 7 forgeurs de resume frame (task_create, boot task B, yield, sleep,
+read_char, get_next_event, main_loop, event_wait, raw_wait) sont au format
+10 octets [Y16][X16][A16][P][PCL][PCH][PBR]. Validation : test verrouillage
+irq-frame-m16 ROUGE→VERT (intégré à make tests), ground-truth pad+100
+no-SEI ⇒ test_oricos_clock PASS, suite Phosphoric verte intégralement.
+L'invariant « X=1 aux points préemptibles » n'est plus requis (couvert par
+construction). Retrait Opt-A différé (protège aussi la classe souris-drag).
+
 ## [2026-06-10] — ADR-32 §10.9 : chasse au slot CLOSE — cause racine = frame IRQ 8-bit vs M=16
 
 Le bug clock Opt-A est élucidé par la mesure (§10.3bis « mesurer, jamais
