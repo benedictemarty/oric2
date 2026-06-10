@@ -315,14 +315,70 @@ mécanisme record/replay :
   complet inclut le RECORD des listes, ~+1 700 one-shot amorti par tous
   les redraws suivants en EXEC_LIST).
 
-**C2b (sprint suivant — requis pour ratifier C)** : le −22 % est loin du
-critère −90 % car (1) les **widgets** restent dessinés en direct (hors
-record) et (2) la **draguée se reconstruit** au lieu d'être rejouée.
-Plan : widgets listés (slots de chaînes per-widget dans le ring) +
-extension ISA additive « EXEC_LIST avec offset x/y » (le GPU rejoue la
-liste translatée → le drag ne reconstruit RIEN, ni la draguée ni les
-autres). Critère de ratification C inchangé : −90 % cycles CPU sur
-redraw_drag + validation interactive drag fluide.
+**C2b (livrée 2026-06-10)** — le drag ne reconstruit RIEN, critère −90 %
+ATTEINT (1 307 cyc vs baseline 13 151 = **−90,1 %**) :
+
+- **GPU-ISA v4 (extension additive, contrat gravé respecté)** :
+  opcode `EXEC_LIST_XY` ($0A) — le GPU rejoue une display-list TRANSLATÉE
+  de (dx, dy) (ARG2 = dy<<12|dx, 12-bit two's complement). La translation
+  s'applique aux coordonnées des ops de dessin (FILL_RECT/16, LINE,
+  TEXT/16) **en espace entier signé** — le clip écran des coordonnées
+  négatives est correct, pas de wrap 12-bit. CLEAR/BLIT/SET_BPL
+  (adresses) non translatés. CAPS_BYTE = $F4 (version 4, bit LIST_XY) ;
+  la sémantique d'EXEC_LIST ($09) est inchangée. 3 tests device (replay
+  translaté EXEC_LIST vs EXEC_LIST_XY sur la même liste, clip négatif,
+  caps + gardes d'imbrication croisées).
+- **Drag = replay translaté** : `_wl_record_end` mémorise l'origine
+  (x, y) de la fenêtre (`WL_ORG_X/Y`) ; `_wl_exec` poste `EXEC_LIST_XY`
+  avec (x−org, y−org) quand la fenêtre a bougé (sinon `EXEC_LIST`, v3
+  pur). Avec la cap LIST_XY, `kernel_wm_move_focused` n'invalide PLUS la
+  liste au move, et la draguée n'est plus spécial-casée en chrome direct.
+  Carte v3 sans la cap : comportement C2a conservé (routage par
+  capacités, contrat).
+- **Widgets listés** : `_wl_window_chrome_listed` enregistre chrome +
+  widgets dans la liste de la fenêtre. Les chaînes passent par une
+  **arène SDRAM per-(slot, flip)** (`WL_ARENA`, chunk $400, bump-alloc
+  remis à zéro à chaque record) — stables tant que la liste est valide,
+  ce que le ring 32×32 (profondeur FIFO) ne garantit pas. (Le plan
+  initial « slots per-widget dans le ring » est remplacé par l'arène :
+  plus simple et couvre les items de GU_LIST, N chaînes par widget.)
+  `label_prop` sous record émet char par char dans la liste de la
+  fenêtre (un EXEC_LIST imbriqué est interdit), buffer espacé dans
+  l'arène (128 o). **Garde 64 entrées** (borne GPU) + arène pleine →
+  record AVORTÉ (`WL_ABORT`) → liste non validée → rendu direct
+  (fallback sans perte). Invalidations sur changement d'état widget :
+  entonnoir `kernel_wm_redraw_widget` + toggle/radio/list_select/
+  text-focus/`_wm_widget_hit` (transitions WIDGET_ACTIVE) + add_widget.
+- **Menu (liste 9) + taskbar (liste 10)** : barre de menu et taskbar
+  (fond + boutons) deviennent des display-lists rejouables — invalidées
+  sur open/close menu, déclaration dynamique, add/close/set_focus/
+  minimize. L'**horloge** taskbar reste directe (elle change à chaque
+  tick — la lister invaliderait en permanence).
+- **Coalescing de frames (modèle compositeur)** : pendant un geste
+  (drag/resize armé), si le GPU est encore BUSY, la frame est SKIPPÉE
+  (`WM_RD_SKIPPED`) — le rect sale capturé reste celui de la dernière
+  position dessinée, et la fin de geste rattrape la frame manquée.
+  Supprime le pic mesuré de 52 k cyc (spin QFULL derrière le full
+  redraw du clic, ~100 k cyc GPU de clear desktop).
+- **Culling dirty-rect** : `redraw_drag` calcule UNE fois l'union
+  (ancien ∪ nouveau rect de la draguée) → seules les fenêtres
+  intersectantes sont rejouées ; la barre de menu (inatteignable, y
+  clampé ≥ MENU_BAR_H) et la taskbar (bande y ≥ TB_Y_SEP non touchée)
+  sont skippées. Réduit aussi la charge GPU par frame (~21 k → ~8 k cyc)
+  → plus de saturation en régime établi.
+- **Fix collision latente C2a** : `WL_VALID` ($019095, 9 o) chevauchait
+  `PANIC_CODE` ($019095) et `BUNDLE_FOUND_*` ($019096-$01909C) — un
+  panic invalidait la liste 0, une liste validée corrompait le résultat
+  du scan bundle. Bloc WL relogé en $0191A0+ (libre entre IRQ_ZP_SAVE
+  et GUICODE), chaîne d'asserts ld65 posée sur tout le bloc.
+- **Gains mesurés** (`test_gpu_display_list_drag`, drag réel 60 Hz) :
+  redraw_drag max **1 307 cyc** vs 13 151 (baseline C2a carte sans LIST)
+  = **−90,1 %** ; vs 10 184 (C2a listé) = −87 % ; vs 4 203 (carte sans
+  LIST avec le kernel C2b — coalescing + culling profitent aussi au
+  direct) = −68 %. Budget gravé dans le test : ≤ 2 200 cyc (R8 : marge).
+
+**Critère restant pour ratifier C** : validation interactive utilisateur
+(drag fluide).
 
 ## 6. Impacts croisés
 

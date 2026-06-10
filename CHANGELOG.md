@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10o] — ADR-34 étape C2b LIVRÉE : drag = replay translaté, critère −90 % ATTEINT
+
+GPU-ISA v4 (additif, contrat gravé) : EXEC_LIST_XY ($0A) rejoue une
+display-list translatée de (dx, dy) — coordonnées en espace entier
+signé (clip négatif correct), CAPS $F4, EXEC_LIST inchangé. Kernel :
+drag = replay translaté (origine WL_ORG au record, plus d'invalidation
+au move), widgets + menu + taskbar DANS les listes (arène de chaînes
+SDRAM per-(slot,flip), garde 64 entrées + fallback direct sur abort),
+coalescing de frames (GPU saturé → skip + rattrapage fin de geste),
+culling dirty-rect (union ancien∪nouveau, fenêtres/menu/taskbar
+intacts skippés). Fix collision latente C2a WL_VALID/PANIC_CODE/
+BUNDLE_FOUND ($019095 → relogement $0191A0 + asserts).
+**redraw_drag max : 13151 (pré-C2) → 10184 (C2a) → 1307 cyc (−90,1 %)**
+— critère de ratification de l'étape C atteint ; reste la validation
+interactive (drag fluide) par Bénédicte. Suite Phosphoric complète
+verte (30/30 GPU device, intégration OricOS incluse).
+
 ## [2026-06-10n] — ADR-34 étape C2a LIVRÉE : fenêtres = display-lists rejouables (record/replay)
 
 Hooks WL_REC dans fill_rect16/text16 : le chrome d'une fenêtre est

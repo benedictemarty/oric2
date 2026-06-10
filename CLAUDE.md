@@ -127,9 +127,16 @@ GPU-ISA v2 async — FIFO 16 + IRQ complétion (IRQF_GPU) + CAPS/VERSION
 (read TRIGGER), kernel route par capacités (GPU_CAPS_KERNEL boot),
 compose post-and-continue −52 % cyc CPU mesurés. Règles de contrat
 GRAVÉES : sémantique d'opcode immuable, extensions additives, GPU_CAPS
-obligatoire, Phosphoric = suite de conformance. Étape C (display-lists
-EXEC_LIST) lancée. Dossier :
-`docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md`.
+obligatoire, Phosphoric = suite de conformance. **Étape C : C1 + C2a +
+C2b LIVRÉES (2026-06-10)** — EXEC_LIST ($09, v3) puis EXEC_LIST_XY
+($0A, v4, replay translaté) ; fenêtres (chrome + widgets), menu,
+taskbar = display-lists rejouables (arène de chaînes per-(slot,flip),
+garde 64 entrées + fallback direct) ; drag = replay translaté sans
+reconstruction + coalescing de frames + culling dirty-rect ;
+`redraw_drag` 13 151 → **1 307 cyc (−90,1 %)** : critère chiffré de
+ratification ATTEINT — **reste la validation interactive (drag fluide)
+pour ratifier C**. Fix collision latente WL_VALID/PANIC_CODE ($019095 →
+$0191A0). Dossier : `docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md`.
 
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 
