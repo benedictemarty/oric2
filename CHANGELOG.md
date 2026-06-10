@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10i] — Revue critique senior du kernel OricOS
+
+`docs/notes/REVIEW_senior_OricOS_2026-06-10.md` : audit 14 724 lignes.
+3 problèmes structurels (WM dans l'IRQ — verrou = bug task_wm_starve ;
+layout mémoire manuel — 4 collisions historiques de la même classe ;
+wm.s monolithe 5 578 L), 6 problèmes de second rang (erreurs silencieuses,
+boot pollué de tests, 3 rings en cohabitation, aliasing ABI $D0, GPU
+sync sous sei, TCB_PRIO mort), risques HDL, et plan priorisé P0/P1/P2.
+Recommandation transversale : P0-a (finir ADR-28) et P0-b (layout par le
+linker) avant toute nouvelle feature GUI.
+
 ## [2026-06-10h] — SP-3.p M.1 : highlight du menu ouvert (rouge→vert)
 
 Titre du menu ouvert en vidéo inversée (fond blanc mesuré au proportionnel,
