@@ -1089,12 +1089,44 @@ senior §10.1).
 - `audit-rep-x` baseline 18 → 20 (les 2 nouvelles boucles 16-bit,
   contexte IRQ I=1 — non préemptibles).
 
-**Note résiduelle (classe T1, hors scope)** : `kernel_event_push_timer`
-(IRQ T1) écrit `EVT_TMP` ($6E) hors de l'enveloppe souris ; un syscall
-qui posterait des events en parallèle partagerait ce slot. Cette
-fenêtre préexistait à Opt-A (qui ne couvrait que 2 syscalls) et n'est
-pas élargie par son retrait. À traiter si un cas concret apparaît
-(candidat : slot IRQ-only $E2, cf. §10.3).
+**Note résiduelle (classe T1)** : traitée le jour même — voir §10.12.
+
+### 10.12 Fenêtre EVT_TMP/T1 fermée — push EVENT_RING atomique (2026-06-10)
+
+> Traitement de la note résiduelle §10.11, sur demande de Bénédicte.
+> Méthode rouge → fix → vert.
+
+**Analyse.** La pré-condition historique des pushers EVENT_RING
+(en-tête event.s : « appelés depuis l'IRQ handler, I=1 — EVT_TMP
+scratch IRQ-only, pas de race ») est **cassée depuis deux évolutions** :
+`kernel_event_push_menu` (ADR-30 Étape 2b, hit menu dynamique) et
+`kernel_event_push_verbatim` (task_wm, ADR-28 Étape 2) tournent en
+contexte **tâche** (I=0). Le problème dépasse EVT_TMP : la section
+critique entière [test COUNT → `_evt_tail_offset` (EVT_TMP) → écriture
+record → `_evt_advance_tail` (RMW TAIL/COUNT)] est préemptible par un
+pusher IRQ (T1 timer, KBD2, MOU2) → **deux records au même slot, count
+faux** — corruption de la file, pas seulement du scratch.
+
+**Rouge.** Invariant mécanique : « `_evt_advance_tail` n'est JAMAIS
+atteint avec I=0 » (tous les pushers de nouveaux slots y passent —
+couvre aussi tout pusher futur). Test
+`test-oricos-evt-push-atomic` (Phosphoric), scénario serveur WM
+(TC_WM_FLAG=$A5, moves souris → RAW → task_wm → push_verbatim) :
+**ROUGE — 10 pushes, 10 violations I=0**, pusher fautif identifié par
+peek de l'adresse de retour (push_verbatim).
+
+**Fix.** `php`/`sei` … `plp` sur la section critique des 2 pushers
+tâche-callable (`push_menu`, `push_verbatim`) — pattern identique aux
+précédents reconnus (`kernel_event_pop`, `kernel_raw_pop`,
+`kbd_ring_pop`). Les pushers IRQ-only (key/mouse/timer) restent sans
+garde (I=1 par contexte, pas de nesting). Pré-condition réécrite en
+tête d'event.s avec la règle pour tout nouveau pusher. Choix tracé :
+PAS de migration EVT_TMP→$E2 (candidat §10.3) — elle n'aurait protégé
+que le scratch, pas le RMW TAIL/COUNT ; le sei court ferme les deux.
+
+**Vert.** 12 pushes, 0 violation. Test intégré à `make tests` (garde
+mécanique : tout futur pusher interruptible rougira dès qu'un scénario
+l'exerce). Suite complète verte, budgets cycles inchangés.
 
 ---
 

@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10d] — ADR-32 §10.12 : fenêtre EVT_TMP/T1 fermée (push EVENT_RING atomique)
+
+La pré-cond « pushers EVENT_RING = IRQ-only, I=1 » était cassée depuis
+push_menu (ADR-30) et push_verbatim (task_wm, ADR-28) qui tournent côté
+tâche : section critique [COUNT → EVT_TMP → record → RMW TAIL/COUNT]
+préemptible par les pushers IRQ → file corrompue. Rouge : nouvel invariant
+test-oricos-evt-push-atomic (« _evt_advance_tail jamais avec I=0 ») — 10/10
+violations sur scénario wm-server. Fix : php/sei…plp sur les 2 pushers
+tâche (pattern event_pop/raw_pop). Vert : 0 violation, garde mécanique dans
+make tests (couvre tout pusher futur). Pré-cond réécrite en tête d'event.s.
+
 ## [2026-06-10c] — ADR-32 §10.11 : Opt-A retiré, classe souris-drag validée rouge→vert
 
 Sur demande de Bénédicte. La sentinelle test-position-shift v2.2 (multi-slots
