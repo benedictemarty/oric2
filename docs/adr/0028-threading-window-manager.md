@@ -647,7 +647,28 @@ Diagnostic mesuré : sémantique correcte (focus à ~200k, drag appliqué à
 (drag/resize/menus/taskbar fluides en mode défaut) — leçon ADR-29.
 
 **VALIDÉE 2026-06-10 par Bénédicte Marty** (« cela fonctionne, le drag
-est fluide ») — la bascule est ACTÉE. `WM_TASKMODE` est le mode nominal
+est fluide ») — la bascule est ACTÉE.
+
+**Retour interactif post-validation : « le rendu est clignotant lorsque
+l'on étend une fenêtre » — 2 causes mesurées, 2 fixes (2026-06-10)** :
+1. **Effacement plein rect à chaque move de resize** : contrairement au
+   drag (replay translaté, liste valide), le resize invalide la liste à
+   chaque changement de w/h — l'effacement bleu de TOUT l'ancien rect
+   était visible pendant le trou erase→re-record→replay. Fix :
+   `redraw_drag` n'efface que les bandes EXPOSÉES (droite/basse au
+   rétrécissement) ; agrandissement pur → zéro effacement (la fenêtre
+   repeint par-dessus elle-même). Drag → effacement plein conservé.
+2. **CLEAR plein écran du redraw de clic traversant le pipeline** : le
+   full redraw du clic (focus) postait le clear desktop (98k cyc GPU ≈
+   6 frames) qui s'exécutait au MILIEU du geste suivant → écran bleu
+   ~3 ms (mesuré : flash à cyc 374919-377835 pour un clic à 270k). Fix :
+   flag one-shot `WM_RD_NOCLEAR` — un redraw de clic « focus pur »
+   (rien d'exposé : arm drag/resize, clic taskbar focus/restore) skip le
+   clear ; les chemins avec exposition (close, minimize, menu, callback
+   de contrôle) le gardent.
+Garde : `test_resize_grow_no_flicker` (échantillonne le pixel du corps à
+chaque pas CPU pendant un agrandissement réel 60 Hz, GPU timé — vu ROUGE
+1 071 flashes avant fix, 0 après). Re-validation interactive attendue. `WM_TASKMODE` est le mode nominal
 d'OricOS ; le rendu en IRQ n'existe plus que derrière l'opt-out
 `--wm-legacy` (chemin couvert par `test_oricos_wm_legacy_optout`).
 L'ADR-28 est entièrement livrée : design option C ratifié 2026-05-29,

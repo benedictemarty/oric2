@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10s] — Fix clignotement resize (retour interactif post-bascule)
+
+« Le rendu est clignotant lorsque l'on étend une fenêtre » : 2 causes
+mesurées, 2 fixes kernel. (1) Resize : effacement par bandes EXPOSÉES
+seulement (agrandissement pur → zéro effacement — l'effacement plein
+rect était visible pendant le trou erase→re-record→replay, spécifique
+au resize qui invalide la liste à chaque w/h). (2) Clic : WM_RD_NOCLEAR
+one-shot — le full redraw « focus pur » skip le CLEAR desktop (98k cyc
+GPU qui traversait le pipeline au milieu du geste → écran bleu ~3 ms,
+flash mesuré à cyc ~375k pour un clic à 270k). Garde rouge→vert :
+test_resize_grow_no_flicker (1071 flashes avant, 0 après). Suite verte.
+Re-validation interactive attendue.
+
 ## [2026-06-10r] — Bascule WM_TASKMODE VALIDÉE interactivement : ADR-28 entièrement livrée
 
 « Cela fonctionne, le drag est fluide » (Bénédicte, 2026-06-10) — le
