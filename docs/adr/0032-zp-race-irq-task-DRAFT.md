@@ -1128,6 +1128,37 @@ que le scratch, pas le RMW TAIL/COUNT ; le sei court ferme les deux.
 mécanique : tout futur pusher interruptible rougira dès qu'un scénario
 l'exerce). Suite complète verte, budgets cycles inchangés.
 
+### 10.13 Collatéraux §10.9 traités (2026-06-10)
+
+**(a) TICK_COUNTER ⟂ NMI_HANDLER ($5500) — RÉSOLU.**
+`TICK_COUNTER = $015500` était la même adresse que le start du segment
+`NMI_HANDLER` : chaque tick T1 écrasait l'opcode `rti` du handler NMI.
+Bénin v1 (aucune source NMI câblée) mais bombe à retardement pour
+l'homologation HW ULX3S (bouton, watchdog).
+- **Rouge** : `test-oricos-nmi-safe` (Phosphoric), 2 volets — (1) le
+  byte à `kernel_nmi_handler` doit valoir $40/rti après quelques ticks
+  (lu : **$0D**, le compteur) ; (2) des NMI réels (`cpu816_nmi`)
+  doivent être absorbés sans tuer le run (avant fix : `clock: done`
+  jamais atteint — le CPU exécutait le compteur comme opcode).
+- **Fix** : `TICK_COUNTER` relocalisé **$5500 → $019093** (zone data
+  runtime, entre `CURSOR_X` $9092 et `BANK_FREE_LIST` $90A0). Asserts
+  de non-overlap ajoutés ; le garde linker « CODE ≤ $5500 » est
+  conservé (plancher = segment NMI_HANDLER). 5 lectures hardcodées
+  $015500 migrées dans les tests Phosphoric (boot ×4, helloc ×1).
+- **Vert** : handler intact ($40), 4 NMI réels absorbés, app au bout.
+  Intégré à `make tests`. Suite complète verte.
+
+**(c) TCB_BITMAP « slot 4 incohérent » — FAUSSE ALERTE (clos).**
+Relecture du code (boot init `$0007`, `task_create` masque bit 1 pour
+pid 1, `bitmap_clear` `1<<pid`) : la convention est **bit = pid**, bit 0
+= sentinelle « slot 0 invalide » — PAS bit = slot. L'observation
+$00EF du run cassé était donc correcte : pids 4 et 8 DEAD → bits 4 et 8
+clear, pid 5 BLOCKED → bit 5 set. Vérifié par mesure sur kernel sain :
+bitmap $01EF = sentinelle + pids 1,2,3,5,6,7,8 vivants, pid 4 (task_d
+éphémère auto-terminée, comportement documenté) clear. L'erreur était
+dans mon décodage du diagnostic (slot 0-based vs pid 1-based). Aucun
+bug, aucun changement de code.
+
 ---
 
 *Section §10 ajoutée 2026-06-09 suite sign-off senior. Conditions de

@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10e] — ADR-32 §10.13 : TICK_COUNTER/NMI $5500 fixé, bitmap TCB = fausse alerte
+
+(a) TICK_COUNTER ($015500) écrasait l'opcode rti du segment NMI_HANDLER à
+chaque tick — tout NMI réel exécutait le compteur comme opcode. Rouge :
+test-oricos-nmi-safe (byte handler = $0D au lieu de $40 ; NMI réels tuaient
+le run). Fix : TICK_COUNTER relocalisé → $019093 + asserts non-overlap ;
+5 lectures hardcodées migrées dans les tests. Vert : handler intact, 4 NMI
+absorbés, app au bout. Garde dans make tests.
+(c) TCB_BITMAP « slot 4 » : fausse alerte close par relecture + mesure —
+convention bit=pid (bit 0 = sentinelle), les valeurs observées ($00EF run
+cassé, $01EF run sain) sont correctes. Aucun changement de code.
+
 ## [2026-06-10d] — ADR-32 §10.12 : fenêtre EVT_TMP/T1 fermée (push EVENT_RING atomique)
 
 La pré-cond « pushers EVENT_RING = IRQ-only, I=1 » était cassée depuis
