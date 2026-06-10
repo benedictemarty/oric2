@@ -63,6 +63,68 @@ compositing visible. Même famille que « clic pendant 1er rendu perdu »
 (R6) au sprint de consolidation : aucun stimulus de test n'est livré
 sur un flanc détecté, toujours flanc + marge.**
 
+## SPRINT DE CONSOLIDATION — bilan (2026-06-11, « go » de Bénédicte)
+
+### 1. Audit R6 « variables superposées au CHARSET » : FAIT
+
+Scan systématique des 282 constantes $01xxxx contre l'image kernel :
+97 variables ont un octet image initial NON NUL. Croisé avec les sites
+d'écriture init vs événementiels. La plupart sont des scratch
+écrits-avant-lus ou des structures bornées par un compteur initialisé
+(rings via COUNT, ZORDER via ZORDER_N — sûres par protocole). **1 bug
+latent réel trouvé et fixé : WM_OWNER** — les slots jamais créés
+contenaient des octets image plausibles comme pids ($02/$04/$08…) ; au
+sys_exit d'une tâche au pid correspondant, close_owner fermait une
+fenêtre INEXISTANTE (WM_COUNT corrompu). De plus la sentinelle « pas
+d'owner » était $00 alors que pid 0 existe, et kernel_wm_close (bouton
+×) ne nettoyait pas l'owner (slot fermé non réutilisé re-fermable).
+Fix : sentinelle WM_OWNER_NONE=$FF + init wm_init + clear au close.
+Garde rouge-checkée : test_oricos_wm_owner_sentinel (ROUGE vu :
+$1C/$00/$00/$3E/$00/$08, VERT après).
+
+### 2. DÉCOUVERTE MAJEURE — oricrobot périmé : bugs A et B = artefacts
+
+Le binaire `oricrobot` datait d'AVANT le travail GPU v4 (caps,
+EXEC_LIST_XY) : `GPU_CAPS_KERNEL = $00` dans tout l'environnement robot
+→ le kernel tournait en régime v1 sync/direct, SANS display-lists. Tous
+les diagnostics robot de la veille (dont les « bugs résiduels » A et B)
+testaient un régime qui n'est PAS celui de la validation interactive.
+Après reconstruction (`make oricrobot`, caps $F4) :
+- **Bug A (liste périmée tallwin) : NON REPRODUIT** — render correct.
+  Reste l'artefact connu de l'app démo task_tallwin qui blitte son
+  backing plein-rect par-dessus son propre chrome (question de design
+  ADR-27 : le chrome devrait-il vivre dans le backing ? — à instruire).
+- **Bug B (chrome non rejoué post-drag) : NON REPRODUIT** — état final
+  correct (fenêtres complètes, z-order propre, 0 trace). Vérifié aussi
+  par décodage de la display-list slot 0 : 2 FILL_RECT16 + 6 TEXT16,
+  liste complète et correcte, dx=0, exec GPU propre.
+- **Le fix single-writer (traces) TIENT dans le vrai régime** : 0 résidu.
+
+**Fix harnais : `make tests` dépend désormais d'`oricrobot`** (le
+binaire ne peut plus diverger silencieusement des devices émulés).
+Leçon R6 : un harnais de mesure a la même exigence de fraîcheur que le
+code mesuré — un robot stale a fabriqué 2 faux bugs et failli déclencher
+2 faux fixes.
+
+### 3. Bug borné NON fixé — labels d'icônes morts à la source
+
+Les labels d'icônes desktop (« Files »/« Prefs ») sont $FF dès
+ICON_TABLE (bank 1) : la copie source dans kernel_icon_add lit du $FF
+(pointeur source erroné). Préexistant (les vieux screenshots montraient
+« ddddddd » en régime direct ; blanc en régime listé). Fausse piste
+écartée avec preuve : TB_CLK_SDRAM ($011200) ne collisionne PAS avec les
+labels ($011200 bank SDRAM $01) — l'upload horloge écrit ADDR_HI=$00 →
+$001200. À fixer dans une passe dédiée (chercher le caller de
+kernel_icon_add au boot et son pointeur label).
+
+### 4. Reste du sprint (à dérouler)
+
+- Oracle « framebuffer listé == rendu direct » (test de transparence).
+- Matrice d'interaction {drag court/long/sur fenêtre, resize,
+  release-pendant-skip} × {listée/composée/modale}.
+- Design ADR-27 : chrome dans le backing vs blit client-only (artefact
+  tallwin §2).
+
 ## Bug résiduel A — liste rejouée périmée/tronquée (scénario tallwin)
 
 **Repro** (oricrobot) : `--tallwin` (fenêtre 200×200 créée à (100,100),

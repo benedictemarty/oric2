@@ -7,6 +7,22 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11b] — Sprint consolidation : audit R6 + harnais oricrobot réparé, bugs A/B clos
+
+« go » de Bénédicte sur le sprint de consolidation. **Audit R6** (282
+constantes bank 1 vs image kernel) : 1 bug latent réel fixé — WM_OWNER
+(pids fantômes des octets image CHARSET → close_owner fermait des
+fenêtres inexistantes au sys_exit) : sentinelle $FF + init + clear au
+close, garde rouge-checkée. **Découverte majeure** : le binaire
+oricrobot était PÉRIMÉ (avant GPU v4, caps=$00) — tous les diagnostics
+robot de la veille testaient le régime sans display-lists ; après
+rebuild, les « bugs résiduels » A et B ne se reproduisent PAS (faux
+bugs d'artefact harnais), le fix traces tient (0 résidu), la
+display-list slot 0 décodée est complète et correcte. `make tests`
+dépend désormais d'oricrobot. Bug borné non fixé : labels d'icônes
+morts à la source (préexistant, fausse piste TB_CLK écartée avec
+preuve). Dossier mis à jour. Suite complète verte.
+
 ## [2026-06-11] — Fix traces de drag (single-writer) + dossier fragilité record/replay
 
 Retour interactif Bénédicte (« plein de traces » puis « c'est fragile »).
