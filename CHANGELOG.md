@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10w] — Sprint « suite GUI » VALIDÉ interactivement (« niquel »)
+
+Validation interactive positive de Bénédicte sur l'ensemble : hover
+d'item de menu, labels de boutons centrés, proportionnel partout
+(titres/menus/taskbar), fix dialogues (boutons 56 px, repaint à la
+fermeture, plus de fantôme) et titre des modales « Dialog »/« Alert ».
+Le sprint GUI est clos. Reste parqué (non bloquant) : fontes
+multiples/styles.
+
 ## [2026-06-10v] — Titre des modales + clarification drag (retour interactif)
 
 « Pas de titre pour win2 ; draggable seulement quand win2 fermée » :
