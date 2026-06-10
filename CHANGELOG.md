@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10j] — P0-a : bug task_wm_starve CLOS (cause prouvée)
+
+C'était un bug ÉMULATEUR fixé le 2026-06-01 (Phosphoric 08a9bf, ASL mem
+M-aware) — dossier jamais refermé, verrou fantôme sur ADR-28 pendant 9
+jours. Preuve apportée : kernel d'époque + émulateur actuel = PASS ;
+kernel d'époque + bug CPU re-simulé = 10/10 STALE, sites loggés
+(kernel_task_create scan bitmap + bitmap_clear). Mécanisme : ASL mem
+8-bit-fixe en M=16 → masque du pid 8 (premier bit du HIGH byte) jamais
+posé dans TCB_BITMAP → la création suivante (ctl_demo) écrasait le TCB de
+task_wm — d'où la double condition exacte des flags. Le verrou ADR-28 est
+levé ; la bascule WM_TASKMODE par défaut reste un sprint dédié avec
+validation interactive. Clôture : docs/notes/BUG_task_wm_starve_CLOS.md.
+
 ## [2026-06-10i] — Revue critique senior du kernel OricOS
 
 `docs/notes/REVIEW_senior_OricOS_2026-06-10.md` : audit 14 724 lignes.
