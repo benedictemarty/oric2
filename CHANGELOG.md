@@ -7,6 +7,26 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11] — Fix traces de drag (single-writer) + dossier fragilité record/replay
+
+Retour interactif Bénédicte (« plein de traces » puis « c'est fragile »).
+**OricOS** : fix single-writer du geste — pendant drag/resize, le
+compose-loop de l'app skip la fenêtre focus, task_wm (redraw_drag) blit
+lui-même son backing (`kernel_wm_compose_slot` extrait) sous le chrome.
+0 résidu mesuré (vs ~34 blocs). Au passage : `WM_DRAG_ARMED` jamais
+initialisé ET superposé au segment CHARSET ($08 image) → init wm_init +
+item d'audit R6 (variables sur plage chargée ≠ zéro). **Phosphoric** :
+test win_app couteau-sur-le-fil corrigé (marge +200k cyc, 3e instance de
+la famille « stimulus sur flanc ») + harnais de repro versionnés
+(tests/robot/, R9). **Docs** : dossier
+`docs/notes/BUG_record_replay_fragilite.md` — constat de fragilité (8
+mécanismes interdépendants, bugs d'interaction non couverts), 2 bugs
+résiduels tracés avec repros (A : liste périmée tallwin ; B : chrome non
+rejoué post-drag long), proposition de sprint de CONSOLIDATION (gel
+features, matrice de tests d'interaction, invariants, simplification si
+le culling/coalescing coûtent plus qu'ils ne rapportent). Suite complète
+verte.
+
 ## [2026-06-10y] — ADR-27 C2 LIVRÉE : backing store multi-banques contiguës
 
 « flip compact ADR-27 » (périmètre C2 choisi par Bénédicte) : allocateur
