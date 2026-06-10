@@ -109,7 +109,7 @@ expliciter avant d'avancer.
 
 ### ~~ADR-32~~ → ratifiée 2026-06-10, déplacée vers §2 (invariant ZP/IRQ P1/P2/P3 ; la migration mouse_step hors IRQ — option B du dossier originel — reste explicitement non ratifiée, chantier ADR-28)
 
-### ADR-34 — GPU-ISA : primitives GUI, async, display-lists (dossier d'instruction, **DRAFT 2026-06-10**)
+### ADR-34 — GPU-ISA : primitives GUI, async, display-lists (dossier d'instruction, **étape B ratifiée 2026-06-10**)
 
 **Question** : à quel niveau d'abstraction fixer le contrat des primitives
 graphiques (GPU-ISA) pour que (1) la charge IRQ du rendu disparaisse —
@@ -121,9 +121,14 @@ async), Amiga (Blitter/Copper). 4 options : (A) statu quo sync ; (B) v2
 async — FIFO + IRQ complétion + vsync + GPU_CAPS ; (C) v3 display-lists
 EXEC_LIST — une fenêtre = sa liste, rejouée par le GPU, l'IRQ ne rend plus
 rien ; (D) DRAW_WINDOW figée (écartée : fige le look, contraire ADR-26).
-**Recommandation senior tracée : B puis C**, ratifiables séparément ;
-règles de contrat (sémantique immuable, extensions additives, GPU_CAPS
-obligatoire, Phosphoric = suite de conformance). Dossier :
+**Recommandation senior tracée : B puis C**, ratifiables séparément.
+**Étape B RATIFIÉE 2026-06-10** (validation interactive Bénédicte) :
+GPU-ISA v2 async — FIFO 16 + IRQ complétion (IRQF_GPU) + CAPS/VERSION
+(read TRIGGER), kernel route par capacités (GPU_CAPS_KERNEL boot),
+compose post-and-continue −52 % cyc CPU mesurés. Règles de contrat
+GRAVÉES : sémantique d'opcode immuable, extensions additives, GPU_CAPS
+obligatoire, Phosphoric = suite de conformance. Étape C (display-lists
+EXEC_LIST) lancée. Dossier :
 `docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md`.
 
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)

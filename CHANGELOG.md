@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10m] — Étape B RATIFIÉE (validation Bénédicte) + étape C1 LIVRÉE : display-lists
+
+B ratifiée après validation interactive — règles de contrat GRAVÉES
+(sémantique immuable, additif, GPU_CAPS, Phosphoric = conformance).
+C1 : GPU_OP_EXEC_LIST ($09, ISA v3, CAPS $73) — display-lists en SDRAM
+(13 o/entrée, terminateur $FF, récursion interdite, borne 64), 2 tests
+device ; premier consommateur kernel : kernel_tk_label_prop construit la
+liste des TEXT16 et poste UNE commande (−48 % mesuré : 5549→2854 cyc sur
+le texte de dialogue). C2 (fenêtre = sa liste, redraw_drag −90 %,
+validation drag fluide) = sprint suivant, prérequis en place.
+
 ## [2026-06-10l] — ADR-34 étape B LIVRÉE : GPU-ISA v2 async (FIFO + IRQ + CAPS)
 
 Device Phosphoric : FIFO 16 (snapshot au TRIGGER), mode timé opt-in

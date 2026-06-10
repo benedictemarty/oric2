@@ -249,14 +249,46 @@ niveau d'abstraction.
   **sature le CPU** — la marge de task_wm dépendait de ±30 octets de
   position de code. Cadence de test ramenée à 125 Hz (réaliste). C'est
   la mesure la plus directe à ce jour du coût du rendu-en-IRQ.
-- **Ratification de l'étape B** : critères du §5 remplis (implémentation
-  100 %, tests rouge→vert, mesure). À arbitrer par Bénédicte
-  (validation interactive recommandée : `--xvga --dlg-demo` — le rendu
-  vivant tourne désormais en async réel).
+- **Ratification de l'étape B** : **RATIFIÉE 2026-06-10 par Bénédicte
+  Marty** (« c'est validé, ratifie B ») après validation interactive.
+  Conformité moratoire : dossier d'instruction ✓ (§0-§4), implémentation
+  100 % testée ✓ (rouge-check device, −52 % mesuré, suite verte),
+  cohérence ADR ✓ (étend ADR-21 de manière additive, sert ADR-27/28).
+  **Les règles de contrat du §4 sont GRAVÉES à compter de cette
+  ratification** : sémantique d'opcode immuable, évolutions additives,
+  GPU_CAPS obligatoire, Phosphoric = suite de conformance de l'ISA.
 - **Étape C** : ratifiable quand `EXEC_LIST` est implémentée + une
   fenêtre réelle rendue par liste avec gain mesuré sur `redraw_drag`
   (objectif : −90 % de cycles CPU) + validation interactive utilisateur
   (drag fluide).
+
+### 5ter. ÉTAPE C lancée — C1 LIVRÉE (2026-06-10), C2 = sprint suivant
+
+**C1 (livrée)** :
+- **Device** : `GPU_OP_EXEC_LIST` ($09) — le GPU fetch et exécute une
+  display-list en SDRAM (entrées de 13 octets [op][arg1-4×3], terminateur
+  $FF). Gardes : récursion interdite (ERR), borne 64 entrées (liste sans
+  terminateur → ERR, le GPU ne court pas dans la SDRAM). Coût modélisé =
+  fetch + somme des entrées. **ISA v3** : CAPS_BYTE = $73 (FIFO + IRQ +
+  LIST, version 3 — extension additive, le bit FIFO v2 reste lisible par
+  un OS v2). 2 tests device (liste 3 commandes avec SET_BPL intra-liste :
+  ordre prouvé ; gardes récursion/borne).
+- **Premier consommateur kernel** : `kernel_tk_label_prop` (textes des
+  dialogues) — si cap LIST : construit la display-list des N entrées
+  TEXT16 en SDRAM (positions proportionnelles précalculées, écriture via
+  VRAM port auto-inc) et poste UNE commande EXEC_LIST ; drain en TÊTE
+  (protège les scratch d'une liste encore en vol), pas de drain final.
+  Carte sans LIST : boucle sync v1 intacte (routage par capacités).
+- **Gains mesurés** (`test-oricos-gpu-async`, make tests) : label
+  « Save changes? » (13 chars) : **5 549 → 2 854 cycles CPU (−48 %)**
+  vs carte FIFO-sans-LIST simulée. Suite complète verte.
+
+**C2 (sprint suivant — le cœur de la vision)** : kernel_wm_redraw /
+_wm_draw_windows / redraw_drag en CONSTRUCTEURS de listes (une fenêtre =
+sa display-list, reconstruite à la création/resize/contenu, REJOUÉE au
+drag). Critère de ratification C inchangé : −90 % cycles CPU sur
+redraw_drag + validation interactive drag fluide. Pré-requis techniques
+en place (EXEC_LIST, caps, pattern constructeur démontré sur label_prop).
 
 ## 6. Impacts croisés
 
