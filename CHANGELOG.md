@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10y] — ADR-27 C2 LIVRÉE : backing store multi-banques contiguës
+
+« flip compact ADR-27 » (périmètre C2 choisi par Bénédicte) : allocateur
+de banques contiguës (pool dédié $20-$5F) + table par slot + intégration
+sys_win_create/compose/window_base/close → fenêtres > 128 px de haut
+composées sans sur-lecture (Finding B latent supprimé). GPU transparent
+(SDRAM plate). 2 tests rouge-checkés (allocateur + fenêtre 200px). Le
+§0bis (hazard bpl↔IRQ) et Finding B sont fermés par construction depuis
+la bascule taskmode (ADR-28 §8 : plus aucun rendu en IRQ) — C2 a donc pu
+être livrée sans réveiller la race. Suite complète verte. Validation
+interactive attendue.
+
 ## [2026-06-10x] — Fontes multiples : variante grasse + titres en gras (GeoWorks)
 
 Sprint GUI « go gui » : deuxième fonte = smear bold de la fonte XVGA

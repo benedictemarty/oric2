@@ -81,11 +81,44 @@ store compact. Avancement :
     Robustesse à ajouter (option : registres GPU `clip_w/clip_h`, ou
     clip kernel-side dans les wrappers `sys_gfx_*`). Pas de cas
     déclencheur réel actuel — différer jusqu'à premier dépassement.
-  - **C2 — Allocation multi-banques contiguës** (point §0ter 6) :
-    requis pour fenêtres > 128 px de haut en pleine largeur (cf. §3
-    de ce dossier). Modifie `sys_win_create` + allocateur LIFO actuel
-    (ADR-2.h v0.1) qui ne supporte pas le contigu. Sprint dédié à
-    instruire au critère §6.1 (app cible réelle).
+  - ✅ **C2 — Allocation multi-banques contiguës LIVRÉE (2026-06-10)** :
+    fenêtres > 128 px de haut en pleine largeur (stride 512 → backing
+    store byte_w·h > 64 KiB) obtiennent des banques **contiguës**
+    allouées dans un pool dédié. Détails :
+    - **Allocateur contigu** (`alloc.s`) : pool dédié banks **$20-$5F**
+      (SDRAM $200000-$5FFFFF, 4 MiB = 64 banques, libre de tout : fonts,
+      listes $03, backing statiques $06-$0D, framebuffer XVGA $10-$15,
+      pool live $84-$9F). Carte byte-array `BACKING_MAP` (1 octet/banque,
+      $00=libre/$A5=occupé) → first-fit contigu trivial.
+      `kernel_alloc_banks_contig`(A=count→A=base ou 0) /
+      `kernel_free_banks_contig`(A=base, X=count) /
+      `kernel_init_backing_map` (boot). Test unitaire
+      `test_oricos_contig_alloc` (alloc/free/réutilisation first-fit/
+      carte vide après cleanup, via démo boot auto-nettoyant).
+    - **Table par slot** : `WM_BACKING_BANK[slot]` (0 = legacy $06+slot,
+      1 banque) + `WM_BACKING_NB[slot]` (nb pour le free). Helper
+      `kernel_wm_backing_base_hi`(A=slot→A=banque de base) consulté par
+      `kernel_gfx_window_base` (dessin app) ET `kernel_wm_compose`
+      (BLIT). Côté GPU **transparent** : SDRAM plate, banques contiguës =
+      région linéaire (stride 512 inchangée, point §0ter contraintes
+      respectées).
+    - **`sys_win_create`** : `nbanks = ceil(h/128)` ; si > 1, alloc
+      contig + stocke base/nb ; sinon legacy. Échec d'alloc → legacy
+      (sur-lecture tolérée, loggée). **`kernel_wm_close`** : libère les
+      banques + remet le slot en legacy.
+    - **Test end-to-end** `test_oricos_tallwin_multibank` : `task_tallwin`
+      (`--tallwin`, gated `TC_TALLWIN_FLAG`) crée une fenêtre 200×200 →
+      `WM_BACKING_BANK[slot]` dans [$20,$5F], nb=2 ; le compose lit toute
+      la hauteur (rows 50/150/190 blancs). **Rouge-checké** : alloc forcé
+      legacy → `WM_BACKING_BANK=$00` → FAIL.
+    - **Piège relevé** : le jonglage de pile (pha/ply/plx) dans
+      `sys_win_create` corrompait l'allocation (la fenêtre était allouée
+      PUIS la pile désynchronisée → état perdu). Réécrit en scratch
+      bank 1 (`SWC_SLOT`/`SWC_NBANKS`), zéro pile. À retenir : préférer
+      un scratch nommé au jonglage de pile multi-niveaux entre jsr.
+  - **C1 — Clip surface compacte** : reste différé (pas de déclencheur ;
+    le multi-banques C2 supprime la sur-lecture des fenêtres hautes — le
+    clip ne concerne plus que le dessin out-of-bounds intra-app).
 
 ## Ratification rétractée (2026-05-30t)
 
@@ -189,7 +222,15 @@ chrome OricOS (105,115) = lightgray, chrome Editor (305,315) = bleu,
 task_compact rect (61,61) = lightgray. Aucun noir nulle part.
 24/24 suites Phosphoric vertes.
 
-### Finding B — limitation connue : fast-drag artifact en --compact
+### Finding B — CLOS 2026-06-10 (résolu par la bascule taskmode ADR-28 §8)
+
+> **Mise à jour 2026-06-10** : la cause racine (IRQ souris rendant le
+> framebuffer pendant la section `bpl` du compose) est supprimée par la
+> bascule taskmode — l'IRQ ne rend plus rien. Le fast-drag en `--compact`
+> ne peut plus produire l'artefact de bandes. Limitation **fermée**.
+> Analyse historique conservée ci-dessous.
+
+### Finding B (historique) — limitation connue : fast-drag artifact en --compact
 
 Validation interactive 2026-05-30w (drag rapide SDL de la fenêtre OricOS)
 a montré des **bandes horizontales massives** (stries jaune/bleu/blanc
@@ -249,7 +290,23 @@ compose ⇒ framebuffer identique) ⇒ la suite (`win_draw`/`win_app`/`clock`/
 `gui_demo`/`ctl_demo` + mouse/drag) doit rester verte. Tout écart = bug à
 corriger ou revert.
 
-## 0bis. Analyse de concurrence (bloquante pour la migration kernel)
+## 0bis. Analyse de concurrence — BLOCAGE LEVÉ par ADR-28 §8 (2026-06-10)
+
+> **Mise à jour 2026-06-10** : ce §0bis décrivait le hazard `bpl`↔IRQ
+> comme « bloquant pour la migration kernel ». Sa **cause racine** — le
+> handler IRQ souris appelant `kernel_wm_mouse_step` → `kernel_wm_redraw`
+> (dessin framebuffer) avec IRQ activées, pouvant tomber entre un
+> `set_bpl(byte_w)` et le TRIGGER d'un helper gfx — **n'existe plus**
+> depuis la **bascule taskmode (ADR-28 §8)** : l'IRQ ne fait plus AUCUN
+> rendu (lecture device + push RAW_RING + sprite curseur uniquement) ; la
+> politique fenêtre ET le rendu (dont le compose et son `bpl`) tournent en
+> tâche serveur `task_wm`, en contexte tâche unique. Le **Finding B**
+> (artefact de bandes au fast-drag en `--compact`, §0quinquies) était le
+> symptôme observable de ce hazard → **clos par construction**. C2 a donc
+> été livrée sans réintroduire ce risque. L'analyse historique ci-dessous
+> est conservée pour mémoire.
+
+## 0bis (historique). Analyse de concurrence (bloquante — résolue)
 
 Investigation 2026-05-27 (handlers.s, wm.s). Le registre `bpl` est un **état GPU
 global persistant**. Or :
