@@ -668,7 +668,9 @@ l'on étend une fenêtre » — 2 causes mesurées, 2 fixes (2026-06-10)** :
    de contrôle) le gardent.
 Garde : `test_resize_grow_no_flicker` (échantillonne le pixel du corps à
 chaque pas CPU pendant un agrandissement réel 60 Hz, GPU timé — vu ROUGE
-1 071 flashes avant fix, 0 après). Re-validation interactive attendue. `WM_TASKMODE` est le mode nominal
+1 071 flashes avant fix, 0 après). **Re-validation interactive POSITIVE
+(Bénédicte, 2026-06-10)** — le rendu resize est propre, l'ADR-28 est
+close avec drag ET resize fluides en mode nominal taskmode. `WM_TASKMODE` est le mode nominal
 d'OricOS ; le rendu en IRQ n'existe plus que derrière l'opt-out
 `--wm-legacy` (chemin couvert par `test_oricos_wm_legacy_optout`).
 L'ADR-28 est entièrement livrée : design option C ratifié 2026-05-29,

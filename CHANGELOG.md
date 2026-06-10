@@ -18,7 +18,8 @@ one-shot — le full redraw « focus pur » skip le CLEAR desktop (98k cyc
 GPU qui traversait le pipeline au milieu du geste → écran bleu ~3 ms,
 flash mesuré à cyc ~375k pour un clic à 270k). Garde rouge→vert :
 test_resize_grow_no_flicker (1071 flashes avant, 0 après). Suite verte.
-Re-validation interactive attendue.
+**Re-validation interactive POSITIVE (Bénédicte, 2026-06-10)** : drag
+ET resize fluides en mode nominal — ADR-28 close, sprint terminé.
 
 ## [2026-06-10r] — Bascule WM_TASKMODE VALIDÉE interactivement : ADR-28 entièrement livrée
 
