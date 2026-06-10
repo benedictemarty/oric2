@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10k] — ADR-34 ouverte : GPU-ISA (primitives GUI, async, display-lists)
+
+Dossier d'instruction à la demande de Bénédicte (« les fenêtres GUI sont
+des primitives du GPU » ; « si je change de carte, je ne change pas les
+primitives » ; « l'objectif est la réduction de la charge IRQ »).
+Références : Apple IIgs (jumeau 65C816 — stratification QuickDraw II =
+contrat, et leçon de perf SANS blitter), SymbOS (mêmes primitives sur CPC
+soft et MSX V9938 command engine async/CE), Amiga (Blitter/Copper). 4
+options chiffrées ; recommandation : B (v2 async — FIFO + IRQ complétion
++ vsync + GPU_CAPS) puis C (v3 display-lists EXEC_LIST : une fenêtre = sa
+liste, l'IRQ ne rend plus rien) ; D (DRAW_WINDOW figée) écartée. Règles de
+contrat : sémantique immuable, extensions additives, GPU_CAPS obligatoire,
+Phosphoric = suite de conformance. CLAUDE.md §3 mis à jour. Dossier :
+docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md.
+
 ## [2026-06-10j] — P0-a : bug task_wm_starve CLOS (cause prouvée)
 
 C'était un bug ÉMULATEUR fixé le 2026-06-01 (Phosphoric 08a9bf, ASL mem

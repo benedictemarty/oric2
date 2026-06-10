@@ -109,6 +109,23 @@ expliciter avant d'avancer.
 
 ### ~~ADR-32~~ → ratifiée 2026-06-10, déplacée vers §2 (invariant ZP/IRQ P1/P2/P3 ; la migration mouse_step hors IRQ — option B du dossier originel — reste explicitement non ratifiée, chantier ADR-28)
 
+### ADR-34 — GPU-ISA : primitives GUI, async, display-lists (dossier d'instruction, **DRAFT 2026-06-10**)
+
+**Question** : à quel niveau d'abstraction fixer le contrat des primitives
+graphiques (GPU-ISA) pour que (1) la charge IRQ du rendu disparaisse —
+objectif premier — et (2) un changement de carte/HDL ne change jamais les
+primitives ? Références instruites : Apple IIgs (jumeau 65C816, leçon
+QuickDraw II = contrat logiciel + leçon de perf SANS blitter), SymbOS
+(mêmes primitives sur CPC sans accélération et MSX V9938 command engine
+async), Amiga (Blitter/Copper). 4 options : (A) statu quo sync ; (B) v2
+async — FIFO + IRQ complétion + vsync + GPU_CAPS ; (C) v3 display-lists
+EXEC_LIST — une fenêtre = sa liste, rejouée par le GPU, l'IRQ ne rend plus
+rien ; (D) DRAW_WINDOW figée (écartée : fige le look, contraire ADR-26).
+**Recommandation senior tracée : B puis C**, ratifiables séparément ;
+règles de contrat (sémantique immuable, extensions additives, GPU_CAPS
+obligatoire, Phosphoric = suite de conformance). Dossier :
+`docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md`.
+
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 
 ### ~~ADR-31~~ → ratifiée 2026-05-30, déplacée vers §2 (option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` dans `_wm_draw_widget_body` ; validation interactive utilisateur positive ; deviendra obsolète à la ratification ADR-27 backing store ; dossier : `docs/adr/0031-clip-widget-rect-parent.md`)
