@@ -904,6 +904,111 @@ quand un cas burst réel est observé.
 - Audits Agent v1+v2 (collisions ZP) : reproductibles via `make
   audit-smart` extended.
 
+### 10.9 RÉSOLUTION de la chasse au slot (2026-06-10) — la collision n'est PAS en ZP
+
+> **Statut : cause racine du bug clock Opt-A MESURÉE et PROUVÉE.**
+> Le « slot » de collision n'est pas un slot mémoire : c'est le
+> **registre B (octet haut de l'accumulateur A) à travers la frame
+> IRQ 8-bit de `kernel_irq_handler`**.
+
+**Méthode (§10.3bis appliqué — mesurer, jamais deviner)** :
+
+1. Repro de la condition historique : `inject-pad-shift.py --apply 120`
+   + `sei`/`cli` Opt-A commentés ⇒ `test_oricos_clock` FAIL avec la
+   signature exacte (`tick=1 cyc=900001`). ✓
+2. Logger ZP-IRQ (`test_oricos_zp_log`, Phosphoric) : snapshot
+   ZP $00-$FF + stack bank 0 + bank 1 à chaque step pendant les bodies
+   `sys_win_flush`/`sys_gfx_fill_rect`, diff post-step, classement par
+   contexte (IRQ vs tâche). **Aucune écriture ZP par l'IRQ pendant les
+   bodies** — l'hypothèse « collision slot ZP » est invalidée pour CE
+   bug (elle reste valable comme classe pour l'instance souris/drag).
+3. Watchpoints différentiels (TCB pid 8, `CURSOR_ADDR` $019090) +
+   trace registres fine. **Preuve** :
+   - cyc=207832 : tâche clock (pid 8) dans `kernel_print_char` pc_lf,
+     `PC=01:11AD`, **C=$BC98, M=16** (P=$91, fenêtre `rep #$20 …
+     lda/adc/sta CURSOR_ADDR`).
+   - cyc=207839 : IRQ T1 prise (vecteur $FF00), C=$BC98 intact.
+   - cyc=208408 : RTI ramène au même PC=01:11AD avec **C=$5C98** —
+     l'octet haut de A vaut la valeur que le code IRQ a laissée dans B.
+   - Conséquence : `sta CURSOR_ADDR` écrit $5C99 → tous les prints
+     suivants partent hors écran ($5C99+ au lieu de $BC99+) →
+     « clock: done » jamais visible. **L'app NE hang PAS** : elle
+     termine ses 16 ticks et exit proprement (TCB pid 8 DEAD à
+     cyc=251927 par `sys_exit`) — c'est l'écran qui ne reçoit plus rien.
+
+**Mécanisme** : `kernel_irq_handler` ouvre par `sep #$30` puis
+`pha/phx/phy` **8-bit** (handlers.s). Le `pla` final ne restaure que
+A.low ; B conserve ce que le code IRQ y a laissé. Toute tâche ou
+syscall interrompu **en M=16 entre un load et un store** reprend avec
+A.high corrompu. Le risque était documenté en tête de `handlers.s`
+(invariant IRQ_CONFORMITE §3.3 A) mais l'audit ne couvrait que
+**X/Y 16-bit** — le cas **A/M=16** n'était ni listé ni couvert par
+l'invariant « X=1 aux points préemptibles ». Le site déclencheur
+(`kernel_print_char` avance/LF, console.s) n'était pas dans le tableau
+d'audit.
+
+**Pourquoi position-dépendant (pad +120)** : la corruption exige que
+l'IRQ T1 tombe dans une fenêtre de quelques cycles (`rep #$20` …
+`sta`). Le pad décale la phase relative boot↔T1 et aligne la fenêtre.
+**Pourquoi Opt-A « réparait »** : les `sei` sur fill_rect/flush
+décalaient le timing — l'IRQ ne tombait plus dans la fenêtre du print.
+Fix de point par accident, exactement ce que le sign-off senior
+craignait (§10.1).
+
+**Découvertes collatérales (à traiter, hors bug principal)** :
+- **(a) `TICK_COUNTER = $015500` ⟂ segment `NMI_HANDLER` ($5500)** :
+  la variable et le `rti` du handler NMI occupent la MÊME adresse —
+  chaque tick écrase l'opcode `rti`. Bénin v1 (aucune source NMI
+  câblée) mais bombe à retardement : tout NMI exécuterait la valeur du
+  compteur comme opcode. Réassigner TICK_COUNTER ou déplacer le
+  segment.
+- **(b) Harness Phosphoric : lire $0100-$0FFF via `memory_read` route
+  $0300-$03FF vers l'I/O** — la lecture de $0304 (T1C-L) ACQUITTE
+  l'IRQ T1. Le logger v1 mangeait une IRQ sur deux et faisait
+  disparaître le bug qu'il mesurait. Leçon harness : tout snapshot
+  mémoire doit exclure la fenêtre I/O. (Corrigé dans
+  `test_oricos_zp_log.c`.)
+- **(c) `TCB_BITMAP` ($015B20)=$00EF en fin de run cassé** : slot 4
+  (pid 5, BLOCKED) marqué libre. Non investigué — à vérifier après le
+  fix principal (peut être une conséquence du même mécanisme).
+
+**Options de fix (à arbitrer — refactor structurel, confirmation
+humaine requise par CLAUDE.md OricOS §5)** :
+- **(A) Option B des sources** (pré-tracée en tête de handlers.s) :
+  `kernel_irq_handler` save/restore **16-bit** (`rep #$30` +
+  `pha/phx/phy`). Fix de CLASSE (couvre A, X, Y d'un coup, ferme aussi
+  les 3 sites « RÉEL » de l'audit X/Y). Coût : le format de frame
+  change → adaptation atomique de TOUS les forgeurs/consommateurs de
+  frame (`kernel_task_create`, `sys_yield`, `do_switch`,
+  `kernel_block_switch`). Multi-fichiers, ~1 jour + tests.
+- **(B) Sauver B seul dans la frame** (`xba`/`pha` x2) : +1 octet de
+  frame, même contrainte d'atomicité forgeurs, ne couvre pas X/Y
+  (couverts par l'invariant X=1 existant — mais invariant fragile).
+- **(C) Étendre l'invariant aux régions M=16** : wrapper `sei`/`cli`
+  chaque séquence `rep #$20` préemptible (console.s print_char ×3,
+  scroll_up, + audit complet wm.s/gfx.s). C'est le « patchwork sei
+  ad-hoc » que ce dossier (§1) qualifie d'insoutenable — déconseillé.
+
+**Recommandation senior tracée : (A)** — c'est l'option que l'auteur
+du handler avait lui-même pré-identifiée, elle ferme la classe entière
+(A+X+Y) au lieu du point, et elle rend caducs les wrappers sei/cli
+(c) ET l'invariant X=1 (simplification nette).
+
+**Test de verrouillage** : `test_oricos_irq_frame_m16` (Phosphoric) —
+détecte la corruption de C à travers une IRQ prise en M=16 (snapshot C
+à la prise, comparaison au retour au PC interrompu). **ROUGE démontré
+sur le kernel actuel** (condition mémoire
+`feedback_test_definition_of_done` satisfaite) ; passera VERT avec le
+fix. Hors `make tests` tant que le fix n'est pas landé.
+
+**Impact sur ce dossier** : §10.2/§10.3 (layout ZP $E0-$EF) restent
+pertinents pour la classe ZP souris/drag, mais ne sont PLUS le chemin
+du bug clock Opt-A. Le retrait d'Opt-A (Étape 4) devient possible dès
+que le fix (A) est landé et que `test_oricos_irq_frame_m16` +
+pad-shift ground-truth passent.
+
+---
+
 *Section §10 ajoutée 2026-06-09 suite sign-off senior. Conditions de
-suivi tracées. Implémentation pour sprint dédié — pas dans le scope
-de la session courante.*
+suivi tracées. §10.9 (résolution chasse au slot) ajoutée 2026-06-10 :
+cause racine mesurée = frame IRQ 8-bit vs contexte M=16.*

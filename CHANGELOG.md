@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10] — ADR-32 §10.9 : chasse au slot CLOSE — cause racine = frame IRQ 8-bit vs M=16
+
+Le bug clock Opt-A est élucidé par la mesure (§10.3bis « mesurer, jamais
+deviner ») : la collision n'est pas un slot ZP mais le **registre B (A.high)
+à travers la frame IRQ 8-bit** de `kernel_irq_handler` (`sep #$30` +
+pha/phx/phy). Preuve par trace registres : tâche clock interrompue en M=16
+(C=$BC98) reprend avec C=$5C98 → CURSOR_ADDR corrompu → prints hors écran.
+Test de verrouillage `test-oricos-irq-frame-m16` ROUGE démontré (3/5) sur
+kernel courant, même avec Opt-A. Fix kernel à arbitrer (option A recommandée :
+frame 16-bit). Détail : `docs/adr/0032-zp-race-irq-task-DRAFT.md` §10.9,
+CHANGELOGs Phosphoric (instruments) et OricOS (analyse kernel).
+
 ## [2026-06-09e] — Fix Phosphoric DPR + Klaus 65C816 étendu (17 tests)
 
 Bug Phosphoric latent fixé : `addr816_zp`/`zp_x`/`zp_y` ignoraient `cpu->D`
