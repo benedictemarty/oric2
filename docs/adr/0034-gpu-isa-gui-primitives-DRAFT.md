@@ -262,7 +262,7 @@ niveau d'abstraction.
   (objectif : −90 % de cycles CPU) + validation interactive utilisateur
   (drag fluide).
 
-### 5ter. ÉTAPE C lancée — C1 LIVRÉE (2026-06-10), C2 = sprint suivant
+### 5ter. ÉTAPE C lancée — C1 + C2a LIVRÉES (2026-06-10), C2b = sprint suivant
 
 **C1 (livrée)** :
 - **Device** : `GPU_OP_EXEC_LIST` ($09) — le GPU fetch et exécute une
@@ -283,12 +283,46 @@ niveau d'abstraction.
   « Save changes? » (13 chars) : **5 549 → 2 854 cycles CPU (−48 %)**
   vs carte FIFO-sans-LIST simulée. Suite complète verte.
 
-**C2 (sprint suivant — le cœur de la vision)** : kernel_wm_redraw /
-_wm_draw_windows / redraw_drag en CONSTRUCTEURS de listes (une fenêtre =
-sa display-list, reconstruite à la création/resize/contenu, REJOUÉE au
-drag). Critère de ratification C inchangé : −90 % cycles CPU sur
-redraw_drag + validation interactive drag fluide. Pré-requis techniques
-en place (EXEC_LIST, caps, pattern constructeur démontré sur label_prop).
+**C2a (livrée 2026-06-10)** — fenêtres = display-lists rejouables,
+mécanisme record/replay :
+- **Record/replay** : hooks `WL_REC` dans `kernel_gfx_fill_rect16` et
+  `kernel_gfx_text16` — flag armé → la primitive est ÉMISE dans la liste
+  de la fenêtre (VRAM port auto-inc) au lieu d'être postée.
+  `_wl_record_begin`/`_wl_record_end` encadrent le chrome ; au redraw
+  suivant, liste valide → UNE commande `EXEC_LIST` remplace ~6
+  primitives + leurs poses d'arguments.
+- **Sûreté en vol (post-and-continue + FIFO)** : listes par slot
+  **double-bufferées** (`WL_LISTS` $013000, stride $400, flip par
+  enregistrement → zéro drain au re-record) ; chaînes de titres dans un
+  **ring 32×32 o** (`TK_STR_RING` ≥ 2×profondeur FIFO — sûreté
+  structurelle qui ferme le bug « labels partagés » : une commande en
+  vol ne peut plus pointer une chaîne réécrite). `label_prop` :
+  double-buffer + garde opportuniste `TK_LP_PEND` (drain seulement si la
+  cible est réellement en vol ET GPU BUSY).
+- **Invalidation** (8 sites) : add / close / set_focus (×2 slots) /
+  move / resize / maximize / minimize / icon_add → `_wl_invalidate`.
+  Fenêtre **draguée rendue en chrome direct pendant le drag** (sa liste
+  serait invalidée à chaque move — record/invalidate en boucle = pur
+  gaspillage).
+- **Barrières lecteurs SDRAM** : cursor save/restore drainent le FIFO
+  APRÈS leur early-out (le chemin sprite HW ne paie rien).
+- **Robustesse** : garde bus flottant au boot (TRIGGER lu $FF = pas de
+  GPU → caps 0, tous les chemins listés retombent en sync) ; segment
+  ld65 `GUICODE` ($9200-$EDFF) créé — CODE était plein.
+- **Gains mesurés** (drag réel 60 Hz, `test_gpu_display_list_drag`) :
+  `redraw_drag` max **10 184 vs 13 151 cycles (−22 %)** vs carte sans
+  LIST. Budget IRQ legacy rebasé 18 000 → 22 000 (R8 : le premier redraw
+  complet inclut le RECORD des listes, ~+1 700 one-shot amorti par tous
+  les redraws suivants en EXEC_LIST).
+
+**C2b (sprint suivant — requis pour ratifier C)** : le −22 % est loin du
+critère −90 % car (1) les **widgets** restent dessinés en direct (hors
+record) et (2) la **draguée se reconstruit** au lieu d'être rejouée.
+Plan : widgets listés (slots de chaînes per-widget dans le ring) +
+extension ISA additive « EXEC_LIST avec offset x/y » (le GPU rejoue la
+liste translatée → le drag ne reconstruit RIEN, ni la draguée ni les
+autres). Critère de ratification C inchangé : −90 % cycles CPU sur
+redraw_drag + validation interactive drag fluide.
 
 ## 6. Impacts croisés
 

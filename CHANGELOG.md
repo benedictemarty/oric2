@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10n] — ADR-34 étape C2a LIVRÉE : fenêtres = display-lists rejouables (record/replay)
+
+Hooks WL_REC dans fill_rect16/text16 : le chrome d'une fenêtre est
+ENREGISTRÉ dans sa display-list (double-buffer $013000 stride $400, zéro
+drain) puis REJOUÉ en UNE commande EXEC_LIST. Chaînes de titres dans un
+ring 32×32 o ≥ 2×FIFO (ferme structurellement le bug « labels partagés »
+en post-and-continue). Invalidation sur 8 sites (add/close/focus/move/
+resize/max/min/icon). Draguée en chrome direct pendant le drag.
+Barrières curseur après early-out. Garde bus flottant au boot ($FF →
+caps 0). Segment ld65 GUICODE $9200 (CODE plein). Gain drag réel 60 Hz :
+redraw_drag 13151→10184 cyc (−22 %) ; budget IRQ rebasé 18000→22000
+(R8 : record one-shot du premier redraw, amorti ensuite). C2b tracé
+(widgets listés + EXEC_LIST offset x/y) pour le critère −90 %.
+
 ## [2026-06-10m] — Étape B RATIFIÉE (validation Bénédicte) + étape C1 LIVRÉE : display-lists
 
 B ratifiée après validation interactive — règles de contrat GRAVÉES
