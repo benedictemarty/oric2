@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10c] — ADR-32 §10.11 : Opt-A retiré, classe souris-drag validée rouge→vert
+
+Sur demande de Bénédicte. La sentinelle test-position-shift v2.2 (multi-slots
+$73-$78 vs args COP $D0-$D4) fait enfin ROUGIR la classe souris-drag : 20
+corruptions sans Opt-A (l'IRQ drag écrase GFX_BASE/GFX_COLOR pendant un body
+sys_gfx_fill_rect — v2.1 surveillait $73 que le chemin fill_rect16 n'écrit
+jamais). Protection de classe : kernel_irq_handler sauvegarde/restaure les
+scratch ZP $08-$93 (140 octets, IRQ_ZP_SAVE $019100) autour du bloc souris —
+tous les syscalls protégés, coût payé uniquement sur IRQ souris. Opt-A
+(sei/cli sur fill_rect/flush) retiré. VERT : 0/33 phases, irq_in_window>0,
+suite complète verte sans rebasage des budgets cycles. Garde de classe dans
+make tests.
+
 ## [2026-06-10b] — ADR-32 §10.10 : FIX frame IRQ 16-bit livré (option A, validée par Bénédicte)
 
 `kernel_irq_handler` sauve/restaure désormais A/X/Y en 16-bit (`rep #$30`),

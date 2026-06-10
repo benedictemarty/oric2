@@ -878,21 +878,23 @@ quand un cas burst réel est observé.
 
 ### 10.7 Conditions de suivi (du sign-off senior, à tracker)
 
-- [ ] **§10 inscrit comme item réel** (pas « un jour ») — ce document
-      est l'instrument. Suivi : reprise active dès qu'un syscall
-      non-Opt-A déclenche la classe, ou trimestre Q3 2026 plancher.
+- [x] **§10 inscrit comme item réel** (pas « un jour ») — traité :
+      cause mesurée (§10.9), fix frame 16-bit (§10.10), protection
+      classe souris-drag + retrait Opt-A (§10.11), le tout 2026-06-10.
 - [ ] **Invariant ZP IRQ acté en ADR ratifié** (cf. 10.3) — partie
-      intégrante de la ratification §10.
-- [ ] **`make test-position-shift` landé maintenant** (cf. 10.5) —
-      **v1 = scaffolding seul (2026-06-09)**, capacité de détection
-      **non démontrée** (run contradictoire : gfx_fill_rect-sans-SEI reste
-      vert). v2 requis avec stimulus drag + détecteur mémoire direct +
-      cible de validation gfx_fill_rect-sans-SEI ⇒ ROUGE avant push.
+      intégrante de la ratification §10. Le périmètre a changé :
+      l'enveloppe save/restore §10.11 remplace la migration $E0-$EF
+      pour le chemin souris ; reste EVT_TMP/T1 (note §10.11).
+- [x] **`make test-position-shift` capacité de détection démontrée**
+      (cf. 10.5/10.11) — v2.2 multi-slots : ROUGE 20 corruptions sur
+      kernel sans protection, VERT avec. Garde de classe dans
+      `make tests`.
 - [ ] **Ligne ADR sur course exempt↔focus** (cf. 10.6.a) — à acter
       avant ratification §10.
 - [ ] **`coalesce-on-overflow` RAW_RING** (cf. 10.6.b) — optionnel,
       reprise sur observation cas burst.
-- [ ] **Retrait Opt-A post-§10** (cf. Étape 4) — bonus.
+- [x] **Retrait Opt-A post-§10** (cf. Étape 4) — livré §10.11
+      (2026-06-10), remplacé par la protection de classe IRQ.
 
 ### 10.8 Réf croisée
 
@@ -1037,11 +1039,62 @@ Implémentation complète le jour même :
 
 **Impact sur ce dossier** : §10.2/§10.3 (layout ZP $E0-$EF) restent
 pertinents pour la classe ZP souris/drag, mais ne sont PLUS le chemin
-du bug clock Opt-A. **Retrait d'Opt-A (Étape 4)** : désormais possible
-sur le plan « bug clock », mais les `sei` d'Opt-A protègent AUSSI la
-réentrance ZP souris-drag (CR A/B) — retrait à valider séparément
-contre cette classe (stimulus drag) avant de l'acter. Statu quo
-conservé en attendant.
+du bug clock Opt-A.
+
+### 10.11 Retrait Opt-A + protection de classe souris-drag (2026-06-10)
+
+> **Étape 4 du plan §10.4 LIVRÉE**, sur demande explicite de Bénédicte
+> (« retire Opt-A et valide la classe souris-drag »). Méthode rouge →
+> protection → vert, conforme `feedback_test_definition_of_done`.
+
+**1. La classe souris-drag rendue ROUGE (enfin).** Le scaffolding
+v1/v2.1 de `test-position-shift` ne rougissait pas parce que la
+sentinelle surveillait `GFX_ARG2_LO` ($73) — or le chemin drag IRQ
+(`kernel_wm_redraw_drag` → `kernel_gfx_fill_rect16`) écrit **les
+registres GPU directement**, jamais GFX_ARG2_*. Il écrase en revanche
+`GFX_BASE_*` ($70-$72), `GFX_COLOR` ($78), `WM_ARG_*`, `WM_DP_TMP`,
+`DP_TMP`, `EVT_TMP`, `VRAM_OP_*`… **v2.2** : sentinelle multi-slots —
+à l'entrée de `kernel_gfx_fill_rect` (consommation), compare
+$73/$74/$76/$77/$78 aux args COP $D0-$D4 (intacts par construction).
+**ROUGE obtenu** sur kernel sans Opt-A : 20 corruptions sur le sweep
+(phases 52-128), divergence type `GFX_COLOR` attendu $00 / observé $0F
+— l'app aurait dessiné dans le framebuffer desktop à la couleur du
+rendu de fenêtres. Diag `irq_in_window` confirme que les IRQ souris
+frappent bien pendant la fenêtre du body.
+
+**2. Protection de classe** (remplace les `sei` de point d'Opt-A) :
+`kernel_irq_handler` sauvegarde les scratch ZP **$08-$93 (140 octets)**
+vers `IRQ_ZP_SAVE` ($019100) avant le bloc souris (`mouse_read` →
+`mouse_step`/drag → `event_push_mouse`) et les restaure après. Un body
+syscall préempté par une IRQ souris reprend avec TOUS ses scratch
+intacts — protège **tous les syscalls**, pas seulement
+fill_rect/flush. Boucles 16-bit (`rep #$30`, ~2×750 cyc), payées
+UNIQUEMENT sur les IRQ avec event MOU2 — les IRQ T1 pures ne paient
+rien. Pas d'IRQ imbriquée (I=1 dans le handler) → buffer unique.
+
+**3. Opt-A retiré** : `sei`/`cli` supprimés de `sys_gfx_fill_rect` et
+`sys_win_flush` (gain : ~300 cyc de latence IRQ max par syscall, et
+surtout fin du fix-de-point non générique pointé par le sign-off
+senior §10.1).
+
+**Validation** :
+- `test-position-shift` v2.2 : ROUGE (20 corruptions) sans protection
+  → **VERT (0/33 phases)** avec, `irq_in_window` toujours > 0 (les
+  conditions du rouge restent exercées). Le verdict fait désormais
+  échouer le test (garde de classe dans `make tests`).
+- `test-oricos-irq-frame-m16` : VERT (la frame 16-bit §10.10 tient).
+- Suite complète Phosphoric : verte, **sans rebasage des budgets
+  cycles** (wm-cost, scroll-cost, ctl-taskmode, scroll-burst passent —
+  le coût du save/restore tient dans les marges).
+- `audit-rep-x` baseline 18 → 20 (les 2 nouvelles boucles 16-bit,
+  contexte IRQ I=1 — non préemptibles).
+
+**Note résiduelle (classe T1, hors scope)** : `kernel_event_push_timer`
+(IRQ T1) écrit `EVT_TMP` ($6E) hors de l'enveloppe souris ; un syscall
+qui posterait des events en parallèle partagerait ce slot. Cette
+fenêtre préexistait à Opt-A (qui ne couvrait que 2 syscalls) et n'est
+pas élargie par son retrait. À traiter si un cas concret apparaît
+(candidat : slot IRQ-only $E2, cf. §10.3).
 
 ---
 
