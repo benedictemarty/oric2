@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10t] — Sprint « suite GUI » : hover menu, centrage, proportionnel partout
+
+Trois briques GeoWorks livrées : item de menu survolé inversé
+(MENU_HOVER + tracking motion + repaint liste 9), labels de boutons
+centrés H/V en proportionnel (text_width), proportionnel généralisé —
+titres de fenêtres (copie bank 1 WM_TITLES_B1), menus (titres + items),
+taskbar (le scratch partagé TB_WIN_SDRAM disparaît au profit de l'arène
+C2b). +1 test (menu_hover) ; recalibrages : drag tests espacés (merge
+d'events au boot prop), filtre 4000 cyc sur la mesure label C1. Suite
+verte. Validation interactive attendue.
+
 ## [2026-06-10s] — Fix clignotement resize (retour interactif post-bascule)
 
 « Le rendu est clignotant lorsque l'on étend une fenêtre » : 2 causes
