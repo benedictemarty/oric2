@@ -646,6 +646,15 @@ Diagnostic mesuré : sémantique correcte (focus à ~200k, drag appliqué à
 **Critère de sortie de sprint : validation interactive utilisateur**
 (drag/resize/menus/taskbar fluides en mode défaut) — leçon ADR-29.
 
+**VALIDÉE 2026-06-10 par Bénédicte Marty** (« cela fonctionne, le drag
+est fluide ») — la bascule est ACTÉE. `WM_TASKMODE` est le mode nominal
+d'OricOS ; le rendu en IRQ n'existe plus que derrière l'opt-out
+`--wm-legacy` (chemin couvert par `test_oricos_wm_legacy_optout`).
+L'ADR-28 est entièrement livrée : design option C ratifié 2026-05-29,
+bascule par défaut validée 2026-06-10. Refinements restants tracés en
+§7.6/limites (damage tracking optionnel, record RAW étendu v2,
+single-writer $D0..$D9 inter-apps si multi-app événementiel réel).
+
 ## Références
 - CLAUDE.md §2 (ADR-03/24/25/26), §3 (ADR-15/27), §10 (moratoire).
 - `docs/adr/0027-backing-store-fenetre-DRAFT.md` §0bis/§0ter.

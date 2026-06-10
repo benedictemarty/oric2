@@ -7,6 +7,15 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10r] — Bascule WM_TASKMODE VALIDÉE interactivement : ADR-28 entièrement livrée
+
+« Cela fonctionne, le drag est fluide » (Bénédicte, 2026-06-10) — le
+critère de sortie du sprint bascule est rempli. WM_TASKMODE est le mode
+nominal d'OricOS : politique fenêtre + rendu (display-lists ADR-34) en
+tâche serveur, IRQ réduite à lecture device + push RAW + sprite
+curseur. Le rendu-en-IRQ ne subsiste que derrière --wm-legacy (testé).
+ADR-28 : design ratifié 2026-05-29, bascule validée 2026-06-10.
+
 ## [2026-06-10q] — ADR-28 §8 : BASCULE WM_TASKMODE PAR DÉFAUT (sprint lancé par Bénédicte)
 
 Le rendu et la politique fenêtre quittent l'IRQ : le boot crée task_wm
