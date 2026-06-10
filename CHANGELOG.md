@@ -7,6 +7,23 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10g] — SP-3.p : suite GUI — fontes proportionnelles + textes de dialogues
+
+Reprise des briques GUI parquées (réf GeoWorks/GEOS, ADR-26 déclaratif) :
+**F.1 fontes proportionnelles** — table FONT_WIDTHS générée du charset XVGA
+(gen-font-widths.py), kernel_tk_text_width (mesure) + kernel_tk_label_prop
+(rendu char-à-char, avance variable), nouveau type widget LABELP, segment
+GUICODE ($9200, CODE était plein). **D.1 dialogues** — tag DB_TEXT (GEOS
+DBTXTSTR : relx16 rely16 ptr16) dans SYS_DO_DLGBOX + message optionnel
+SYS_ALERT ($D0-$D2), staging DLG_TEXT_BUF, troncature par largeur pour
+l'alerte. Au passage : fix bug UX préexistant (les dialogues ne peignaient
+JAMAIS leurs widgets — aucun redraw avant la boucle modale) et fix far
+addressing des labels GUICODE (widths lues en bank 0 → texte superposé, vu
+ROUGE par l'assertion d'étendue). SDK : defines DB_*, oricos_alert zérote
+$D0-$D2, oricos_alert_msg ajouté. Démos : --dlg-demo / --alert-demo
+(Phosphoric). Tests dlgbox/alert durcis (staging + widget + pixels +
+étendue proportionnelle). Suite complète verte. Screenshots validés.
+
 ## [2026-06-10f] — ADR-32 RATIFIÉE : invariant ZP/IRQ P1/P2/P3
 
 Les 2 conditions §10.7 restantes sont traitées : (1) invariant ZP/IRQ acté
