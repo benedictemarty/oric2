@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10q] — ADR-28 §8 : BASCULE WM_TASKMODE PAR DÉFAUT (sprint lancé par Bénédicte)
+
+Le rendu et la politique fenêtre quittent l'IRQ : le boot crée task_wm
+et pose WM_TASKMODE=$A5 par défaut (panic R5 si échec de création) ;
+l'IRQ souris = lecture device + push RAW + sprite curseur seulement.
+Opt-out --wm-legacy (TC_WM_LEGACY $01EE90). Récolte du chantier ADR-34 :
+le record des display-lists s'exécute désormais hors IRQ. Bug
+single-writer $D0..$D9 (task_wm vs event_pop apps) trouvé et corrigé
+par Forbid/Permit (ADR-25) — rouge→vert sur mainloop_message. 7 tests
+GUI rebasés (R8 : rendu asynchrone, latence sched ~50-100k cyc).
+Critère de sortie : validation interactive (drag/resize/menus fluides).
+
 ## [2026-06-10p] — ADR-34 étape C RATIFIÉE : l'ADR GPU-ISA est close
 
 Validation interactive positive de Bénédicte (« cela fonctionne » —

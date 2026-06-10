@@ -599,6 +599,53 @@ Ratification le **2026-05-29**, conformément aux 3 conditions du moratoire
 Ces refinements sont **tracés** et **suivis** ; aucun n'est bloquant pour la
 décision d'architecture désormais figée par cette ratification.
 
+## 8. BASCULE PAR DÉFAUT (2026-06-10) — WM_TASKMODE devient le mode nominal
+
+Sprint lancé par Bénédicte après la clôture du verrou « bug task_wm
+starve » (`docs/notes/BUG_task_wm_starve_CLOS.md` : bug ÉMULATEUR — ASL
+mem 8-bit-fixe sous M=16 cassait le scan bitmap de `task_create` pour
+les pids ≥ 8 ; prouvé R1 par re-simulation, gardé par
+`test_oricos_ctl_taskmode_starve` + pivots Klaus RMW M=16).
+
+**Mécanique de la bascule** :
+- Le **boot pose lui-même** `TC_WM_FLAG = WM_TASKMODE = $A5` et crée
+  `task_wm` (échec de création → `kernel_panic PANIC_NO_TASK_SLOT`,
+  R5 : tâche système, échec bruyant). Les gates runtime existants
+  (IRQ → RAW_RING, skip mouse_step en IRQ) sont inchangés — ils lisent
+  ces flags.
+- **Opt-out explicite** : `TC_WM_LEGACY = $A5` ($01EE90, poké pré-boot
+  par `--wm-legacy` côté Phosphoric ou par un test) → comportement IRQ
+  legacy intégral, conservé et testé. `--wm-server`/`--wm-taskmode`
+  deviennent des no-ops de compatibilité.
+- Conséquence ADR-34 : le **record des display-lists s'exécute désormais
+  hors IRQ** (chemin nominal) — l'IRQ souris ne fait plus que
+  lecture device + push RAW + sprite curseur.
+
+**Bug single-writer trouvé et corrigé pendant la bascule** (§5bis
+OricOS/CLAUDE.md) : `$D0..$D9` (record d'événement) est un tampon ZP
+**partagé entre tâches** (D=0 pour toutes). task_wm garde son record
+RAW dedans pendant tout `mouse_step` (préemptible en taskmode) ; une
+app préemptante qui fait `event_pop` l'écrase → `push_verbatim`
+republiait le MAUVAIS événement (mesuré : le DOWN republié en MOVED,
+`MSG_CONTENT` perdu — rouge sur `test_oricos_mainloop_message`).
+**Fix** : `Forbid`/`Permit` (ADR-25, portée tâche↔tâche — les IRQ et le
+curseur sprite restent vivants) autour de la section pop→push de
+`task_wm_entry` ; jamais tenu pendant `raw_wait`. Pré-existant depuis
+l'Étape 2, exposé par le défaut. Reste de la même famille (tracé, non
+bloquant) : deux APPS qui pop-ent concurremment partagent aussi
+`$D0..$D9` — à instruire si le multi-app événementiel devient réel.
+
+**Ajustements tests (R8, justifiés)** : 7 tests GUI de
+`test_oricos_boot` étendent leur borne de cycles (160-320k → 400-600k) —
+le rendu est désormais **asynchrone** (latence d'ordonnancement task_wm
+~50-100k cycles dans ces harness) ; l'ordre des événements est préservé
+par RAW_RING, seules les assertions finales avaient besoin de marge.
+Diagnostic mesuré : sémantique correcte (focus à ~200k, drag appliqué à
+~250k pour des injections à 140-150k).
+
+**Critère de sortie de sprint : validation interactive utilisateur**
+(drag/resize/menus/taskbar fluides en mode défaut) — leçon ADR-29.
+
 ## Références
 - CLAUDE.md §2 (ADR-03/24/25/26), §3 (ADR-15/27), §10 (moratoire).
 - `docs/adr/0027-backing-store-fenetre-DRAFT.md` §0bis/§0ter.
