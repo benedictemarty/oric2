@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10p] — ADR-34 étape C RATIFIÉE : l'ADR GPU-ISA est close
+
+Validation interactive positive de Bénédicte (« cela fonctionne » —
+drag fluide, widgets/menu/taskbar corrects) : l'étape C remplit ses
+deux critères (−90,1 % mesuré + validation interactive). **ADR-34
+close** : étapes B (v2 async) et C (v3/v4 display-lists) ratifiées,
+contrat GPU-ISA gravé (opcodes $00-$0A contractuels pour le HDL ULX3S,
+Phosphoric = suite de conformance). Conformité moratoire §10 citée au
+dossier. CLAUDE.md : ADR-34 déplacée §3 → §2 ; ADR_SUMMARY mis à jour.
+Chantier connexe restant (hors ADR) : record hors IRQ → ADR-28.
+
 ## [2026-06-10o] — ADR-34 étape C2b LIVRÉE : drag = replay translaté, critère −90 % ATTEINT
 
 GPU-ISA v4 (additif, contrat gravé) : EXEC_LIST_XY ($0A) rejoue une

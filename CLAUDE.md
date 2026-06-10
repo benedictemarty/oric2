@@ -56,6 +56,7 @@ Ces décisions sont **non-négociables** sans nouvelle discussion explicite avec
 | ADR-31 | Clip widget hors rect parent | Option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` (test dans `_wm_draw_widget_body`) ; rendue redondante à terme par ADR-27 (backing store contraint le rendu par construction), mais conservée v1 — pas de migration coûteuse pour un cas couvert |
 | ADR-32 | ZP/IRQ | Invariant P1/P2/P3 (ratifiée 2026-06-10) : **P1** enveloppe IRQ — le chemin souris de `kernel_irq_handler` save/restore les scratch ZP `$08-$93` (`IRQ_ZP_SAVE` `$019100`) ; **P2** sections critiques `php/sei…plp` côté tâche pour les structures RMW partagées (rings, pushers tâche) ; **P3** frame IRQ 16-bit (`rep #$30` avant pha/phx/phy, forgeurs au format 10 octets — c'était la cause racine du bug clock : A.high clobbé en M=16, PAS une collision ZP). Opt-A (sei de point) retiré ; TICK_COUNTER relocalisé `$019093` (écrasait le `rti` NMI à `$5500`) ; exempt↔focus option (γ) `kernel_kbd_waiter_eligible` actée. 4 gardes rouge→vert dans `make tests` (irq-frame-m16, position-shift v2.2, evt-push-atomic, nmi-safe). Migration mouse_step hors IRQ NON ratifiée (chantier ADR-28). Dossier : `docs/adr/0032-zp-race-irq-task.md` |
 | ADR-33 | Sprite HW curseur | Sprite 16×16 4bpp transparent dans le compositor (Phosphoric `sprite_device`, à terme ULA HDL). I/O `$0370-$037F`. Bitmap **PC/GEOS pBasic** authentique (porté `bluewaysw/pcgeos`). Remplace backing store software, ferme ADR-32 §9 par construction pour le chemin legacy default (`WM_TASKMODE=$00`). `--wm-taskmode` reste expérimental (bug task_wm starve §10 ouvert). Audit §4.4 livré sur toutes les composites GPU (fill_rect/fill_rect16/line/text/text16). Réf : `docs/adr/0033-sprite-hw-cursor-DRAFT.md` |
+| ADR-34 | GPU-ISA | Étapes B + C ratifiées 2026-06-10 (validations interactives). **Contrat GPU-ISA gravé** : sémantique d'opcode immuable, extensions additives, GPU_CAPS obligatoire (read TRIGGER, caps<<4\|version, $F4 = v4), Phosphoric = suite de conformance. **B (v2)** : FIFO 16 + IRQ complétion (IRQF_GPU) + CAPS, kernel routé par capacités, compose post-and-continue (−52 %). **C (v3/v4)** : display-lists `EXEC_LIST` ($09) + `EXEC_LIST_XY` ($0A, replay translaté dy<<12\|dx signés 12-bit, clip négatif en espace entier) ; fenêtres (chrome+widgets), menu, taskbar = listes rejouables (arène de chaînes per-(slot,flip), garde 64 entrées + fallback direct) ; drag = replay translaté + coalescing de frames + culling dirty-rect ; `redraw_drag` 13 151 → 1 307 cyc (**−90,1 %**). Chantier connexe hors ADR : record hors IRQ (converge ADR-28). Dossier : `docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md` |
 
 **Détail, alternatives écartées, implications** → [`docs/adr/ADR_SUMMARY.md`](docs/adr/ADR_SUMMARY.md) et fichiers individuels `docs/adr/00XX-*.md`.
 
@@ -109,34 +110,7 @@ expliciter avant d'avancer.
 
 ### ~~ADR-32~~ → ratifiée 2026-06-10, déplacée vers §2 (invariant ZP/IRQ P1/P2/P3 ; la migration mouse_step hors IRQ — option B du dossier originel — reste explicitement non ratifiée, chantier ADR-28)
 
-### ADR-34 — GPU-ISA : primitives GUI, async, display-lists (dossier d'instruction, **étape B ratifiée 2026-06-10**)
-
-**Question** : à quel niveau d'abstraction fixer le contrat des primitives
-graphiques (GPU-ISA) pour que (1) la charge IRQ du rendu disparaisse —
-objectif premier — et (2) un changement de carte/HDL ne change jamais les
-primitives ? Références instruites : Apple IIgs (jumeau 65C816, leçon
-QuickDraw II = contrat logiciel + leçon de perf SANS blitter), SymbOS
-(mêmes primitives sur CPC sans accélération et MSX V9938 command engine
-async), Amiga (Blitter/Copper). 4 options : (A) statu quo sync ; (B) v2
-async — FIFO + IRQ complétion + vsync + GPU_CAPS ; (C) v3 display-lists
-EXEC_LIST — une fenêtre = sa liste, rejouée par le GPU, l'IRQ ne rend plus
-rien ; (D) DRAW_WINDOW figée (écartée : fige le look, contraire ADR-26).
-**Recommandation senior tracée : B puis C**, ratifiables séparément.
-**Étape B RATIFIÉE 2026-06-10** (validation interactive Bénédicte) :
-GPU-ISA v2 async — FIFO 16 + IRQ complétion (IRQF_GPU) + CAPS/VERSION
-(read TRIGGER), kernel route par capacités (GPU_CAPS_KERNEL boot),
-compose post-and-continue −52 % cyc CPU mesurés. Règles de contrat
-GRAVÉES : sémantique d'opcode immuable, extensions additives, GPU_CAPS
-obligatoire, Phosphoric = suite de conformance. **Étape C : C1 + C2a +
-C2b LIVRÉES (2026-06-10)** — EXEC_LIST ($09, v3) puis EXEC_LIST_XY
-($0A, v4, replay translaté) ; fenêtres (chrome + widgets), menu,
-taskbar = display-lists rejouables (arène de chaînes per-(slot,flip),
-garde 64 entrées + fallback direct) ; drag = replay translaté sans
-reconstruction + coalescing de frames + culling dirty-rect ;
-`redraw_drag` 13 151 → **1 307 cyc (−90,1 %)** : critère chiffré de
-ratification ATTEINT — **reste la validation interactive (drag fluide)
-pour ratifier C**. Fix collision latente WL_VALID/PANIC_CODE ($019095 →
-$0191A0). Dossier : `docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md`.
+### ~~ADR-34~~ → étapes B et C ratifiées 2026-06-10, déplacée vers §2 (GPU-ISA v2/v3/v4 : FIFO async + IRQ + CAPS, display-lists EXEC_LIST/EXEC_LIST_XY, contrat gravé ; `redraw_drag` −90,1 % + validation interactive drag fluide ; dossier : `docs/adr/0034-gpu-isa-gui-primitives-DRAFT.md`)
 
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 

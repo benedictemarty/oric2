@@ -262,7 +262,29 @@ niveau d'abstraction.
   (objectif : −90 % de cycles CPU) + validation interactive utilisateur
   (drag fluide).
 
-### 5ter. ÉTAPE C lancée — C1 + C2a LIVRÉES (2026-06-10), C2b = sprint suivant
+### 5quater. ÉTAPE C RATIFIÉE (2026-06-10)
+
+**RATIFIÉE 2026-06-10 par Bénédicte Marty** (« cela fonctionne ») après
+validation interactive du drag (fluide, widgets/menu/taskbar corrects)
+sur l'implémentation C2b complète. Les deux critères de ratification
+sont remplis :
+1. **−90 % de cycles CPU sur `redraw_drag`** : 13 151 → 1 307 cyc
+   (−90,1 %), budget ≤ 2 200 gravé dans `test_gpu_display_list_drag`.
+2. **Validation interactive utilisateur** : drag fluide confirmé.
+
+Conformité moratoire (CLAUDE.md §10) : dossier d'instruction ✓ (§0-§5),
+implémentation 100 % livrée et testée ✓ (suite Phosphoric complète
+verte, 3 tests device EXEC_LIST_XY, budget R8 gravé), cohérence ADR ✓
+(extension additive d'ADR-21/étape B — contrat gravé respecté ; sert
+ADR-26/27/28 ; le sprite curseur ADR-33 reste hors listes).
+
+**L'ADR-34 est close** : GPU-ISA v2 (B) + v3/v4 (C) ratifiées. La
+sémantique des opcodes $00-$0A est CONTRACTUELLE pour le HDL ULX3S ;
+Phosphoric est la suite de conformance. Chantier connexe restant (hors
+ADR-34) : sortir le record de l'IRQ — converge avec la bascule
+WM_TASKMODE (ADR-28).
+
+### 5ter. ÉTAPE C lancée — C1 + C2a LIVRÉES (2026-06-10), C2b livrée ensuite (cf. §5quater ratification)
 
 **C1 (livrée)** :
 - **Device** : `GPU_OP_EXEC_LIST` ($09) — le GPU fetch et exécute une
