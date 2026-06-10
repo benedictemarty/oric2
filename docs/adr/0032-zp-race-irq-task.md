@@ -1,9 +1,11 @@
-# ADR-32 (DRAFT) — Course ZP IRQ↔tâche : propriétaire unique WM + migration mouse_step hors IRQ
+# ADR-32 — Course ZP/registres IRQ↔tâche : invariant P1/P2/P3 (frame 16-bit, enveloppe ZP souris, sections critiques rings)
 
-- **Statut** : **ouverte — dossier d'instruction** (2026-05-31). DRAFT
-  non ratifié (moratoire CLAUDE.md §10 : implémentation de référence à
-  produire par étapes ; ratification après validation interactive et
-  passage du harnais d'injection event-async).
+- **Statut** : **RATIFIÉE 2026-06-10** (voir §11 — conformité moratoire
+  citée, 3 conditions vérifiées, périmètre ratifié vs non-ratifié
+  explicite). Le titre originel du dossier (« propriétaire unique WM +
+  migration mouse_step hors IRQ ») reflétait l'hypothèse d'instruction ;
+  la décision ratifiée est l'invariant §10.14(1), issu de la mesure
+  (§10.9) — la migration mouse_step reste explicitement non ratifiée.
 - **Date d'ouverture** : 2026-05-31
 - **Décideurs** : bmarty (arbitrage), Claude Code (instruction)
 - **Origine** : audit ingénieur 6502/65C816 du kernel
@@ -881,18 +883,18 @@ quand un cas burst réel est observé.
 - [x] **§10 inscrit comme item réel** (pas « un jour ») — traité :
       cause mesurée (§10.9), fix frame 16-bit (§10.10), protection
       classe souris-drag + retrait Opt-A (§10.11), le tout 2026-06-10.
-- [ ] **Invariant ZP IRQ acté en ADR ratifié** (cf. 10.3) — partie
-      intégrante de la ratification §10. Le périmètre a changé :
-      l'enveloppe save/restore §10.11 remplace la migration $E0-$EF
-      pour le chemin souris ; reste EVT_TMP/T1 (note §10.11).
+- [x] **Invariant ZP IRQ acté en ADR ratifié** — fait : §10.14(1)
+      (protocoles P1/P2/P3), repris dans OricOS/CLAUDE.md §5nonies,
+      ratifié §11 (2026-06-10).
 - [x] **`make test-position-shift` capacité de détection démontrée**
       (cf. 10.5/10.11) — v2.2 multi-slots : ROUGE 20 corruptions sur
       kernel sans protection, VERT avec. Garde de classe dans
       `make tests`.
-- [ ] **Ligne ADR sur course exempt↔focus** (cf. 10.6.a) — à acter
-      avant ratification §10.
+- [x] **Ligne ADR sur course exempt↔focus** (cf. 10.6.a) — fait :
+      §10.14(2), option (γ) actée telle qu'implémentée
+      (kernel_kbd_waiter_eligible), critère de réouverture tracé.
 - [ ] **`coalesce-on-overflow` RAW_RING** (cf. 10.6.b) — optionnel,
-      reprise sur observation cas burst.
+      hors ratification (§11.2), reprise sur observation cas burst.
 - [x] **Retrait Opt-A post-§10** (cf. Étape 4) — livré §10.11
       (2026-06-10), remplacé par la protection de classe IRQ.
 
@@ -1159,8 +1161,108 @@ bitmap $01EF = sentinelle + pids 1,2,3,5,6,7,8 vivants, pid 4 (task_d
 dans mon décodage du diagnostic (slot 0-based vs pid 1-based). Aucun
 bug, aucun changement de code.
 
+### 10.14 Conditions §10.7 finales : invariant ZP IRQ acté + ligne exempt↔focus
+
+**(1) INVARIANT ZP/IRQ — acté (texte normatif, repris dans
+`OricOS/CLAUDE.md` §5nonies)** :
+
+> **« Tout état partagé entre contexte IRQ top-half et contexte tâche
+> obéit à l'un des trois protocoles, sans exception :**
+> **(P1) Enveloppe IRQ** — le chemin IRQ qui clobbe des scratch ZP
+> les sauvegarde/restaure intégralement (chemin souris :
+> `IRQ_ZP_SAVE`, plage $08-$93, handlers.s §10.11). Tout nouveau
+> sous-arbre IRQ écrivant de la ZP scratch passe sous l'enveloppe ou
+> ajoute la sienne.
+> **(P2) Section critique côté tâche** — toute structure à RMW
+> partagée (rings EVENT/RAW/KBD, compteurs) s'accède côté tâche sous
+> `php`/`sei` … `plp` (pattern event_pop/raw_pop/kbd_ring_pop,
+> pushers tâche §10.12).
+> **(P3) Registres intégraux** — la frame IRQ sauvegarde A/X/Y en
+> 16-bit (§10.10) ; les forgeurs de frame suivent le format 10 octets
+> documenté en tête de handlers.s. »**
+>
+> Gardes mécaniques dans `make tests` (chacune vue ROUGE sur son
+> défaut) : `test-oricos-irq-frame-m16` (P3),
+> `test-position-shift` v2.2 (P1), `test-oricos-evt-push-atomic` (P2),
+> `test-oricos-nmi-safe` (layout code/data).
+
+Le layout « ZP top-half dédiée $E0-$EF » (§10.3) est **abandonné** :
+l'enveloppe P1 le rend inutile pour le chemin souris (préserve TOUS
+les slots au lieu d'en déplacer quelques-uns), P2 ferme les rings.
+Il reste cité comme option future si un chemin IRQ hors-souris
+devenait gros consommateur de ZP scratch.
+
+**(2) Course exempt↔focus (§10.6.a) — option (γ) actée telle
+qu'implémentée.** `kernel_kbd_waiter_eligible` (sched.s) route déjà
+le clavier : `KBD_WAITER` reste un slot unique, mais le réveil est
+filtré — waiter sans fenêtre (tâche non-GUI, ex. task_e) → éligible ;
+waiter propriétaire de la fenêtre focus → éligible ; waiter GUI
+non-focus → touche retenue (re-réveil au prochain key une fois focus).
+La sémantique « premier arrivé sur le slot » entre un exempt et le
+focus est **intentionnelle v1** (un seul lecteur clavier bloquant à la
+fois en pratique). **Critère de réouverture** : besoin réel de
+plusieurs waiters simultanés (ex. 2 apps GUI en `SYS_READ_CHAR`
+concurrent) → passer à la liste de waiters (option β).
+
 ---
 
-*Section §10 ajoutée 2026-06-09 suite sign-off senior. Conditions de
-suivi tracées. §10.9 (résolution chasse au slot) ajoutée 2026-06-10 :
-cause racine mesurée = frame IRQ 8-bit vs contexte M=16.*
+## 11. RATIFICATION (2026-06-10)
+
+**Statut : RATIFIÉE** — sur instruction de Bénédicte Marty
+(« traite les deux conditions §10.7 restantes et ratifie l'ADR-32 »).
+
+### 11.1 Conformité au moratoire (CLAUDE.md workspace §10 — audit obligatoire)
+
+Le présent paragraphe cite le moratoire de ratification ADR
+(instauré 2026-05-09) et confirme les 3 conditions :
+
+1. **Dossier d'instruction écrit** ✓ — contexte chiffré (206 sites
+   d'écriture ZP, audits §10.2), ≥ 2 alternatives chiffrées (§4 :
+   options A/B/C ; §10.9 : options de fix A/B/C ; §10.6.a : α/β/γ),
+   recommandations senior tracées (§0, §10.3bis, §10.9).
+2. **Implémentation prête ≥ 50 %** ✓ — 100 % livré et testé :
+   §10.10 frame IRQ 16-bit, §10.11 enveloppe IRQ_ZP_SAVE + retrait
+   Opt-A, §10.12 push EVENT_RING atomique, §10.13 TICK_COUNTER/NMI.
+   4 gardes rouge→vert dans `make tests` (OricOS d69b3b4, Phosphoric
+   c557ca1 et antérieurs).
+3. **Cohérence ADR existantes** ✓ — renforce ADR-25 (Forbid ne masque
+   pas les IRQ : les protocoles P1-P3 ferment précisément ce trou) ;
+   n'altère pas ADR-28 (voir périmètre ci-dessous) ; ADR-33 non
+   contredite (audit §4.4 GPU conservé).
+
+### 11.2 Périmètre ratifié
+
+**Décision ratifiée** : l'« invariant ZP/IRQ » §10.14(1) avec ses
+trois protocoles P1/P2/P3 et leurs implémentations livrées
+(§10.10-§10.13), plus la ligne exempt↔focus §10.14(2) option (γ).
+
+**Enseignement central tracé** : la question initiale du dossier
+(« quelle option pour fermer la course ZP ? ») reposait sur un
+diagnostic partiellement faux — le bug déclencheur (clock/Opt-A)
+n'était PAS une collision ZP mais la frame IRQ 8-bit vs M=16
+(§10.9, mesuré). La course ZP souris-drag était RÉELLE (§10.11,
+rouge 20/33) mais distincte. La méthode §10.3bis (« mesurer, jamais
+deviner ») est ce qui a permis de fermer les deux.
+
+**Explicitement NON ratifié** (reste ouvert, chantiers séparés) :
+- L'option (B) originale du §4 — migration complète de `mouse_step`
+  hors IRQ vers la tâche serveur WM (`WM_TASKMODE=$A5` par défaut).
+  Les protocoles P1-P3 ferment la course sans elle ; elle reste un
+  chantier ADR-28 (latence/architecture), gated expérimental, avec
+  le bug task_wm starve noté en ADR-33.
+- Le layout ZP $E0-$EF (§10.3) — abandonné, cf. §10.14(1).
+- `coalesce-on-overflow` RAW_RING (§10.6.b) — optionnel, sur
+  observation d'un cas burst réel.
+
+### 11.3 Suites
+
+- `OricOS/CLAUDE.md` §5nonies : invariant P1/P2/P3 (fait, même
+  commit).
+- CLAUDE.md workspace : ADR-32 déplacée §3 → §2 (fait, même commit).
+- Fichier renommé `0032-zp-race-irq-task.md` (suffixe DRAFT retiré).
+
+---
+
+*Section §10 ajoutée 2026-06-09 suite sign-off senior. §10.9-§10.13
+(résolution complète, 4 gardes rouge→vert) 2026-06-10. §10.14 +
+ratification §11 : 2026-06-10, sur instruction de Bénédicte Marty.*

@@ -7,6 +7,20 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10f] — ADR-32 RATIFIÉE : invariant ZP/IRQ P1/P2/P3
+
+Les 2 conditions §10.7 restantes sont traitées : (1) invariant ZP/IRQ acté
+— P1 enveloppe IRQ_ZP_SAVE, P2 sections critiques rings côté tâche, P3
+frame IRQ 16-bit — texte normatif §10.14(1) repris dans OricOS/CLAUDE.md
+§5nonies (+ item 10 checklist) ; (2) course exempt↔focus actée option (γ)
+telle qu'implémentée (kernel_kbd_waiter_eligible), critère de réouverture
+tracé. Ratification §11 conforme moratoire (3 conditions citées et
+vérifiées : dossier complet, implémentation 100 % livrée avec 4 gardes
+rouge→vert, cohérence ADR-25/28/33). Périmètre honnête : la migration
+mouse_step hors IRQ (option B originelle) reste explicitement NON ratifiée.
+Fichier renommé docs/adr/0032-zp-race-irq-task.md, CLAUDE.md §3→§2,
+ADR_SUMMARY mis à jour.
+
 ## [2026-06-10e] — ADR-32 §10.13 : TICK_COUNTER/NMI $5500 fixé, bitmap TCB = fausse alerte
 
 (a) TICK_COUNTER ($015500) écrasait l'opcode rti du segment NMI_HANDLER à
@@ -63,7 +77,7 @@ pha/phx/phy). Preuve par trace registres : tâche clock interrompue en M=16
 (C=$BC98) reprend avec C=$5C98 → CURSOR_ADDR corrompu → prints hors écran.
 Test de verrouillage `test-oricos-irq-frame-m16` ROUGE démontré (3/5) sur
 kernel courant, même avec Opt-A. Fix kernel à arbitrer (option A recommandée :
-frame 16-bit). Détail : `docs/adr/0032-zp-race-irq-task-DRAFT.md` §10.9,
+frame 16-bit). Détail : `docs/adr/0032-zp-race-irq-task.md` §10.9,
 CHANGELOGs Phosphoric (instruments) et OricOS (analyse kernel).
 
 ## [2026-06-09e] — Fix Phosphoric DPR + Klaus 65C816 étendu (17 tests)
@@ -485,7 +499,7 @@ OricOS + suivi des littéraux côté Phosphoric.
   défaut. Le flag existe pour permettre aux tests d'injection async
   (avec `cpu816_set_pc_hook` Phosphoric, Étape 1 déjà livrée) de
   valider le nouveau chemin sans impact production. Réf :
-  `docs/adr/0032-zp-race-irq-task-DRAFT.md` §3 + §5.
+  `docs/adr/0032-zp-race-irq-task.md` §3 + §5.
 
 ## [2026-05-31m] — ADR-32 Étape 1 : harnais PC-hook Phosphoric
 
@@ -495,12 +509,12 @@ OricOS + suivi des littéraux côté Phosphoric.
   juste avant le fetch d'opcode. Pré-requis pour les tests
   d'injection event-async ADR-32 §4 (anti-revert ADR-28 Étape 3).
   3 cas testés (`test_pc_hook`), 0 régression suite tests
-  Phosphoric. Réf : `docs/adr/0032-zp-race-irq-task-DRAFT.md`
+  Phosphoric. Réf : `docs/adr/0032-zp-race-irq-task.md`
   Étape 1 + axe 8.5 audit.
 
 ## [2026-05-31l] — Dossier d'instruction ADR-32 (course ZP IRQ↔tâche)
 
-### Added — `docs/adr/0032-zp-race-irq-task-DRAFT.md`
+### Added — `docs/adr/0032-zp-race-irq-task.md`
 - Dossier d'instruction (conforme moratoire CLAUDE.md §10 cond. 1)
   pour le fix de la course ZP IRQ↔tâche identifiée par
   `AUDIT_65C816_REMEDIATION.md` §3.3a — **suspect n°1 du revert

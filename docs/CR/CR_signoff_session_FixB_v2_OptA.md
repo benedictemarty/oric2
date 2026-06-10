@@ -102,7 +102,7 @@ tape collision ZP non protégée ⇒ rejouer toute la session.
 
 - `docs/CR/CR_reentrance_irq_syscall_confirmed.md` — trace A/B test 2
   SEI ciblé + invalidation Opt-C.
-- `docs/adr/0032-zp-race-irq-task-DRAFT.md` §10 — squelette ZP top-half
+- `docs/adr/0032-zp-race-irq-task.md` §10 — squelette ZP top-half
   IRQ dédiée, audit ordonné par risque, plan d'attaque, conditions de
   suivi (§10.7 = miroir de §4 ci-dessus).
 - `docs/notes/HANDOFF_inge_senior_Bug_B_session.md` — synthèse session

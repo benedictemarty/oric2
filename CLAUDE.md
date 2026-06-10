@@ -54,6 +54,7 @@ Ces décisions sont **non-négociables** sans nouvelle discussion explicite avec
 | ADR-28 | Threading WM | Option C : politique fenêtre + rendu en tâche serveur WM, curseur seul en IRQ (`TC_WM_FLAG=$A5`) ; réf Intuition/GEOS |
 | ADR-29 | Drag notification hint | Hint déclaratif aligné GeoWorks : default DELAYED (app notifiée 1× à la release), override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; réf PC/GEOS `gValueC.def` |
 | ADR-31 | Clip widget hors rect parent | Option A : skip widget si `rel.x+w > win.w` OR `rel.y+h > win.h` (test dans `_wm_draw_widget_body`) ; rendue redondante à terme par ADR-27 (backing store contraint le rendu par construction), mais conservée v1 — pas de migration coûteuse pour un cas couvert |
+| ADR-32 | ZP/IRQ | Invariant P1/P2/P3 (ratifiée 2026-06-10) : **P1** enveloppe IRQ — le chemin souris de `kernel_irq_handler` save/restore les scratch ZP `$08-$93` (`IRQ_ZP_SAVE` `$019100`) ; **P2** sections critiques `php/sei…plp` côté tâche pour les structures RMW partagées (rings, pushers tâche) ; **P3** frame IRQ 16-bit (`rep #$30` avant pha/phx/phy, forgeurs au format 10 octets — c'était la cause racine du bug clock : A.high clobbé en M=16, PAS une collision ZP). Opt-A (sei de point) retiré ; TICK_COUNTER relocalisé `$019093` (écrasait le `rti` NMI à `$5500`) ; exempt↔focus option (γ) `kernel_kbd_waiter_eligible` actée. 4 gardes rouge→vert dans `make tests` (irq-frame-m16, position-shift v2.2, evt-push-atomic, nmi-safe). Migration mouse_step hors IRQ NON ratifiée (chantier ADR-28). Dossier : `docs/adr/0032-zp-race-irq-task.md` |
 | ADR-33 | Sprite HW curseur | Sprite 16×16 4bpp transparent dans le compositor (Phosphoric `sprite_device`, à terme ULA HDL). I/O `$0370-$037F`. Bitmap **PC/GEOS pBasic** authentique (porté `bluewaysw/pcgeos`). Remplace backing store software, ferme ADR-32 §9 par construction pour le chemin legacy default (`WM_TASKMODE=$00`). `--wm-taskmode` reste expérimental (bug task_wm starve §10 ouvert). Audit §4.4 livré sur toutes les composites GPU (fill_rect/fill_rect16/line/text/text16). Réf : `docs/adr/0033-sprite-hw-cursor-DRAFT.md` |
 
 **Détail, alternatives écartées, implications** → [`docs/adr/ADR_SUMMARY.md`](docs/adr/ADR_SUMMARY.md) et fichiers individuels `docs/adr/00XX-*.md`.
@@ -106,25 +107,7 @@ expliciter avant d'avancer.
 
 ### ~~ADR-29~~ → ratifiée 2026-05-30, déplacée vers §2 (hint déclaratif aligné GeoWorks, default DELAYED, override IMMEDIATE via `WM_DRAG_NOTIFY_HINT=$A5` ; implémentation Étape 1 livrée + validation interactive utilisateur positive ; révèle et corrige bug pré-existant `_wm_redraw_ctl` ; dossier : `docs/adr/0029-drag-notification-hint.md`)
 
-### ADR-32 — Course ZP IRQ↔tâche : propriétaire unique WM (dossier d'instruction, **DRAFT 2026-05-31**)
-
-**Question** : comment fermer la course ZP entre contexte IRQ
-(`kernel_wm_mouse_step`, `_cursor_draw`) et contexte tâche
-(`sys_win_create`, `sys_gfx_*`, MainLoop) identifiée par l'audit
-`AUDIT_65C816_REMEDIATION.md` §3.3a comme **suspect n°1 du revert
-ADR-28 Étape 3** ? `forbid` ne masque PAS les IRQ (ADR-25). 206 sites
-d'écriture `sta WM_ARG_*`/`sta GFX_*`/`sta WM_DP_*` dans `wm.s`,
-patchwork `sei` ad-hoc épars sur certains sites tâche (`_ml_classify`,
-`_wm_widget_hit`, `_wm_redraw_ctl`) — laisse `sys_win_create` non
-gardé. 3 options chiffrées : (A) statu quo + `sei` épars partout ;
-(B) migration complète `mouse_step` (focus, drag, resize, redraw,
-compose, **callbacks**, **curseur**) hors IRQ vers tâche serveur WM —
-finalise option C ADR-28 ; (C) partition stricte ZP IRQ-only.
-**Recommandation senior tracée : (B)**, avec **plan d'atomicité**
-critique (flag `WM_TASKMODE` de bascule, anti-revert ADR-28 Étape 3)
-et **harnais d'injection event-async préalable** (axe 8.5,
-`cpu816_set_pc_hook` côté Phosphoric). Dossier :
-`docs/adr/0032-zp-race-irq-task-DRAFT.md`.
+### ~~ADR-32~~ → ratifiée 2026-06-10, déplacée vers §2 (invariant ZP/IRQ P1/P2/P3 ; la migration mouse_step hors IRQ — option B du dossier originel — reste explicitement non ratifiée, chantier ADR-28)
 
 ### ADR-30 — Roadmap toolbox (alignement GeoWorks) (dossier d'instruction, **Étapes 1+3 ratifiées 2026-05-30**)
 
