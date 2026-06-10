@@ -7,6 +7,12 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10h] — SP-3.p M.1 : highlight du menu ouvert (rouge→vert)
+
+Titre du menu ouvert en vidéo inversée (fond blanc mesuré au proportionnel,
+texte noir) — feedback GeoWorks standard. Garde :
+test_oricos_menu_open_highlight. Détails : OricOS/CHANGELOG.
+
 ## [2026-06-10g] — SP-3.p : suite GUI — fontes proportionnelles + textes de dialogues
 
 Reprise des briques GUI parquées (réf GeoWorks/GEOS, ADR-26 déclaratif) :
