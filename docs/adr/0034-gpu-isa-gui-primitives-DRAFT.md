@@ -222,6 +222,37 @@ niveau d'abstraction.
   Phosphoric avec tests device (rouge→vert sur « le CPU continue pendant
   un blit long ») ET qu'un chemin kernel (ex. `kernel_wm_compose`) tourne
   en post-and-continue mesuré.
+
+### 5bis. ÉTAPE B LIVRÉE (2026-06-10) — critères remplis, ratification à arbitrer
+
+- **Device (Phosphoric)** : FIFO 16 (snapshot des latchs au TRIGGER),
+  mode timé opt-in (`gpu_set_timed`/`gpu_tick` — les harness legacy sont
+  inchangés, l'émulateur vivant tourne timé), modèle de durée (8 cyc +
+  octets/4 — non contractuel), IRQ de complétion (`IRQF_GPU`, assertée
+  FIFO→vide, ack write-1-to-clear STATUS, enable INT_CTRL),
+  **CAPS/VERSION en lecture TRIGGER** (= $32 : FIFO+IRQ, v2 ; additif —
+  v1 lisait 0), QFULL/OVF sticky. **4 tests device, rouge-check
+  démontré** (exec immédiate simulée → 3 FAIL ; restaurée → 25/25).
+- **Kernel (OricOS)** : `GPU_CAPS_KERNEL` ($019094) lu au boot ;
+  `kernel_gfx_blit_post` (wait seulement si QFULL) + `kernel_gfx_drain`
+  (barrière pour les futurs lecteurs CPU) ; `kernel_wm_compose` routé
+  par capacités (carte v1 → chemin sync intact), **sans drain final**
+  (audit des 3 callers : aucun ne relit la SDRAM — l'affichage rattrape
+  à la frame suivante, sémantique async).
+- **Gain mesuré** (`test-oricos-gpu-async`, dans `make tests`) :
+  compose **22 534 → 10 591 cycles CPU (−52 %)** vs carte v1 simulée
+  (caps pokés à 0) ; transparence fonctionnelle prouvée (même
+  framebuffer composé) ; découverte caps prouvée.
+- **Leçon collatérale (pour l'étape C et ADR-28)** : le recalibrage du
+  test `evt-push-atomic` a montré qu'à 400 Hz d'événements souris, le
+  chemin IRQ legacy (mouse_step + enveloppe P1 ≈ 5 000 cyc/event)
+  **sature le CPU** — la marge de task_wm dépendait de ±30 octets de
+  position de code. Cadence de test ramenée à 125 Hz (réaliste). C'est
+  la mesure la plus directe à ce jour du coût du rendu-en-IRQ.
+- **Ratification de l'étape B** : critères du §5 remplis (implémentation
+  100 %, tests rouge→vert, mesure). À arbitrer par Bénédicte
+  (validation interactive recommandée : `--xvga --dlg-demo` — le rendu
+  vivant tourne désormais en async réel).
 - **Étape C** : ratifiable quand `EXEC_LIST` est implémentée + une
   fenêtre réelle rendue par liste avec gain mesuré sur `redraw_drag`
   (objectif : −90 % de cycles CPU) + validation interactive utilisateur

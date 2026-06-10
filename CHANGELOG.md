@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-10l] — ADR-34 étape B LIVRÉE : GPU-ISA v2 async (FIFO + IRQ + CAPS)
+
+Device Phosphoric : FIFO 16 (snapshot au TRIGGER), mode timé opt-in
+(harness legacy inchangés, émulateur vivant timé), IRQ de complétion
+(IRQF_GPU, ack W1C, enable INT_CTRL), CAPS/VERSION en lecture TRIGGER
+($32, additif), QFULL/OVF sticky — 4 tests device avec rouge-check
+démontré. Kernel : GPU_CAPS_KERNEL lu au boot, blit_post + drain
+(GUICODE), compose post-and-continue routé par capacités, sans drain
+final (audit callers). Gain mesuré : compose 22 534 → 10 591 cyc CPU
+(−52 %) vs carte v1 simulée — test end-to-end dans make tests. Leçon
+collatérale : saturation du chemin IRQ legacy mesurée à 400 Hz souris
+(±30 octets de code basculaient task_wm en famine) — test atomique
+recalibré à 125 Hz réaliste ; argument supplémentaire pour l'étape C.
+Critères de ratification B remplis — arbitrage Bénédicte attendu.
+
 ## [2026-06-10k] — ADR-34 ouverte : GPU-ISA (primitives GUI, async, display-lists)
 
 Dossier d'instruction à la demande de Bénédicte (« les fenêtres GUI sont
