@@ -7,6 +7,21 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11f] — « glitchs + souris arrêtée » : curseur sprite, 3 causes fixées
+
+Garde nouvelle (drag dense, échantillonnage cadence compositor 50 Hz) :
+**245/245 frames avec curseur téléporté (écart ≤ 260 px)** avant → **0,
+écart ≤ 32 px** après. (1) Single-writer sprite : top-half IRQ seul
+positionne le curseur en taskmode (MOUSE_X frais, atomique) — task_wm
+re-écrivait des positions d'events périmés ; réalise « curseur seul en
+IRQ » (ADR-28). (2) Attentes GPU IRQ-ouvertes : les helpers sync
+attendaient la fin d'exécution SOUS sei — en GPU timé, IRQ souris gelée
+à chaque commande GUI (l'horloge taskbar gelait ~1×/s : les glitchs
+« au repos ») ; section critique réduite à args+trigger, polls BUSY/
+QFULL IRQ-ouvertes (taskmode). (3) Latch atomique du sprite_device
+(commit sur Y_HI, note ADR-33 — même sémantique attendue du HDL).
+ALIGN-X re-vérifié (0 trace). Suite complète verte.
+
 ## [2026-06-11e] — « encore des traces » : CAUSE RACINE trouvée et fixée (ALIGN-X)
 
 Reproduit grâce à deux réparations du harnais robot (sprite $0370
