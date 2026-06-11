@@ -117,6 +117,28 @@ labels ($011200 bank SDRAM $01) — l'upload horloge écrit ADDR_HI=$00 →
 $001200. À fixer dans une passe dédiée (chercher le caller de
 kernel_icon_add au boot et son pointeur label).
 
+### 3bis. RÉGRESSION v1 du fix traces — « c'est pire ! » (corrigée 2026-06-11)
+
+Le bloc blit v1 (blit de la draguée dans _wm_draw_one) vivait AVANT la
+copie WM_ARG_* et clobbait X (slot×10) : `tax` avec le slot id +
+compose_slot clobbe X. Au RESIZE (liste invalidée à chaque move → le
+re-record consomme WM_ARG_*), le chrome gardait l'ancienne géométrie :
+**table à jour, rendu fantôme** (w=156 en table, 80×60 à l'écran),
+hit-test décalé du visuel. Invisible au drag pur — le replay translaté
+n'utilise pas WM_ARG_* — d'où des repros drag verts et une régression
+interactive. Fix : bloc déplacé APRÈS la copie ARG. Rouge→vert : repro
+robot resize + garde géométrie dans test_resize_grow_no_flicker
+(« rendu != table après resize »).
+
+**Leçon (à ériger en invariant de revue)** : ce point exact avait été
+REPÉRÉ pendant la bissection win_app, puis écarté parce que le chemin
+du test en cours ne l'empruntait pas. Un invariant de registre
+(X=slot×10 jusqu'à la copie ARG) se vérifie sur TOUS les chemins du
+flux, pas sur celui du bug du jour. Et : une garde de geste qui ne
+vérifie que le « pendant » (flicker) sans vérifier l'ÉTAT FINAL
+(rendu == table) laisse passer les fantômes — les gardes d'interaction
+doivent asserter la convergence finale.
+
 ### 4. Reste du sprint (à dérouler)
 
 - Oracle « framebuffer listé == rendu direct » (test de transparence).

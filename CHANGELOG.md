@@ -7,6 +7,17 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11c] — RÉGRESSION « c'est pire ! » corrigée : resize fantôme (X clobbé)
+
+Retour interactif : le fix traces v1 clobbait X avant la copie WM_ARG_*
+de _wm_draw_one → au resize (liste invalidée → re-record), le chrome
+était re-recordé avec l'ancienne géométrie : table à jour mais fenêtre
+rendue à l'ancienne taille (fantôme, hit-test décalé). Invisible au drag
+pur (replay translaté). Fix : bloc déplacé après la copie ARG. Repro
+robot resize rouge→vert (80×60 → 156×134 = table) ; garde géométrie
+rouge-checkée dans test_resize_grow_no_flicker ; drags revérifiés sains.
+Suite complète verte.
+
 ## [2026-06-11b] — Sprint consolidation : audit R6 + harnais oricrobot réparé, bugs A/B clos
 
 « go » de Bénédicte sur le sprint de consolidation. **Audit R6** (282
