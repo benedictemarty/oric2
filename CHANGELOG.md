@@ -7,6 +7,19 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11e] — « encore des traces » : CAUSE RACINE trouvée et fixée (ALIGN-X)
+
+Reproduit grâce à deux réparations du harnais robot (sprite $0370
+frappait le VIA ; mode `timed` = régime SDL interactif). Cause : le
+BLIT du backing arrondit dst à l'octet 4bpp (x>>1) — fenêtre à x IMPAIR
+→ débord d'1 px à gauche, jamais effacé par l'erase (rect exact) →
+traînées verticales 1 px le long du chemin de drag. Fix : fenêtres à
+x PAIR (création + move, contrainte classique 4bpp/GEOS) avec
+anti-dérive (bit tronqué ré-injecté — sinon la fenêtre glissait de
+1 px/move). Rouge→vert : 89 px de traces → 0 (robot dense timed) ;
+garde test_app_window_drag_complete durcie (rouge-checkée : 2076
+octets sur kernel non aligné) ; repro versionné. Suite complète verte.
+
 ## [2026-06-11d] — « cela ne fonctionne pas » : non reproduit ; durcissements livrés
 
 Batterie robot exhaustive sur le kernel courant (drag démo/app,
