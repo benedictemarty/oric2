@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11d] — « cela ne fonctionne pas » : non reproduit ; durcissements livrés
+
+Batterie robot exhaustive sur le kernel courant (drag démo/app,
+rapide/lent, resize, combos), mesures pixel : tout est propre — le
+symptôme interactif reste à caractériser (geste ? app ? effet ?). En
+chemin : restore bpl après le blit de la draguée (invariant ADR-27
+§0ter, défense en profondeur), garde test_app_window_drag_complete
+(scénario app à backing, jamais couvert), trace GPU_TRACE=1 côté
+device, binaire SDL rebuildé. Deux fausses pistes d'analyse tracées au
+dossier (l'« artefact » récurrent = fenêtre Editor derrière la draguée,
+z-order correct). Suite complète verte.
+
 ## [2026-06-11c] — RÉGRESSION « c'est pire ! » corrigée : resize fantôme (X clobbé)
 
 Retour interactif : le fix traces v1 clobbait X avant la copie WM_ARG_*
