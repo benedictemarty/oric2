@@ -19,6 +19,19 @@ déjà correctes — le binaire seul était faux. Leçon harnais n°3 du
 sprint : robot périmé, kernel en cours de bissection, binaire mixte —
 TOUS les faux symptômes de la semaine étaient des artefacts de build.
 
+## [2026-06-11h] — « Fenêtre blanche » résolu : compose client-only + chrome au create
+
+La capture utilisatrice a identifié la fenêtre tallwin (carré blanc
+200×200). Deux défauts ADR-27 masqués l'un par l'autre depuis la
+livraison C2 : le compose blittait le backing PLEIN RECT (titlebar
+recouverte par le blanc de l'app à chaque tour), et sys_win_create ne
+dessinait JAMAIS le chrome (le blanc plein-rect cachait le trou — le
+« carré blanc » était l'apparence normale de tallwin depuis le début).
+Fix : blit client-only (saute 12 lignes, chrome = propriété du WM) +
+chrome dessiné au create. tallwin a maintenant titlebar focus + boutons.
+Test sprint2a : GPU câblé (draw au create → writes $034x dans le miroir
+VIA sans device — même famille que oricrobot/$0370). Suite verte.
+
 ## [2026-06-11g] — « souris plus affichée » : position initiale du sprite (512,384)
 
 Effet de bord du single-writer : sans event souris, plus rien ne
