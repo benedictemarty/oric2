@@ -7,6 +7,18 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11h] — Cause racine « souris invisible » : binaire SDL mixte → garde .buildflags
+
+Le Makefile Phosphoric partageait les .o entre configs sans invalidation
+par flags : `make` headless + `make SDL2=1` = binaire incohérent (le
+curseur sprite ne s'affichait plus). Reproduit avec le vrai binaire
+(SDL dummy + screenshot), corrigé par un témoin .buildflags (rebuild
+complet au changement de config), vérifié par cycle triple build. La
+position initiale du sprite (512,384) et toute la chaîne curseur étaient
+déjà correctes — le binaire seul était faux. Leçon harnais n°3 du
+sprint : robot périmé, kernel en cours de bissection, binaire mixte —
+TOUS les faux symptômes de la semaine étaient des artefacts de build.
+
 ## [2026-06-11g] — « souris plus affichée » : position initiale du sprite (512,384)
 
 Effet de bord du single-writer : sans event souris, plus rien ne
