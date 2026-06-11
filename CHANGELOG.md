@@ -7,6 +7,14 @@ Entrées détaillées par sous-projet :
 - [Phosphoric/CHANGELOG](./Phosphoric/CHANGELOG)
 - [OricOS/CHANGELOG.md](./OricOS/CHANGELOG.md)
 
+## [2026-06-11g] — « souris plus affichée » : position initiale du sprite (512,384)
+
+Effet de bord du single-writer : sans event souris, plus rien ne
+positionnait le sprite (resté à (0,0), coin menubar). sprite_init pose
+le centre écran. Chaîne d'affichage prouvée fonctionnelle au robot
+(cursorpx : 126 px rendus, suit en absolu/relatif). oricrobot : commandes
+diagnostic spr/cursorpx.
+
 ## [2026-06-11f] — « glitchs + souris arrêtée » : curseur sprite, 3 causes fixées
 
 Garde nouvelle (drag dense, échantillonnage cadence compositor 50 Hz) :
